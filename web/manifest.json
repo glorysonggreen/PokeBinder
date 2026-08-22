@@ -1,0 +1,11 @@
+{
+  "name": "PokeBinder",
+  "short_name": "PokeBinder",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F5EFE1",
+  "theme_color": "#D6301B",
+  "description": "PokeBinder — a Pokémon TCG collection manager.",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}
