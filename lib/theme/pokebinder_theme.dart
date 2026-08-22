@@ -26,6 +26,9 @@ const double kPokemonCardImageWidthPx = 600;
 const double kPokemonCardImageHeightPx = 825;
 const double kPokemonCardImageAspectRatio = kPokemonCardImageWidthPx / kPokemonCardImageHeightPx;
 const double kCardInteractionHeightBuffer = 1.25;
+// Space reserved below each grid tile for the two-line name/set caption
+// (a small gap plus the cardName and cardMeta text rows).
+const double kCardCaptionHeight = 28.0;
 
 class PokeBinderSpacing {
   PokeBinderSpacing._();

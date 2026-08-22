@@ -15,24 +15,27 @@ class BinderCardTile extends StatelessWidget {
     final hasImage = card.imageAssetPath != null;
 
     return AspectRatio(
-      aspectRatio: kPokemonCardAspectRatio,
+      aspectRatio: kPokemonCardImageAspectRatio,
       child: GestureDetector(
         onTap: onTap,
         child: hasImage
             ? Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(5),
                   boxShadow: [
                     BoxShadow(
-                      color: PokeBinderColors.ink.withValues(alpha: 0.16),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
+                      color: PokeBinderColors.ink.withValues(alpha: 0.10),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
                     ),
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.asset(card.imageAssetPath!, fit: BoxFit.cover),
+                  borderRadius: BorderRadius.circular(5),
+                  child: Image.asset(
+                    card.imageAssetPath!,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               )
             : const PokemonCardBack(),
@@ -49,7 +52,7 @@ class AddCardTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: kPokemonCardAspectRatio,
+      aspectRatio: kPokemonCardImageAspectRatio,
       child: GestureDetector(
         onTap: onTap,
         child: CustomPaint(
@@ -75,7 +78,7 @@ class _DashedRRectPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rrect = RRect.fromRectAndRadius(
       Offset.zero & size,
-      const Radius.circular(10),
+      const Radius.circular(5),
     );
     final path = Path()..addRRect(rrect);
 
