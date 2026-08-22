@@ -56,10 +56,10 @@ class _CardFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(11),
+      borderRadius: BorderRadius.circular(6),
       child: Container(
         decoration: (background ?? const BoxDecoration()).copyWith(
-          borderRadius: BorderRadius.circular(11),
+          borderRadius: BorderRadius.circular(6),
           boxShadow: [
             BoxShadow(
               color: PokeBinderColors.ink.withValues(alpha: 0.25),
@@ -78,7 +78,7 @@ class _CardFrame extends StatelessWidget {
                 child: Container(
                   margin: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(7),
+                    borderRadius: BorderRadius.circular(3),
                     border: Border.all(
                       color: PokeBinderColors.white.withValues(alpha: 0.22),
                       width: 1,
@@ -117,7 +117,7 @@ class _CardImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(assetPath, fit: BoxFit.cover);
+    return Image.asset(assetPath, fit: BoxFit.contain);
   }
 }
 

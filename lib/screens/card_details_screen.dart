@@ -49,7 +49,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                       constraints.maxWidth * kPokemonCardWidthFraction,
                       kPokemonCardMaxWidth,
                     );
-                    final cardHeight = cardWidth / kPokemonCardAspectRatio;
+                    final cardHeight = cardWidth / kPokemonCardImageAspectRatio;
                     final bufferWidth =
                         cardWidth * kCardInteractionHeightBuffer;
                     final bufferHeight =

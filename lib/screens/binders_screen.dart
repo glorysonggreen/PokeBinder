@@ -216,51 +216,67 @@ class _BindersTab extends StatelessWidget {
             style: PokeBinderText.sectionLabel,
           ),
           const SizedBox(height: PokeBinderSpacing.sp2),
-          GridView.count(
-            crossAxisCount: 3,
-            mainAxisSpacing: PokeBinderSpacing.sp2,
-            crossAxisSpacing: PokeBinderSpacing.sp2,
-            // A notch shorter than the card alone, to leave room for the
-            // name/set/number caption below each tile.
-            childAspectRatio: kPokemonCardAspectRatio * 0.78,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              for (final card in currentPageCards)
-                Column(
-                  children: [
-                    Expanded(
-                      child: BinderCardTile(
-                        card: card,
-                        onTap: () => onCardTap(card),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      card.name,
-                      style: PokeBinderText.cardName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      '${card.setName} · #${card.cardNumber}',
-                      style: PokeBinderText.cardMeta,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const crossAxisCount = 3;
+              const crossAxisSpacing = PokeBinderSpacing.sp2;
+              final cardWidth = (constraints.maxWidth -
+                      crossAxisSpacing * (crossAxisCount - 1)) /
+                  crossAxisCount;
+              final cardHeight = cardWidth / kPokemonCardImageAspectRatio;
+
+              return GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: PokeBinderSpacing.sp2,
+                  crossAxisSpacing: crossAxisSpacing,
+                  mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
                 ),
-              Column(
                 children: [
-                  Expanded(child: AddCardTile(onTap: () {})),
-                  const SizedBox(height: 4),
-                  // Empty placeholders so the "+" tile's height lines up
-                  // with the two-line name/set captions on the other tiles.
-                  Text('', style: PokeBinderText.cardName),
-                  Text('', style: PokeBinderText.cardMeta),
+                  for (final card in currentPageCards)
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: cardHeight,
+                          child: BinderCardTile(
+                            card: card,
+                            onTap: () => onCardTap(card),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          card.name,
+                          style: PokeBinderText.cardName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${card.setName} · #${card.cardNumber}',
+                          style: PokeBinderText.cardMeta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  Column(
+                    children: [
+                      SizedBox(
+                        height: cardHeight,
+                        child: AddCardTile(onTap: () {}),
+                      ),
+                      const SizedBox(height: 4),
+                      // Empty placeholders so the "+" tile's height lines up
+                      // with the two-line name/set captions on the other
+                      // tiles.
+                      Text('', style: PokeBinderText.cardName),
+                      Text('', style: PokeBinderText.cardMeta),
+                    ],
+                  ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
           Row(
@@ -351,39 +367,53 @@ class _AllCardsTab extends StatelessWidget {
           if (filtered.isEmpty)
             const _EmptyState()
           else
-            GridView.count(
-              crossAxisCount: 3,
-              mainAxisSpacing: PokeBinderSpacing.sp3,
-              crossAxisSpacing: PokeBinderSpacing.sp2,
-              childAspectRatio: kPokemonCardAspectRatio * 0.78,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                for (final card in filtered)
-                  Column(
-                    children: [
-                      Expanded(
-                        child: BinderCardTile(
-                          card: card,
-                          onTap: () => onCardTap(card),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        card.name,
-                        style: PokeBinderText.cardName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${card.setName} · #${card.cardNumber}',
-                        style: PokeBinderText.cardMeta,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const crossAxisCount = 3;
+                const crossAxisSpacing = PokeBinderSpacing.sp2;
+                final cardWidth = (constraints.maxWidth -
+                        crossAxisSpacing * (crossAxisCount - 1)) /
+                    crossAxisCount;
+                final cardHeight = cardWidth / kPokemonCardImageAspectRatio;
+
+                return GridView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: PokeBinderSpacing.sp3,
+                    crossAxisSpacing: crossAxisSpacing,
+                    mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
                   ),
-              ],
+                  children: [
+                    for (final card in filtered)
+                      Column(
+                        children: [
+                          SizedBox(
+                            height: cardHeight,
+                            child: BinderCardTile(
+                              card: card,
+                              onTap: () => onCardTap(card),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            card.name,
+                            style: PokeBinderText.cardName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            '${card.setName} · #${card.cardNumber}',
+                            style: PokeBinderText.cardMeta,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                  ],
+                );
+              },
             ),
         ],
       ),
