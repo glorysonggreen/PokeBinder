@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class PokeBinderColors {
   PokeBinderColors._();
@@ -40,18 +41,21 @@ class PokeBinderSpacing {
 class PokeBinderText {
   PokeBinderText._();
 
-  static const eyebrow = TextStyle(
+  static TextStyle chakraPetch(TextStyle base) =>
+      GoogleFonts.chakraPetch(textStyle: base);
+
+  static final eyebrow = chakraPetch(const TextStyle(
     fontSize: 10,
     fontWeight: FontWeight.bold,
     letterSpacing: 1.4,
     color: PokeBinderColors.redDeep,
-  );
+  ));
 
-  static const heading = TextStyle(
+  static final heading = chakraPetch(const TextStyle(
     fontSize: 19,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.ink,
-  );
+  ));
 
   static const subtitle = TextStyle(
     fontSize: 11.5,
@@ -69,50 +73,52 @@ class PokeBinderText {
     color: PokeBinderColors.ink,
   );
 
-  static const statLabel = TextStyle(
+  static final statLabel = chakraPetch(const TextStyle(
     fontSize: 8,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.8,
     color: PokeBinderColors.inkSoft,
-  );
+  ));
 
+  // Left on the default font, matching the mockup's JetBrains Mono
+  // treatment for numeric readouts rather than the Chakra Petch labels.
   static const statNumber = TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.redDeep,
   );
 
-  static const buttonLabel = TextStyle(
+  static final buttonLabel = chakraPetch(const TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.3,
     color: PokeBinderColors.white,
-  );
+  ));
 
-  static const buttonGhostLabel = TextStyle(
+  static final buttonGhostLabel = chakraPetch(const TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.3,
     color: PokeBinderColors.redDeep,
-  );
+  ));
 
-  static const sectionLabel = TextStyle(
+  static final sectionLabel = chakraPetch(const TextStyle(
     fontSize: 10,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.7,
     color: PokeBinderColors.inkSoft,
-  );
+  ));
 
-  static const tabLabelInactive = TextStyle(
+  static final tabLabelInactive = chakraPetch(const TextStyle(
     fontSize: 11,
     color: PokeBinderColors.inkSoft,
-  );
+  ));
 
-  static const tabLabelActive = TextStyle(
+  static final tabLabelActive = chakraPetch(const TextStyle(
     fontSize: 11,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.redDeep,
-  );
+  ));
 
   static const listRowTitle = TextStyle(
     fontSize: 12,
@@ -124,30 +130,47 @@ class PokeBinderText {
     color: PokeBinderColors.inkSoft,
   );
 
-  static const chipLabel = TextStyle(
+  static final chipLabel = chakraPetch(const TextStyle(
     fontSize: 9.5,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.2,
     color: PokeBinderColors.inkSoft,
-  );
+  ));
 
-  static const chipLabelActive = TextStyle(
+  static final chipLabelActive = chakraPetch(const TextStyle(
     fontSize: 9.5,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.2,
     color: PokeBinderColors.white,
-  );
+  ));
 
-  static const resultCount = TextStyle(
+  static final resultCount = chakraPetch(const TextStyle(
     fontSize: 9.5,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.6,
     color: PokeBinderColors.inkSoft,
-  );
+  ));
 
-  static const cardName = TextStyle(
+  static final cardName = chakraPetch(const TextStyle(
     fontSize: 8.5,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.inkSoft,
-  );
+  ));
+
+  // Set name + card number line shown beneath a card's name (Binder page
+  // grid), a notch smaller/lighter than cardName so the Pokémon name stays
+  // the primary line — same Chakra Petch label voice as the rest of the UI.
+  static final cardMeta = chakraPetch(TextStyle(
+    fontSize: 7.5,
+    fontWeight: FontWeight.w500,
+    color: PokeBinderColors.inkSoft.withValues(alpha: 0.75),
+  ));
+
+  // Back-link ("‹ Back") also uses the Chakra Petch label voice in the
+  // mockup.
+  static final backLink = chakraPetch(const TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: PokeBinderColors.redDeep,
+  ));
 }

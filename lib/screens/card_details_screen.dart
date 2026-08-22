@@ -39,7 +39,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
             children: [
               BackLink(onTap: () => Navigator.of(context).maybePop()),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              const Text('CARD DETAILS', style: PokeBinderText.eyebrow),
+              Text('CARD DETAILS', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp4),
 
               Center(
@@ -50,12 +50,14 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                       kPokemonCardMaxWidth,
                     );
                     final cardHeight = cardWidth / kPokemonCardAspectRatio;
+                    final bufferWidth =
+                        cardWidth * kCardInteractionHeightBuffer;
                     final bufferHeight =
                         cardHeight * kCardInteractionHeightBuffer;
 
                     return ClipRect(
                       child: SizedBox(
-                        width: cardWidth,
+                        width: bufferWidth,
                         height: bufferHeight,
                         child: Center(
                           child: SizedBox(
