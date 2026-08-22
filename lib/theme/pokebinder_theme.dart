@@ -40,7 +40,7 @@ class PokeBinderSpacing {
 
 class PokeBinderText {
   PokeBinderText._();
-
+  
   static TextStyle chakraPetch(TextStyle base) =>
       GoogleFonts.chakraPetch(textStyle: base);
 
@@ -80,8 +80,6 @@ class PokeBinderText {
     color: PokeBinderColors.inkSoft,
   ));
 
-  // Left on the default font, matching the mockup's JetBrains Mono
-  // treatment for numeric readouts rather than the Chakra Petch labels.
   static const statNumber = TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.bold,
@@ -157,17 +155,12 @@ class PokeBinderText {
     color: PokeBinderColors.inkSoft,
   ));
 
-  // Set name + card number line shown beneath a card's name (Binder page
-  // grid), a notch smaller/lighter than cardName so the Pokémon name stays
-  // the primary line — same Chakra Petch label voice as the rest of the UI.
   static final cardMeta = chakraPetch(TextStyle(
     fontSize: 7.5,
     fontWeight: FontWeight.w500,
     color: PokeBinderColors.inkSoft.withValues(alpha: 0.75),
   ));
 
-  // Back-link ("‹ Back") also uses the Chakra Petch label voice in the
-  // mockup.
   static final backLink = chakraPetch(const TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w600,
