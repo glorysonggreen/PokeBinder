@@ -7,9 +7,6 @@ import '../widgets/binder_card_tile.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'card_details_screen.dart';
 
-/// The PokeBinder "Binders" screen, matching the mockup's Collection
-/// screen: a top tab bar switching between a binder-by-binder page view
-/// and a flat, filterable grid of every card.
 class BindersScreen extends StatefulWidget {
   const BindersScreen({super.key});
 
@@ -61,7 +58,7 @@ class _BindersScreenState extends State<BindersScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('COLLECTION', style: PokeBinderText.eyebrow),
+              Text('COLLECTION', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp3),
               _TopTabBar(
                 index: _tabIndex,
@@ -223,13 +220,46 @@ class _BindersTab extends StatelessWidget {
             crossAxisCount: 3,
             mainAxisSpacing: PokeBinderSpacing.sp2,
             crossAxisSpacing: PokeBinderSpacing.sp2,
-            childAspectRatio: kPokemonCardAspectRatio,
+            // A notch shorter than the card alone, to leave room for the
+            // name/set/number caption below each tile.
+            childAspectRatio: kPokemonCardAspectRatio * 0.78,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
               for (final card in currentPageCards)
-                BinderCardTile(card: card, onTap: () => onCardTap(card)),
-              AddCardTile(onTap: () {}),
+                Column(
+                  children: [
+                    Expanded(
+                      child: BinderCardTile(
+                        card: card,
+                        onTap: () => onCardTap(card),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      card.name,
+                      style: PokeBinderText.cardName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '${card.setName} · #${card.cardNumber}',
+                      style: PokeBinderText.cardMeta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              Column(
+                children: [
+                  Expanded(child: AddCardTile(onTap: () {})),
+                  const SizedBox(height: 4),
+                  // Empty placeholders so the "+" tile's height lines up
+                  // with the two-line name/set captions on the other tiles.
+                  Text('', style: PokeBinderText.cardName),
+                  Text('', style: PokeBinderText.cardMeta),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
@@ -314,7 +344,7 @@ class _AllCardsTab extends StatelessWidget {
                 'SHOWING ${filtered.length} CARDS',
                 style: PokeBinderText.resultCount,
               ),
-              const Text('SORT: RECENT', style: PokeBinderText.resultCount),
+              Text('SORT: RECENT', style: PokeBinderText.resultCount),
             ],
           ),
           const SizedBox(height: PokeBinderSpacing.sp2),
@@ -325,7 +355,7 @@ class _AllCardsTab extends StatelessWidget {
               crossAxisCount: 3,
               mainAxisSpacing: PokeBinderSpacing.sp3,
               crossAxisSpacing: PokeBinderSpacing.sp2,
-              childAspectRatio: kPokemonCardAspectRatio * 0.86,
+              childAspectRatio: kPokemonCardAspectRatio * 0.78,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: [
@@ -342,6 +372,12 @@ class _AllCardsTab extends StatelessWidget {
                       Text(
                         card.name,
                         style: PokeBinderText.cardName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${card.setName} · #${card.cardNumber}',
+                        style: PokeBinderText.cardMeta,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../theme/pokebinder_theme.dart';
 
-/// The energy type shown on a Pokémon card. Drives the card artwork's
-/// gradient background, matching the type-colored tiles seen throughout
-/// the mockup (binder grid, search results, etc).
 enum PokemonCardType { fire, water, grass, electric, psychic, normal }
 
 extension PokemonCardTypeGradient on PokemonCardType {
-  /// Gradient colors lifted from the mockup's .card-tile background values
-  /// for each type, e.g. fire: linear-gradient(160deg,#f2a99a,#d6301b).
   List<Color> get gradientColors {
     switch (this) {
       case PokemonCardType.fire:
@@ -107,6 +102,7 @@ class PokemonCardData {
       binderName: 'Kanto Starters',
       page: 1,
       estimatedValue: 3400,
+      imageAssetPath: '../assets/blastoise_base_set.jpg',
     ),
     PokemonCardData(
       id: 'sample-venusaur',
@@ -120,6 +116,7 @@ class PokemonCardData {
       binderName: 'Kanto Starters',
       page: 1,
       estimatedValue: 2900,
+      imageAssetPath: '../assets/venusaur_base_set.jpg',
     ),
     PokemonCardData(
       id: 'sample-squirtle',
@@ -133,6 +130,7 @@ class PokemonCardData {
       binderName: 'Kanto Starters',
       page: 2,
       estimatedValue: 120,
+      imageAssetPath: '../assets/squirtle_base_set.jpg',
     ),
     PokemonCardData(
       id: 'sample-bulbasaur',
@@ -146,6 +144,7 @@ class PokemonCardData {
       binderName: 'Kanto Starters',
       page: 2,
       estimatedValue: 110,
+      imageAssetPath: '../assets/bulbasaur_base_set.jpg',
     ),
     PokemonCardData(
       id: 'sample-pikachu',
@@ -159,6 +158,7 @@ class PokemonCardData {
       binderName: 'Rare Holos',
       page: 1,
       estimatedValue: 450,
+      imageAssetPath: '../assets/pikachu_base_set.jpg', 
     ),
     PokemonCardData(
       id: 'sample-raichu',
@@ -172,6 +172,7 @@ class PokemonCardData {
       binderName: 'Rare Holos',
       page: 1,
       estimatedValue: 1800,
+      imageAssetPath: '../assets/raichu_base_set.jpg',
     ),
     PokemonCardData(
       id: 'sample-alakazam',
@@ -185,6 +186,7 @@ class PokemonCardData {
       binderName: 'Rare Holos',
       page: 1,
       estimatedValue: 2100,
+      imageAssetPath: '../assets/alakazam_base_set.jpg',
     ),
     PokemonCardData(
       id: 'sample-mewtwo',
@@ -198,6 +200,7 @@ class PokemonCardData {
       binderName: 'Rare Holos',
       page: 1,
       estimatedValue: 3100,
+      imageAssetPath: '../assets/mewtwo_base_set.jpg',
     ),
     PokemonCardData(
       id: 'sample-gyarados',
@@ -211,6 +214,7 @@ class PokemonCardData {
       binderName: 'Trade Bait',
       page: 1,
       estimatedValue: 1600,
+      imageAssetPath: '../assets/gyarados_base_set.jpg',
     ),
     PokemonCardData(
       id: 'sample-vaporeon',
@@ -224,6 +228,7 @@ class PokemonCardData {
       binderName: 'Trade Bait',
       page: 1,
       estimatedValue: 1450,
+      imageAssetPath: '../assets/vaporeon_jungle.jpg',
     ),
     PokemonCardData(
       id: 'sample-jigglypuff',
@@ -237,6 +242,7 @@ class PokemonCardData {
       binderName: 'Trade Bait',
       page: 1,
       estimatedValue: 60,
+      imageAssetPath: '../assets/jigglypuff_jungle.jpg',
     ),
   ];
 }

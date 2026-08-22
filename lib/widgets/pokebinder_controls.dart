@@ -13,14 +13,7 @@ class BackLink extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: PokeBinderColors.redDeep,
-          ),
-        ),
+        child: Text(label, style: PokeBinderText.backLink),
       ),
     );
   }
