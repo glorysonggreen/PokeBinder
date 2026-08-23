@@ -732,8 +732,6 @@ class _AllCardsTab extends StatelessWidget {
       case 'Uncommon':
         return 'Uncommon';
       case 'Rare':
-      case 'Holo Rare':
-      case 'Rare Holo':
         return 'Rare';
       case 'Double Rare':
         return 'Double Rare';
@@ -885,6 +883,19 @@ class _AllCardsTab extends StatelessWidget {
         filtered.sort((a, b) => b.quantityOwned.compareTo(a.quantityOwned));
         break;
       case CardSortOption.pokemon:
+        // When no specific type chip is selected ("All"), group cards by
+        // type in the standard TCG type order (Colorless, Grass, Fire,
+        // Water, Lightning, Fighting, Psychic, Darkness, Metal, Dragon,
+        // Fairy), then alphabetically within each type.
+        if (typeFilter == null) {
+          filtered.sort((a, b) {
+            final byType = a.type.index.compareTo(b.type.index);
+            return byType != 0
+                ? byType
+                : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          });
+        }
+        break;
       case CardSortOption.trainer:
       case CardSortOption.energy:
         break;
