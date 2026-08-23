@@ -2,27 +2,75 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/interactive_3d_card.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
+import 'card_form_screen.dart';
 
 class CardDetailsScreen extends StatefulWidget {
   final PokemonCardData card;
+  final List<BinderData> binders;
 
-  const CardDetailsScreen({super.key, required this.card});
+  /// Called with the card's state *before* this edit and the form result
+  /// describing the edit, so the caller (which owns the actual binder/card
+  /// data) can place the updated card correctly — including moving it to a
+  /// different binder or page if that's what changed.
+  final void Function(PokemonCardData oldCard, CardFormResult result) onSave;
+
+  const CardDetailsScreen({
+    super.key,
+    required this.card,
+    required this.binders,
+    required this.onSave,
+  });
 
   @override
   State<CardDetailsScreen> createState() => _CardDetailsScreenState();
 }
 
 class _CardDetailsScreenState extends State<CardDetailsScreen> {
-  late int _quantityOwned = widget.card.quantityOwned;
+  late PokemonCardData _card = widget.card;
+
+  Future<void> _editCard() async {
+    final currentBinder = widget.binders.firstWhere(
+      (b) => b.name == _card.binderName,
+      orElse: () => widget.binders.first,
+    );
+
+    final result = await Navigator.of(context).push<CardFormResult>(
+      MaterialPageRoute(
+        builder: (_) => CardFormScreen(
+          existingCard: _card,
+          binders: widget.binders,
+          defaultBinderId: currentBinder.id,
+          defaultPageNumber: _card.page,
+        ),
+      ),
+    );
+    if (result == null) return;
+
+    widget.onSave(_card, result);
+
+    if (result.deleted) {
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() => _card = result.card!);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Saved changes to ${result.card!.name}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final card = widget.card;
+    final card = _card;
 
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
@@ -89,7 +137,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                   Expanded(
                     child: _FieldTile(
                       label: 'Qty owned',
-                      value: '$_quantityOwned',
+                      value: '${card.quantityOwned}',
                     ),
                   ),
                   const SizedBox(width: PokeBinderSpacing.sp2),
@@ -139,8 +187,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                     child: PillButton(
                       label: 'Edit',
                       ghost: true,
-                      onTap: () {
-                      },
+                      onTap: _editCard,
                     ),
                   ),
                   const SizedBox(width: PokeBinderSpacing.sp2),

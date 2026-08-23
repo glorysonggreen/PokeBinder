@@ -4,6 +4,11 @@ import '../theme/pokebinder_theme.dart';
 
 enum PokemonCardType { fire, water, grass, electric, psychic, normal }
 
+/// The Pokémon TCG's three card supertypes. Only Pokémon cards carry an
+/// elemental [PokemonCardType]; Trainer and Energy cards use [subtype]
+/// instead (e.g. "Item"/"Supporter"/"Stadium" or "Basic"/"Special").
+enum CardSupertype { pokemon, trainer, energy }
+
 extension PokemonCardTypeGradient on PokemonCardType {
   List<Color> get gradientColors {
     switch (this) {
@@ -37,6 +42,12 @@ class PokemonCardData {
   final String cardNumber;
   final String rarity;
   final PokemonCardType type;
+  final CardSupertype supertype;
+
+  /// Only meaningful for Trainer ("Item"/"Supporter"/"Stadium") and Energy
+  /// ("Basic"/"Special") cards; null for Pokémon cards, which use [type]
+  /// instead.
+  final String? subtype;
   final int quantityOwned;
   final String condition;
   final String binderName;
@@ -55,6 +66,8 @@ class PokemonCardData {
     required this.cardNumber,
     required this.rarity,
     required this.type,
+    this.supertype = CardSupertype.pokemon,
+    this.subtype,
     required this.quantityOwned,
     required this.condition,
     required this.binderName,
@@ -63,6 +76,44 @@ class PokemonCardData {
     this.notes = '',
     this.imageAssetPath,
   });
+
+  /// Returns a copy of this card with the given fields replaced. Used by the
+  /// Add/Edit Card form so an edit produces a new immutable card rather than
+  /// mutating the original in place.
+  PokemonCardData copyWith({
+    String? name,
+    String? setName,
+    String? cardNumber,
+    String? rarity,
+    PokemonCardType? type,
+    CardSupertype? supertype,
+    String? subtype,
+    int? quantityOwned,
+    String? condition,
+    String? binderName,
+    int? page,
+    double? estimatedValue,
+    String? notes,
+    String? imageAssetPath,
+  }) {
+    return PokemonCardData(
+      id: id,
+      name: name ?? this.name,
+      setName: setName ?? this.setName,
+      cardNumber: cardNumber ?? this.cardNumber,
+      rarity: rarity ?? this.rarity,
+      type: type ?? this.type,
+      supertype: supertype ?? this.supertype,
+      subtype: subtype ?? this.subtype,
+      quantityOwned: quantityOwned ?? this.quantityOwned,
+      condition: condition ?? this.condition,
+      binderName: binderName ?? this.binderName,
+      page: page ?? this.page,
+      estimatedValue: estimatedValue ?? this.estimatedValue,
+      notes: notes ?? this.notes,
+      imageAssetPath: imageAssetPath ?? this.imageAssetPath,
+    );
+  }
 
   /// Sample data matching the mockup's Charizard example, for
   /// previewing/testing the screen standalone.
@@ -243,6 +294,86 @@ class PokemonCardData {
       page: 1,
       estimatedValue: 60,
       imageAssetPath: '../assets/jigglypuff_jungle.jpg',
+    ),
+    PokemonCardData(
+      id: 'sample-potion',
+      name: 'Potion',
+      setName: 'Base Set',
+      cardNumber: '20/102',
+      rarity: 'Common',
+      type: PokemonCardType.normal,
+      supertype: CardSupertype.trainer,
+      subtype: 'Item',
+      quantityOwned: 3,
+      condition: 'NM',
+      binderName: 'Unassigned',
+      page: 0,
+      estimatedValue: 5,
+      imageAssetPath: '../assets/potion_base_set.jpg',
+    ),
+    PokemonCardData(
+      id: 'sample-misty',
+      name: 'Misty',
+      setName: 'Gym',
+      cardNumber: '18/132',
+      rarity: 'Holo Rare',
+      type: PokemonCardType.normal,
+      supertype: CardSupertype.trainer,
+      subtype: 'Supporter',
+      quantityOwned: 2,
+      condition: 'NM',
+      binderName: 'Unassigned',
+      page: 0,
+      estimatedValue: 15,
+      imageAssetPath: '../assets/misty_gym_heroes.jpg',
+    ),
+    PokemonCardData(
+      id: 'sample-cerulean-city-gym',
+      name: 'Cerulean City Gym',
+      setName: 'Gym',
+      cardNumber: '108/132',
+      rarity: 'Uncommon',
+      type: PokemonCardType.normal,
+      supertype: CardSupertype.trainer,
+      subtype: 'Stadium',
+      quantityOwned: 1,
+      condition: 'LP',
+      binderName: 'Unassigned',
+      page: 0,
+      estimatedValue: 22,
+      imageAssetPath: '../assets/cerulean_city_gym_gym.jpg',
+    ),
+    PokemonCardData(
+      id: 'sample-fire-energy',
+      name: 'Fire Energy',
+      setName: 'Base Set',
+      cardNumber: '98/102',
+      rarity: 'Common',
+      type: PokemonCardType.fire,
+      supertype: CardSupertype.energy,
+      subtype: 'Basic',
+      quantityOwned: 8,
+      condition: 'NM',
+      binderName: 'Unassigned',
+      page: 0,
+      estimatedValue: 1,
+      imageAssetPath: '../assets/fire_energy_base_set.jpg',
+    ),
+    PokemonCardData(
+      id: 'sample-double-colorless-energy',
+      name: 'Double Colorless Energy',
+      setName: 'Base Set',
+      cardNumber: '96/102',
+      rarity: 'Uncommon',
+      type: PokemonCardType.normal,
+      supertype: CardSupertype.energy,
+      subtype: 'Special',
+      quantityOwned: 2,
+      condition: 'NM',
+      binderName: 'Unassigned',
+      page: 0,
+      estimatedValue: 8,
+      imageAssetPath: '../assets/double_colorless_energy_base_set.jpg',
     ),
   ];
 }

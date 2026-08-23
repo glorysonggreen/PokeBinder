@@ -169,4 +169,16 @@ class PokeBinderText {
     fontWeight: FontWeight.w600,
     color: PokeBinderColors.redDeep,
   ));
+
+  static final formLabel = chakraPetch(const TextStyle(
+    fontSize: 8.5,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.6,
+    color: PokeBinderColors.inkSoft,
+  ));
+
+  static const formError = TextStyle(
+    fontSize: 11,
+    color: PokeBinderColors.danger,
+  );
 }
