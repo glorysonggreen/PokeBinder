@@ -219,31 +219,84 @@ class _FieldTile extends StatelessWidget {
     this.stacked = false,
   });
 
+  IconData? get _icon {
+    switch (label.toLowerCase()) {
+      case 'qty owned':
+        return Icons.style_outlined;
+      case 'condition':
+        return Icons.verified_outlined;
+      case 'binder':
+        return Icons.menu_book_outlined;
+      case 'page':
+        return Icons.bookmark_outline_rounded;
+      case 'notes':
+        return Icons.sticky_note_2_outlined;
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final icon = _icon;
+
     return Container(
       constraints: minHeight != null
           ? BoxConstraints(minHeight: minHeight!)
           : null,
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: PokeBinderColors.cream,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: PokeBinderColors.ink.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: stacked
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('$label:', style: PokeBinderText.fieldLabel),
+                Row(
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, size: 13, color: PokeBinderColors.redDeep),
+                      const SizedBox(width: 5),
+                    ],
+                    Text(
+                      label.toUpperCase(),
+                      style: PokeBinderText.fieldLabel.copyWith(
+                        letterSpacing: 0.6,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: PokeBinderSpacing.sp1),
-                Text(value, style: PokeBinderText.fieldValue),
+                Text(
+                  value,
+                  style: PokeBinderText.fieldValue.copyWith(height: 1.35),
+                ),
               ],
             )
           : Row(
               children: [
-                Text('$label ', style: PokeBinderText.fieldLabel),
+                if (icon != null) ...[
+                  Icon(icon, size: 14, color: PokeBinderColors.redDeep.withValues(alpha: 0.7)),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  label,
+                  style: PokeBinderText.fieldLabel.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
                 Text(value, style: PokeBinderText.fieldValue),
               ],
             ),
@@ -261,22 +314,70 @@ class _StatBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(14),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [PokeBinderColors.white, Color(0xFFFBF7EC)],
+          colors: [PokeBinderColors.white, Color(0xFFFCE9E4)],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: PokeBinderColors.redDeep.withValues(alpha: 0.16),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: PokeBinderColors.red.withValues(alpha: 0.35)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(label, style: PokeBinderText.statLabel),
-          const SizedBox(height: PokeBinderSpacing.sp1),
-          Text(value, style: PokeBinderText.statNumber),
+          Container(
+            width: 5,
+            height: 62,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [PokeBinderColors.red, PokeBinderColors.redDeep],
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(14),
+                bottomLeft: Radius.circular(14),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(label, style: PokeBinderText.statLabel),
+                        const SizedBox(height: PokeBinderSpacing.sp1),
+                        Text(value, style: PokeBinderText.statNumber),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: PokeBinderColors.red.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.trending_up_rounded,
+                      size: 18,
+                      color: PokeBinderColors.redDeep,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

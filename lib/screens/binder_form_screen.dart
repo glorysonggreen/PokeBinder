@@ -144,17 +144,11 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackLink(
-                label: '‹ Binders',
                 onTap: () => Navigator.of(context).maybePop(),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text(
-                _isEditing ? 'Edit Binder' : 'New Binder',
-                style: PokeBinderText.eyebrow,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _isEditing ? 'Edit binder' : 'Create a binder',
+                _isEditing ? 'Edit Binder' : 'Create a Binder',
                 style: PokeBinderText.heading,
               ),
               const SizedBox(height: 4),
@@ -172,7 +166,10 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                 label: 'Binder name',
                 child: TextField(
                   controller: _nameController,
-                  decoration: pokeInputDecoration(hint: 'e.g. Johto Journey'),
+                  decoration: pokeInputDecoration(
+                    hint: 'e.g. Johto Journey',
+                    icon: Icons.folder_outlined,
+                  ),
                   onChanged: (_) {
                     if (_nameError != null) setState(() => _nameError = null);
                   },
@@ -190,6 +187,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   controller: _categoryController,
                   decoration: pokeInputDecoration(
                     hint: 'e.g. Sets, Value, Trade — groups it in the list',
+                    icon: Icons.sell_outlined,
                   ),
                 ),
               ),
@@ -203,7 +201,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                       child: TextField(
                         controller: _pagesController,
                         keyboardType: TextInputType.number,
-                        decoration: pokeInputDecoration(),
+                        decoration: pokeInputDecoration(icon: Icons.layers_outlined),
                         onChanged: (_) {
                           if (_pagesError != null) {
                             setState(() => _pagesError = null);
@@ -220,17 +218,16 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                 ),
                 right: LabeledFormField(
                   label: 'Slots per page',
-                  child: DropdownButtonFormField<int>(
-                    isExpanded: true,
+                  child: PokeDropdownField<int>(
                     value: _slotsPerPage,
-                    decoration: pokeInputDecoration(),
-                    items: const [6, 9, 12, 15]
-                        .map((n) =>
-                            DropdownMenuItem(value: n, child: Text('$n')))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => _slotsPerPage = value);
-                    },
+                    icon: Icons.grid_view_rounded,
+                    options: const [
+                      PokeDropdownOption(6, '6'),
+                      PokeDropdownOption(9, '9'),
+                      PokeDropdownOption(12, '12'),
+                      PokeDropdownOption(15, '15'),
+                    ],
+                    onChanged: (value) => setState(() => _slotsPerPage = value),
                   ),
                 ),
               ),
@@ -271,30 +268,39 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
               if (_isEditing) ...[
                 const SizedBox(height: PokeBinderSpacing.sp4),
                 Center(
-                  child: InkWell(
-                    onTap: _confirmDelete,
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: PokeBinderSpacing.sp2,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.delete_outline,
-                            size: 14,
-                            color: PokeBinderColors.danger,
-                          ),
-                          SizedBox(width: PokeBinderSpacing.sp2),
-                          Text(
-                            'Delete Binder',
-                            style: TextStyle(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: _confirmDelete,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: PokeBinderSpacing.sp3,
+                          vertical: PokeBinderSpacing.sp2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: PokeBinderColors.danger.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              size: 14,
                               color: PokeBinderColors.danger,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: PokeBinderSpacing.sp2),
+                            Text(
+                              'Delete Binder',
+                              style: TextStyle(
+                                color: PokeBinderColors.danger,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
