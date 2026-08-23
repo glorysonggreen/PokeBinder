@@ -32,6 +32,8 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
       TextEditingController(text: widget.existingBinder?.name ?? '');
   late final _descriptionController =
       TextEditingController(text: widget.existingBinder?.description ?? '');
+  late final _categoryController =
+      TextEditingController(text: widget.existingBinder?.category ?? '');
   late final _pagesController = TextEditingController(
     text: '${widget.existingBinder?.pageCount ?? 1}',
   );
@@ -47,6 +49,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _categoryController.dispose();
     _pagesController.dispose();
     super.dispose();
   }
@@ -79,8 +82,11 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
       id: existing?.id ?? 'binder-${DateTime.now().microsecondsSinceEpoch}',
       name: name,
       description: _descriptionController.text.trim(),
+      category: _categoryController.text.trim(),
       slotsPerPage: _slotsPerPage,
       pages: pages,
+      isPinned: existing?.isPinned ?? false,
+      createdAt: existing?.createdAt ?? DateTime.now(),
     );
 
     Navigator.of(context).pop(BinderFormResult.saved(binder));
@@ -177,6 +183,16 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
                   child: Text(_nameError!, style: PokeBinderText.formError),
                 ),
+
+              LabeledFormField(
+                label: 'Category (optional)',
+                child: TextField(
+                  controller: _categoryController,
+                  decoration: pokeInputDecoration(
+                    hint: 'e.g. Sets, Value, Trade — groups it in the list',
+                  ),
+                ),
+              ),
 
               FormFieldRow(
                 left: Column(

@@ -1,12 +1,8 @@
 import 'package:flutter/foundation.dart';
-
 import 'pokemon_card_data.dart';
 
-/// Sentinel binder id representing "no binder" — cards a user has logged
-/// but hasn't slotted into a binder yet. Not a real [BinderData]; the
-/// screen that owns binder state keeps these cards in a separate list and
-/// only uses this id to route form results.
 const kUnassignedBinderId = '__unassigned__';
+const kUncategorized = '';
 
 @immutable
 class BinderData {
@@ -15,6 +11,9 @@ class BinderData {
   final List<List<PokemonCardData>> pages;
   final String description;
   final int slotsPerPage;
+  final String category;
+  final bool isPinned;
+  final DateTime? createdAt;
 
   const BinderData({
     required this.id,
@@ -22,21 +21,25 @@ class BinderData {
     required this.pages,
     this.description = '',
     this.slotsPerPage = 9,
+    this.category = kUncategorized,
+    this.isPinned = false,
+    this.createdAt,
   });
 
+  DateTime get createdAtOrEpoch =>
+      createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
   int get pageCount => pages.length;
-
   int get cardCount =>
       pages.fold(0, (sum, page) => sum + page.length);
 
-  /// Returns a copy of this binder with the given fields replaced. Used by
-  /// the Add/Edit Binder form and by card add/move operations, which need a
-  /// new pages list rather than a mutation of the original.
   BinderData copyWith({
     String? name,
     List<List<PokemonCardData>>? pages,
     String? description,
     int? slotsPerPage,
+    String? category,
+    bool? isPinned,
+    DateTime? createdAt,
   }) {
     return BinderData(
       id: id,
@@ -44,17 +47,25 @@ class BinderData {
       pages: pages ?? this.pages,
       description: description ?? this.description,
       slotsPerPage: slotsPerPage ?? this.slotsPerPage,
+      category: category ?? this.category,
+      isPinned: isPinned ?? this.isPinned,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
   static List<BinderData> get sampleBinders {
     PokemonCardData card(String name) =>
         PokemonCardData.library.firstWhere((c) => c.name == name);
+    DateTime daysAgo(int days) =>
+        DateTime.now().subtract(Duration(days: days));
 
     return [
       BinderData(
         id: 'binder-kanto-starters',
         name: 'Kanto Starters',
+        category: 'Sets',
+        isPinned: true,
+        createdAt: daysAgo(2),
         pages: [
           [card('Charizard'), card('Blastoise'), card('Venusaur')],
           [card('Squirtle'), card('Bulbasaur')],
@@ -63,6 +74,8 @@ class BinderData {
       BinderData(
         id: 'binder-rare-holos',
         name: 'Rare Holos',
+        category: 'Value',
+        createdAt: daysAgo(10),
         pages: [
           [
             card('Pikachu'),
@@ -75,6 +88,8 @@ class BinderData {
       BinderData(
         id: 'binder-trade-bait',
         name: 'Trade Bait',
+        category: 'Value',
+        createdAt: daysAgo(1),
         pages: [
           [card('Gyarados'), card('Vaporeon'), card('Jigglypuff')],
         ],
