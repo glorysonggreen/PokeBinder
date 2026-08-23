@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+
+import '../models/pokemon_card_data.dart';
+import '../theme/pokebinder_theme.dart';
+
+/// The rounded white input styling shared by every text field, number
+/// field, and dropdown across the form screens, matching the mockup's
+/// `.form-field input, .form-field select` style.
+InputDecoration pokeInputDecoration({String? hint}) {
+  final border = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    borderSide: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.14)),
+  );
+
+  return InputDecoration(
+    hintText: hint,
+    hintStyle: const TextStyle(color: Color(0xFFA89C86), fontSize: 11.5),
+    filled: true,
+    fillColor: PokeBinderColors.white,
+    isDense: true,
+    contentPadding:
+        const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+    border: border,
+    enabledBorder: border,
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(
+        color: PokeBinderColors.red.withValues(alpha: 0.4),
+        width: 1.5,
+      ),
+    ),
+  );
+}
+
+/// A label + input pair with the small uppercase bold label above the
+/// field, matching the mockup's `.form-field`.
+class LabeledFormField extends StatelessWidget {
+  final String label;
+  final Widget child;
+
+  const LabeledFormField({super.key, required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Text(label.toUpperCase(), style: PokeBinderText.formLabel),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// Two fields side by side with the gap the mockup's `.grid2` uses.
+class FormFieldRow extends StatelessWidget {
+  final Widget left;
+  final Widget right;
+
+  const FormFieldRow({super.key, required this.left, required this.right});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: left),
+        const SizedBox(width: 10),
+        Expanded(child: right),
+      ],
+    );
+  }
+}
+
+/// Rounded-square color swatch picker used by the New/Edit Binder screen's
+/// "Cover color" field.
+class BinderCoverSwatchPicker extends StatelessWidget {
+  final List<PokemonCardType> options;
+  final PokemonCardType selected;
+  final ValueChanged<PokemonCardType> onChanged;
+
+  const BinderCoverSwatchPicker({
+    super.key,
+    required this.options,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final type in options)
+          GestureDetector(
+            onTap: () => onChanged(type),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(9),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: type.gradientColors,
+                ),
+                border: Border.all(
+                  color: type == selected
+                      ? PokeBinderColors.white
+                      : Colors.transparent,
+                  width: 2.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: type == selected
+                        ? PokeBinderColors.red.withValues(alpha: 0.55)
+                        : PokeBinderColors.ink.withValues(alpha: 0.18),
+                    blurRadius: type == selected ? 0 : 5,
+                    spreadRadius: type == selected ? 2.5 : 0,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
