@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
@@ -8,9 +7,6 @@ import '../widgets/pokebinder_form_fields.dart';
 
 const _kRarityOptions = ['Holo Rare', 'Rare', 'Uncommon', 'Common', 'Secret Rare'];
 
-/// Condition dropdowns show the full word (matching the mockup) but the app
-/// stores and displays the short code elsewhere (card.condition == 'NM'),
-/// so each option carries both.
 const _kConditionOptions = [
   ('Near Mint', 'NM'),
   ('Lightly Played', 'LP'),
@@ -18,11 +14,6 @@ const _kConditionOptions = [
   ('Damaged', 'DMG'),
 ];
 
-/// What the Add/Edit Card screen hands back. Exactly one shape applies:
-/// - Cancel: the screen pops with no result at all (null).
-/// - Add/Save: `CardFormResult.saved(...)`, with [binderId] either a real
-///   binder's id or [kUnassignedBinderId] if left unassigned.
-/// - Delete (edit mode only): `CardFormResult.deleted()`.
 class CardFormResult {
   final PokemonCardData? card;
   final String? binderId;
@@ -45,9 +36,6 @@ class CardFormResult {
         deleted = true;
 }
 
-/// Add/Edit Card screen. Pass [existingCard] to edit that card; leave it
-/// null to add a new one. [binders] is the full binder list, used to
-/// populate the "Binder" dropdown.
 class CardFormScreen extends StatefulWidget {
   final PokemonCardData? existingCard;
   final List<BinderData> binders;
@@ -423,7 +411,9 @@ class _CardFormScreenState extends State<CardFormScreen> {
                   child: InkWell(
                     onTap: _confirmDelete,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
+                      padding: EdgeInsets.symmetric(
+                        vertical: PokeBinderSpacing.sp2,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -432,7 +422,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                             size: 14,
                             color: PokeBinderColors.danger,
                           ),
-                          SizedBox(width: 5),
+                          SizedBox(width: PokeBinderSpacing.sp2),
                           Text(
                             'Delete Card',
                             style: TextStyle(

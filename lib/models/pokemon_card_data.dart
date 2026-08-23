@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-
 import '../theme/pokebinder_theme.dart';
 
-/// The Pokémon TCG's energy types. `colorless` covers both Colorless-type
-/// Pokémon and cards like Double Colorless Energy that don't belong to any
-/// single element.
 enum PokemonCardType {
   colorless,
   grass,
@@ -19,9 +15,6 @@ enum PokemonCardType {
   fairy,
 }
 
-/// The Pokémon TCG's three card supertypes. Only Pokémon cards carry an
-/// elemental [PokemonCardType]; Trainer and Energy cards use [subtype]
-/// instead (e.g. "Item"/"Supporter"/"Stadium" or "Basic"/"Special").
 enum CardSupertype { pokemon, trainer, energy }
 
 extension PokemonCardTypeGradient on PokemonCardType {

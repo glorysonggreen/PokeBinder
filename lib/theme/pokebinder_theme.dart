@@ -17,10 +17,6 @@ class PokeBinderColors {
   static const teal = Color(0xFF3E7C8C);
   static const danger = Color(0xFFB23A2C);
 
-  /// The app's one "brand red" gradient — used on every solid red box
-  /// (primary buttons, active chips, the binder list icons, etc.) so they
-  /// all read as the same accent color instead of several close-but-off
-  /// reds.
   static const redGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -38,7 +34,7 @@ const double kPokemonCardImageAspectRatio = kPokemonCardImageWidthPx / kPokemonC
 const double kCardInteractionHeightBuffer = 1.25;
 // Space reserved below each grid tile for the two-line name/set caption
 // (a small gap plus the cardName and cardMeta text rows).
-const double kCardCaptionHeight = 28.0;
+const double kCardCaptionHeight = 30.0;
 
 class PokeBinderSpacing {
   PokeBinderSpacing._();

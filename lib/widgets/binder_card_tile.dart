@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import 'pokemon_card_widget.dart';
