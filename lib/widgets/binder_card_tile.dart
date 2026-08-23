@@ -58,13 +58,10 @@ class AddCardTile extends StatelessWidget {
         child: CustomPaint(
           painter: _DashedRRectPainter(),
           child: const Center(
-            child: Text(
-              '+',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: PokeBinderColors.inkSoft,
-              ),
+            child: Icon(
+              Icons.add,
+              size: 22,
+              color: PokeBinderColors.inkSoft,
             ),
           ),
         ),

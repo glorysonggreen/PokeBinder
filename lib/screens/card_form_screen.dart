@@ -96,16 +96,16 @@ class _CardFormScreenState extends State<CardFormScreen> {
       : widget.binders
           .firstWhere(
             (b) => b.name == widget.existingCard!.binderName,
-            orElse: () => BinderData(
+            orElse: () => const BinderData(
               id: kUnassignedBinderId,
               name: 'Unassigned',
-              accentType: PokemonCardType.colorless,
-              pages: const [],
+              pages: [],
             ),
           )
           .id;
 
   String? _nameError;
+  String? _quantityError;
 
   bool get _isEditing => widget.existingCard != null;
 
@@ -128,12 +128,17 @@ class _CardFormScreenState extends State<CardFormScreen> {
       return;
     }
 
+    final quantity = int.tryParse(_quantityController.text);
+    if (quantity == null || quantity < 1) {
+      setState(() => _quantityError = 'Quantity must be at least 1.');
+      return;
+    }
+
     final unassigned = _binderId == kUnassignedBinderId;
     final binder = unassigned
         ? null
         : widget.binders.firstWhere((b) => b.id == _binderId,
             orElse: () => widget.binders.first);
-    final quantity = int.tryParse(_quantityController.text) ?? 1;
     final value = double.tryParse(_valueController.text) ?? 0;
     final page = int.tryParse(_pageController.text) ?? widget.defaultPageNumber;
     final pageNumber = unassigned ? 0 : (page < 1 ? 1 : page);
@@ -145,10 +150,10 @@ class _CardFormScreenState extends State<CardFormScreen> {
       cardNumber: _cardNumberController.text.trim(),
       rarity: _rarity,
       // Manually entered cards have no scanned artwork, so the color that
-      // drives their placeholder silhouette follows their binder's cover
-      // (or stays as-is/normal when left unassigned).
-      type: binder?.accentType ?? widget.existingCard?.type ?? PokemonCardType.colorless,
-      quantityOwned: quantity < 1 ? 1 : quantity,
+      // drives their placeholder silhouette just keeps whatever type the
+      // card already had, defaulting to colorless for brand-new cards.
+      type: widget.existingCard?.type ?? PokemonCardType.colorless,
+      quantityOwned: quantity,
       condition: _conditionCode,
       binderName: binder?.name ?? 'Unassigned',
       page: pageNumber,
@@ -184,9 +189,14 @@ class _CardFormScreenState extends State<CardFormScreen> {
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          TextButton.icon(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text(
+            icon: const Icon(
+              Icons.delete_outline,
+              size: 16,
+              color: PokeBinderColors.danger,
+            ),
+            label: const Text(
               'Delete',
               style: TextStyle(color: PokeBinderColors.danger),
             ),
@@ -304,13 +314,29 @@ class _CardFormScreenState extends State<CardFormScreen> {
               ),
 
               FormFieldRow(
-                left: LabeledFormField(
-                  label: 'Quantity',
-                  child: TextField(
-                    controller: _quantityController,
-                    keyboardType: TextInputType.number,
-                    decoration: pokeInputDecoration(),
-                  ),
+                left: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LabeledFormField(
+                      label: 'Quantity',
+                      child: TextField(
+                        controller: _quantityController,
+                        keyboardType: TextInputType.number,
+                        decoration: pokeInputDecoration(),
+                        onChanged: (_) {
+                          if (_quantityError != null) {
+                            setState(() => _quantityError = null);
+                          }
+                        },
+                      ),
+                    ),
+                    if (_quantityError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+                        child:
+                            Text(_quantityError!, style: PokeBinderText.formError),
+                      ),
+                  ],
                 ),
                 right: LabeledFormField(
                   label: 'Est. value (₱)',
@@ -383,7 +409,8 @@ class _CardFormScreenState extends State<CardFormScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: _isEditing ? 'Save changes' : '＋ Add to binder',
+                      label: _isEditing ? 'Save Changes' : 'Add to Binder',
+                      icon: _isEditing ? Icons.check : Icons.add,
                       onTap: _submit,
                     ),
                   ),
@@ -397,13 +424,24 @@ class _CardFormScreenState extends State<CardFormScreen> {
                     onTap: _confirmDelete,
                     child: const Padding(
                       padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        'Delete card',
-                        style: TextStyle(
-                          color: PokeBinderColors.danger,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.delete_outline,
+                            size: 14,
+                            color: PokeBinderColors.danger,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'Delete Card',
+                            style: TextStyle(
+                              color: PokeBinderColors.danger,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

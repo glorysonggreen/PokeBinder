@@ -12,7 +12,6 @@ const kUnassignedBinderId = '__unassigned__';
 class BinderData {
   final String id;
   final String name;
-  final PokemonCardType accentType;
   final List<List<PokemonCardData>> pages;
   final String description;
   final int slotsPerPage;
@@ -20,7 +19,6 @@ class BinderData {
   const BinderData({
     required this.id,
     required this.name,
-    required this.accentType,
     required this.pages,
     this.description = '',
     this.slotsPerPage = 9,
@@ -36,7 +34,6 @@ class BinderData {
   /// new pages list rather than a mutation of the original.
   BinderData copyWith({
     String? name,
-    PokemonCardType? accentType,
     List<List<PokemonCardData>>? pages,
     String? description,
     int? slotsPerPage,
@@ -44,7 +41,6 @@ class BinderData {
     return BinderData(
       id: id,
       name: name ?? this.name,
-      accentType: accentType ?? this.accentType,
       pages: pages ?? this.pages,
       description: description ?? this.description,
       slotsPerPage: slotsPerPage ?? this.slotsPerPage,
@@ -59,7 +55,6 @@ class BinderData {
       BinderData(
         id: 'binder-kanto-starters',
         name: 'Kanto Starters',
-        accentType: PokemonCardType.fire,
         pages: [
           [card('Charizard'), card('Blastoise'), card('Venusaur')],
           [card('Squirtle'), card('Bulbasaur')],
@@ -68,7 +63,6 @@ class BinderData {
       BinderData(
         id: 'binder-rare-holos',
         name: 'Rare Holos',
-        accentType: PokemonCardType.lightning,
         pages: [
           [
             card('Pikachu'),
@@ -81,7 +75,6 @@ class BinderData {
       BinderData(
         id: 'binder-trade-bait',
         name: 'Trade Bait',
-        accentType: PokemonCardType.water,
         pages: [
           [card('Gyarados'), card('Vaporeon'), card('Jigglypuff')],
         ],
