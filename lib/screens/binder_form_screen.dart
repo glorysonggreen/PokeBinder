@@ -24,17 +24,6 @@ class BinderFormResult {
         deleted = true;
 }
 
-/// The cover colors offered when creating or editing a binder. `colorless`
-/// (used for cards like Jigglypuff) is left out here since the mockup's
-/// New Binder screen only offers five swatches.
-const _kBinderCoverOptions = [
-  PokemonCardType.fire,
-  PokemonCardType.water,
-  PokemonCardType.lightning,
-  PokemonCardType.psychic,
-  PokemonCardType.grass,
-];
-
 /// Add/Edit Binder screen. Pass [existingBinder] to edit (and offer
 /// deleting) that binder; leave it null to create a new one.
 class BinderFormScreen extends StatefulWidget {
@@ -52,14 +41,13 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
   late final _descriptionController =
       TextEditingController(text: widget.existingBinder?.description ?? '');
   late final _pagesController = TextEditingController(
-    text: '${widget.existingBinder?.pageCount ?? 4}',
+    text: '${widget.existingBinder?.pageCount ?? 1}',
   );
 
-  late PokemonCardType _accentType =
-      widget.existingBinder?.accentType ?? _kBinderCoverOptions.first;
-  late int _slotsPerPage = widget.existingBinder?.slotsPerPage ?? 9;
+  late int _slotsPerPage = widget.existingBinder?.slotsPerPage ?? 6;
 
   String? _nameError;
+  String? _pagesError;
 
   bool get _isEditing => widget.existingBinder != null;
 
@@ -82,7 +70,11 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
     // Pages already in the binder always stay — this field can only grow
     // the binder, never shrink it out from under existing cards.
     final minPages = existing?.pageCount ?? 1;
-    final requestedPages = int.tryParse(_pagesController.text) ?? minPages;
+    final requestedPages = int.tryParse(_pagesController.text);
+    if (requestedPages == null || requestedPages < 1) {
+      setState(() => _pagesError = 'Starting pages must be at least 1.');
+      return;
+    }
     final pageCount = requestedPages < minPages ? minPages : requestedPages;
 
     final pages = <List<PokemonCardData>>[
@@ -94,7 +86,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
     final binder = BinderData(
       id: existing?.id ?? 'binder-${DateTime.now().microsecondsSinceEpoch}',
       name: name,
-      accentType: _accentType,
       description: _descriptionController.text.trim(),
       slotsPerPage: _slotsPerPage,
       pages: pages,
@@ -118,9 +109,14 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          TextButton.icon(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text(
+            icon: const Icon(
+              Icons.delete_outline,
+              size: 16,
+              color: PokeBinderColors.danger,
+            ),
+            label: const Text(
               'Delete',
               style: TextStyle(color: PokeBinderColors.danger),
             ),
@@ -166,9 +162,9 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
               const SizedBox(height: 4),
               Text(
                 _isEditing
-                    ? 'Update the name or cover — pages already in this '
-                        'binder stay put.'
-                    : "Give it a name and pick a cover — you can add cards "
+                    ? 'Update the details — pages already in this binder '
+                        'stay put.'
+                    : 'Give it a name and starting size — you can add cards '
                         'to it right after.',
                 style: PokeBinderText.subtitle,
               ),
@@ -186,30 +182,33 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
               ),
               if (_nameError != null)
                 Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: PokeBinderSpacing.sp2,
-                    top: -6,
-                  ),
+                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
                   child: Text(_nameError!, style: PokeBinderText.formError),
                 ),
 
-              LabeledFormField(
-                label: 'Cover color',
-                child: BinderCoverSwatchPicker(
-                  options: _kBinderCoverOptions,
-                  selected: _accentType,
-                  onChanged: (type) => setState(() => _accentType = type),
-                ),
-              ),
-
               FormFieldRow(
-                left: LabeledFormField(
-                  label: 'Starting pages',
-                  child: TextField(
-                    controller: _pagesController,
-                    keyboardType: TextInputType.number,
-                    decoration: pokeInputDecoration(),
-                  ),
+                left: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LabeledFormField(
+                      label: 'Starting pages',
+                      child: TextField(
+                        controller: _pagesController,
+                        keyboardType: TextInputType.number,
+                        decoration: pokeInputDecoration(),
+                        onChanged: (_) {
+                          if (_pagesError != null) {
+                            setState(() => _pagesError = null);
+                          }
+                        },
+                      ),
+                    ),
+                    if (_pagesError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+                        child: Text(_pagesError!, style: PokeBinderText.formError),
+                      ),
+                  ],
                 ),
                 right: LabeledFormField(
                   label: 'Slots per page',
@@ -217,7 +216,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                     isExpanded: true,
                     value: _slotsPerPage,
                     decoration: pokeInputDecoration(),
-                    items: const [9, 4, 6, 12]
+                    items: const [6, 9, 12, 15]
                         .map((n) =>
                             DropdownMenuItem(value: n, child: Text('$n')))
                         .toList(),
@@ -250,7 +249,8 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: _isEditing ? 'Save changes' : '＋ Create binder',
+                      label: _isEditing ? 'Save Changes' : 'Create Binder',
+                      icon: _isEditing ? Icons.check : Icons.add,
                       onTap: _submit,
                     ),
                   ),
@@ -264,13 +264,24 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                     onTap: _confirmDelete,
                     child: const Padding(
                       padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text(
-                        'Delete binder',
-                        style: TextStyle(
-                          color: PokeBinderColors.danger,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.delete_outline,
+                            size: 14,
+                            color: PokeBinderColors.danger,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            'Delete Binder',
+                            style: TextStyle(
+                              color: PokeBinderColors.danger,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

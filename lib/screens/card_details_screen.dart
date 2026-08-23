@@ -186,6 +186,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                   Expanded(
                     child: PillButton(
                       label: 'Edit',
+                      icon: Icons.edit_outlined,
                       ghost: true,
                       onTap: _editCard,
                     ),
@@ -193,7 +194,8 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: 'Add to deck',
+                      label: 'Add to Deck',
+                      icon: Icons.add,
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Added ${card.name} to deck')),

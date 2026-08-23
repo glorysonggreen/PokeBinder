@@ -16,6 +16,16 @@ class PokeBinderColors {
   static const white = Color(0xFFFFFFFF);
   static const teal = Color(0xFF3E7C8C);
   static const danger = Color(0xFFB23A2C);
+
+  /// The app's one "brand red" gradient — used on every solid red box
+  /// (primary buttons, active chips, the binder list icons, etc.) so they
+  /// all read as the same accent color instead of several close-but-off
+  /// reds.
+  static const redGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFE0402A), redDeep],
+  );
 }
 
 const double kPokemonCardAspectRatio = 5 / 7;

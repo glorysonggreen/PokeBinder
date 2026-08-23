@@ -464,7 +464,8 @@ class _BindersTab extends StatelessWidget {
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
           PillButton(
-            label: '＋ New binder',
+            label: 'New Binder',
+            icon: Icons.add,
             onTap: onNewBinder,
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
@@ -490,7 +491,18 @@ class _BindersTab extends StatelessWidget {
               if (!showingUnassigned)
                 InkWell(
                   onTap: onEditBinder,
-                  child: Text('✎ Edit', style: PokeBinderText.backLink),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.edit_outlined,
+                        size: 12,
+                        color: PokeBinderText.backLink.color,
+                      ),
+                      const SizedBox(width: 4),
+                      Text('Edit', style: PokeBinderText.backLink),
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -1009,19 +1021,35 @@ class _BinderListPanel extends StatelessWidget {
         color: PokeBinderColors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: PokeBinderColors.ink.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           for (var i = 0; i < binders.length; i++)
             _BinderListRow(
-              binder: binders[i],
+              icon: Icons.menu_book_rounded,
+              title: binders[i].name,
+              subtitle:
+                  '${binders[i].pageCount} ${binders[i].pageCount == 1 ? 'page' : 'pages'} · '
+                  '${binders[i].cardCount} ${binders[i].cardCount == 1 ? 'card' : 'cards'}',
               selected: !showingUnassigned && binders[i].id == selectedBinder.id,
               showDivider: true,
               onTap: () => onSelect(binders[i]),
             ),
-          _UnassignedListRow(
-            count: unassignedCount,
+          _BinderListRow(
+            icon: Icons.inbox_rounded,
+            title: 'Unassigned',
+            subtitle: '$unassignedCount ${unassignedCount == 1 ? 'card' : 'cards'} · no binder',
             selected: showingUnassigned,
+            showDivider: false,
+            muted: true,
             onTap: onSelectUnassigned,
           ),
         ],
@@ -1030,126 +1058,100 @@ class _BinderListPanel extends StatelessWidget {
   }
 }
 
-class _UnassignedListRow extends StatelessWidget {
-  final int count;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _UnassignedListRow({
-    required this.count,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? PokeBinderColors.red.withValues(alpha: 0.07) : null,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(9),
-                color: PokeBinderColors.ink.withValues(alpha: 0.08),
-                border: Border.all(
-                  color: PokeBinderColors.ink.withValues(alpha: 0.18),
-                  style: BorderStyle.solid,
-                ),
-              ),
-              child: Icon(
-                Icons.inbox_outlined,
-                size: 18,
-                color: PokeBinderColors.inkSoft,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Unassigned', style: PokeBinderText.listRowTitle),
-                  Text(
-                    '$count ${count == 1 ? 'card' : 'cards'} · no binder',
-                    style: PokeBinderText.listRowSubtitle,
-                  ),
-                ],
-              ),
-            ),
-            Text('›', style: PokeBinderText.listRowSubtitle),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
+/// A single row in the binder list — used for both real binders and the
+/// trailing "Unassigned" bucket ([muted] swaps the leading icon to the
+/// neutral inbox styling used for that row).
 class _BinderListRow extends StatelessWidget {
-  final BinderData binder;
+  final IconData icon;
+  final String title;
+  final String subtitle;
   final bool selected;
   final bool showDivider;
+  final bool muted;
   final VoidCallback onTap;
 
   const _BinderListRow({
-    required this.binder,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
     required this.selected,
     required this.showDivider,
+    this.muted = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? PokeBinderColors.red.withValues(alpha: 0.07)
-              : null,
-          border: showDivider
-              ? Border(
-                  bottom: BorderSide(
-                    color: PokeBinderColors.ink.withValues(alpha: 0.07),
-                  ),
-                )
-              : null,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(9),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: binder.accentType.gradientColors,
+    return Ink(
+      decoration: BoxDecoration(
+        color: selected ? PokeBinderColors.red.withValues(alpha: 0.07) : null,
+        border: showDivider
+            ? Border(
+                bottom: BorderSide(
+                  color: PokeBinderColors.ink.withValues(alpha: 0.07),
+                ),
+              )
+            : null,
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: 3,
+                height: 30,
+                margin: const EdgeInsets.only(right: 9),
+                decoration: BoxDecoration(
+                  color: selected ? PokeBinderColors.red : Colors.transparent,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(binder.name, style: PokeBinderText.listRowTitle),
-                  Text(
-                    '${binder.pageCount} pages · ${binder.cardCount} cards',
-                    style: PokeBinderText.listRowSubtitle,
-                  ),
-                ],
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(11),
+                  gradient: muted ? null : PokeBinderColors.redGradient,
+                  color: muted ? PokeBinderColors.cream2 : null,
+                  border: muted
+                      ? Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.12))
+                      : null,
+                ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: muted ? PokeBinderColors.inkSoft : PokeBinderColors.white,
+                ),
               ),
-            ),
-            Text('›', style: PokeBinderText.listRowSubtitle),
-          ],
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: PokeBinderText.listRowTitle.copyWith(
+                        fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                        color: selected ? PokeBinderColors.redDeep : PokeBinderColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: PokeBinderText.listRowSubtitle),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: selected
+                    ? PokeBinderColors.red.withValues(alpha: 0.7)
+                    : PokeBinderColors.inkSoft.withValues(alpha: 0.6),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1216,13 +1218,7 @@ class _Chip extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: active ? null : PokeBinderColors.cream2,
-          gradient: active
-              ? const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFE0402A), PokeBinderColors.red],
-                )
-              : null,
+          gradient: active ? PokeBinderColors.redGradient : null,
         ),
         child: Text(
           label,

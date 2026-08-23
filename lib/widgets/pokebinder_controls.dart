@@ -24,6 +24,7 @@ class PillButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool ghost;
   final bool enabled;
+  final IconData? icon;
 
   const PillButton({
     super.key,
@@ -31,10 +32,14 @@ class PillButton extends StatelessWidget {
     required this.onTap,
     this.ghost = false,
     this.enabled = true,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
+    final labelStyle =
+        ghost ? PokeBinderText.buttonGhostLabel : PokeBinderText.buttonLabel;
+
     return Opacity(
       opacity: enabled ? 1 : 0.45,
       child: Material(
@@ -48,13 +53,7 @@ class PillButton extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: ghost ? PokeBinderColors.white : null,
-              gradient: ghost
-                  ? null
-                  : const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0xFFE0402A), PokeBinderColors.red],
-                    ),
+              gradient: ghost ? null : PokeBinderColors.redGradient,
               border: ghost
                   ? Border.all(
                       color: PokeBinderColors.red.withValues(alpha: 0.35),
@@ -70,11 +69,15 @@ class PillButton extends StatelessWidget {
                 ),
               ],
             ),
-            child: Text(
-              label,
-              style: ghost
-                  ? PokeBinderText.buttonGhostLabel
-                  : PokeBinderText.buttonLabel,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 14, color: labelStyle.color),
+                  const SizedBox(width: 6),
+                ],
+                Text(label, style: labelStyle),
+              ],
             ),
           ),
         ),

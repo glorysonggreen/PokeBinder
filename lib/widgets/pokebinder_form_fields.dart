@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 
 /// The rounded white input styling shared by every text field, number
@@ -73,63 +72,6 @@ class FormFieldRow extends StatelessWidget {
         Expanded(child: left),
         const SizedBox(width: 10),
         Expanded(child: right),
-      ],
-    );
-  }
-}
-
-/// Rounded-square color swatch picker used by the New/Edit Binder screen's
-/// "Cover color" field.
-class BinderCoverSwatchPicker extends StatelessWidget {
-  final List<PokemonCardType> options;
-  final PokemonCardType selected;
-  final ValueChanged<PokemonCardType> onChanged;
-
-  const BinderCoverSwatchPicker({
-    super.key,
-    required this.options,
-    required this.selected,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (final type in options)
-          GestureDetector(
-            onTap: () => onChanged(type),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(9),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: type.gradientColors,
-                ),
-                border: Border.all(
-                  color: type == selected
-                      ? PokeBinderColors.white
-                      : Colors.transparent,
-                  width: 2.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: type == selected
-                        ? PokeBinderColors.red.withValues(alpha: 0.55)
-                        : PokeBinderColors.ink.withValues(alpha: 0.18),
-                    blurRadius: type == selected ? 0 : 5,
-                    spreadRadius: type == selected ? 2.5 : 0,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-            ),
-          ),
       ],
     );
   }
