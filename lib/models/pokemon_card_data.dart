@@ -2,7 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../theme/pokebinder_theme.dart';
 
-enum PokemonCardType { fire, water, grass, electric, psychic, normal }
+/// The Pokémon TCG's energy types. `colorless` covers both Colorless-type
+/// Pokémon and cards like Double Colorless Energy that don't belong to any
+/// single element.
+enum PokemonCardType {
+  colorless,
+  grass,
+  fire,
+  water,
+  lightning,
+  fighting,
+  psychic,
+  darkness,
+  metal,
+  dragon,
+  fairy,
+}
 
 /// The Pokémon TCG's three card supertypes. Only Pokémon cards carry an
 /// elemental [PokemonCardType]; Trainer and Energy cards use [subtype]
@@ -12,17 +27,27 @@ enum CardSupertype { pokemon, trainer, energy }
 extension PokemonCardTypeGradient on PokemonCardType {
   List<Color> get gradientColors {
     switch (this) {
+      case PokemonCardType.colorless:
+        return const [Color(0xFFE8E1D0), Color(0xFFAFA48C)];
+      case PokemonCardType.grass:
+        return const [Color(0xFFA8DBA0), Color(0xFF4F8F47)];
       case PokemonCardType.fire:
         return const [Color(0xFFF2A99A), Color(0xFFD6301B)];
       case PokemonCardType.water:
         return const [Color(0xFF8FD0D8), Color(0xFF3E7C8C)];
-      case PokemonCardType.grass:
-        return const [Color(0xFFA8DBA0), Color(0xFF4F8F47)];
-      case PokemonCardType.electric:
+      case PokemonCardType.lightning:
         return const [Color(0xFFFFD98A), Color(0xFFE8AC3E)];
+      case PokemonCardType.fighting:
+        return const [Color(0xFFE3A87C), Color(0xFFA8531F)];
       case PokemonCardType.psychic:
         return const [Color(0xFFC9C1E6), Color(0xFF7A6DB0)];
-      case PokemonCardType.normal:
+      case PokemonCardType.darkness:
+        return const [Color(0xFF8B849A), Color(0xFF332C42)];
+      case PokemonCardType.metal:
+        return const [Color(0xFFD9D9E3), Color(0xFF8C8C99)];
+      case PokemonCardType.dragon:
+        return const [Color(0xFFF5CB7E), Color(0xFFC98A2E)];
+      case PokemonCardType.fairy:
         return const [Color(0xFFF7C9DC), Color(0xFFD987AC)];
     }
   }
@@ -59,7 +84,12 @@ class PokemonCardData {
   /// in the type's gradient colors, same as the mockup's SVG critter icons.
   final String? imageAssetPath;
 
-  const PokemonCardData({
+  /// When this card was added to the collection. Drives the "Time" sort
+  /// option's Newest/Oldest ordering. Defaults to now for freshly
+  /// created/scanned cards.
+  final DateTime dateAdded;
+
+  PokemonCardData({
     required this.id,
     required this.name,
     required this.setName,
@@ -75,7 +105,8 @@ class PokemonCardData {
     required this.estimatedValue,
     this.notes = '',
     this.imageAssetPath,
-  });
+    DateTime? dateAdded,
+  }) : dateAdded = dateAdded ?? DateTime.now();
 
   /// Returns a copy of this card with the given fields replaced. Used by the
   /// Add/Edit Card form so an edit produces a new immutable card rather than
@@ -95,6 +126,7 @@ class PokemonCardData {
     double? estimatedValue,
     String? notes,
     String? imageAssetPath,
+    DateTime? dateAdded,
   }) {
     return PokemonCardData(
       id: id,
@@ -112,13 +144,15 @@ class PokemonCardData {
       estimatedValue: estimatedValue ?? this.estimatedValue,
       notes: notes ?? this.notes,
       imageAssetPath: imageAssetPath ?? this.imageAssetPath,
+      dateAdded: dateAdded ?? this.dateAdded,
     );
   }
 
   /// Sample data matching the mockup's Charizard example, for
   /// previewing/testing the screen standalone.
-  static const sample = PokemonCardData(
+  static final sample = PokemonCardData(
     id: 'sample-charizard',
+    dateAdded: DateTime(2023, 1, 15),
     name: 'Charizard',
     setName: 'Base Set',
     cardNumber: '4/102',
@@ -139,10 +173,11 @@ class PokemonCardData {
   /// other card intentionally has no imageAssetPath, so the binder grid
   /// shows the universal card back for it, same as it will for any card
   /// added before its own artwork is scanned in.
-  static const library = <PokemonCardData>[
+  static final library = <PokemonCardData>[
     sample,
     PokemonCardData(
       id: 'sample-blastoise',
+      dateAdded: DateTime(2023, 2, 1),
       name: 'Blastoise',
       setName: 'Base Set',
       cardNumber: '2/102',
@@ -157,6 +192,7 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-venusaur',
+      dateAdded: DateTime(2023, 2, 15),
       name: 'Venusaur',
       setName: 'Base Set',
       cardNumber: '15/102',
@@ -171,6 +207,7 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-squirtle',
+      dateAdded: DateTime(2023, 3, 1),
       name: 'Squirtle',
       setName: 'Base Set',
       cardNumber: '63/102',
@@ -185,6 +222,7 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-bulbasaur',
+      dateAdded: DateTime(2023, 3, 10),
       name: 'Bulbasaur',
       setName: 'Base Set',
       cardNumber: '44/102',
@@ -199,11 +237,12 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-pikachu',
+      dateAdded: DateTime(2023, 4, 5),
       name: 'Pikachu',
       setName: 'Base Set',
       cardNumber: '58/102',
       rarity: 'Common',
-      type: PokemonCardType.electric,
+      type: PokemonCardType.lightning,
       quantityOwned: 4,
       condition: 'NM',
       binderName: 'Rare Holos',
@@ -213,11 +252,12 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-raichu',
+      dateAdded: DateTime(2023, 4, 20),
       name: 'Raichu',
       setName: 'Base Set',
       cardNumber: '14/102',
       rarity: 'Holo Rare',
-      type: PokemonCardType.electric,
+      type: PokemonCardType.lightning,
       quantityOwned: 1,
       condition: 'NM',
       binderName: 'Rare Holos',
@@ -227,6 +267,7 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-alakazam',
+      dateAdded: DateTime(2023, 5, 12),
       name: 'Alakazam',
       setName: 'Base Set',
       cardNumber: '1/102',
@@ -241,6 +282,7 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-mewtwo',
+      dateAdded: DateTime(2023, 6, 1),
       name: 'Mewtwo',
       setName: 'Base Set',
       cardNumber: '10/102',
@@ -255,6 +297,7 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-gyarados',
+      dateAdded: DateTime(2023, 6, 18),
       name: 'Gyarados',
       setName: 'Base Set',
       cardNumber: '6/102',
@@ -269,6 +312,7 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-vaporeon',
+      dateAdded: DateTime(2023, 7, 9),
       name: 'Vaporeon',
       setName: 'Jungle',
       cardNumber: '12/64',
@@ -283,11 +327,12 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-jigglypuff',
+      dateAdded: DateTime(2023, 8, 1),
       name: 'Jigglypuff',
       setName: 'Jungle',
       cardNumber: '54/64',
       rarity: 'Common',
-      type: PokemonCardType.normal,
+      type: PokemonCardType.colorless,
       quantityOwned: 5,
       condition: 'NM',
       binderName: 'Trade Bait',
@@ -297,11 +342,12 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-potion',
+      dateAdded: DateTime(2023, 9, 14),
       name: 'Potion',
       setName: 'Base Set',
       cardNumber: '20/102',
       rarity: 'Common',
-      type: PokemonCardType.normal,
+      type: PokemonCardType.colorless,
       supertype: CardSupertype.trainer,
       subtype: 'Item',
       quantityOwned: 3,
@@ -313,11 +359,12 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-misty',
+      dateAdded: DateTime(2023, 10, 2),
       name: 'Misty',
       setName: 'Gym',
       cardNumber: '18/132',
       rarity: 'Holo Rare',
-      type: PokemonCardType.normal,
+      type: PokemonCardType.colorless,
       supertype: CardSupertype.trainer,
       subtype: 'Supporter',
       quantityOwned: 2,
@@ -329,11 +376,12 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-cerulean-city-gym',
+      dateAdded: DateTime(2023, 11, 11),
       name: 'Cerulean City Gym',
       setName: 'Gym',
       cardNumber: '108/132',
       rarity: 'Uncommon',
-      type: PokemonCardType.normal,
+      type: PokemonCardType.colorless,
       supertype: CardSupertype.trainer,
       subtype: 'Stadium',
       quantityOwned: 1,
@@ -345,6 +393,7 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-fire-energy',
+      dateAdded: DateTime(2023, 12, 5),
       name: 'Fire Energy',
       setName: 'Base Set',
       cardNumber: '98/102',
@@ -361,11 +410,12 @@ class PokemonCardData {
     ),
     PokemonCardData(
       id: 'sample-double-colorless-energy',
+      dateAdded: DateTime(2024, 1, 20),
       name: 'Double Colorless Energy',
       setName: 'Base Set',
       cardNumber: '96/102',
       rarity: 'Uncommon',
-      type: PokemonCardType.normal,
+      type: PokemonCardType.colorless,
       supertype: CardSupertype.energy,
       subtype: 'Special',
       quantityOwned: 2,

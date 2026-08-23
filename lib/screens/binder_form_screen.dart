@@ -24,13 +24,13 @@ class BinderFormResult {
         deleted = true;
 }
 
-/// The cover colors offered when creating or editing a binder. `normal`
+/// The cover colors offered when creating or editing a binder. `colorless`
 /// (used for cards like Jigglypuff) is left out here since the mockup's
 /// New Binder screen only offers five swatches.
 const _kBinderCoverOptions = [
   PokemonCardType.fire,
   PokemonCardType.water,
-  PokemonCardType.electric,
+  PokemonCardType.lightning,
   PokemonCardType.psychic,
   PokemonCardType.grass,
 ];

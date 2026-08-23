@@ -99,7 +99,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
             orElse: () => BinderData(
               id: kUnassignedBinderId,
               name: 'Unassigned',
-              accentType: PokemonCardType.normal,
+              accentType: PokemonCardType.colorless,
               pages: const [],
             ),
           )
@@ -147,7 +147,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
       // Manually entered cards have no scanned artwork, so the color that
       // drives their placeholder silhouette follows their binder's cover
       // (or stays as-is/normal when left unassigned).
-      type: binder?.accentType ?? widget.existingCard?.type ?? PokemonCardType.normal,
+      type: binder?.accentType ?? widget.existingCard?.type ?? PokemonCardType.colorless,
       quantityOwned: quantity < 1 ? 1 : quantity,
       condition: _conditionCode,
       binderName: binder?.name ?? 'Unassigned',
@@ -155,6 +155,9 @@ class _CardFormScreenState extends State<CardFormScreen> {
       estimatedValue: value < 0 ? 0 : value,
       notes: _notesController.text.trim(),
       imageAssetPath: widget.existingCard?.imageAssetPath,
+      // Preserve the original add date when editing; a brand-new card is
+      // timestamped now so it shows up first under Sort ▸ Time ▸ Newest.
+      dateAdded: widget.existingCard?.dateAdded ?? DateTime.now(),
     );
 
     Navigator.of(context).pop(

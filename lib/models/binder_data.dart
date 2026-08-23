@@ -68,7 +68,7 @@ class BinderData {
       BinderData(
         id: 'binder-rare-holos',
         name: 'Rare Holos',
-        accentType: PokemonCardType.electric,
+        accentType: PokemonCardType.lightning,
         pages: [
           [
             card('Pikachu'),

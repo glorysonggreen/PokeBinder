@@ -9,17 +9,29 @@ import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 
-/// How the All Cards tab orders/groups the collection. Recent and
-/// Alphabetical span every supertype; Pokémon/Trainer/Energy additionally
-/// restrict the list to that supertype and swap the chip row beneath the
-/// search bar to that supertype's own subcategories.
-enum CardSortOption { recent, alphabetical, pokemon, trainer, energy }
+/// How the All Cards tab orders/groups the collection. Time and
+/// Alphabetical (plus Card Number/Rarity/Quantity) span every supertype;
+/// Pokémon/Trainer/Energy additionally restrict the list to that supertype
+/// and swap the chip row beneath the search bar to that supertype's own
+/// subcategories. Set and Rarity swap the chip row to the sets/rarities
+/// actually present in the collection.
+enum CardSortOption {
+  time,
+  alphabetical,
+  pokemon,
+  trainer,
+  energy,
+  set,
+  cardNumber,
+  rarity,
+  quantity,
+}
 
 extension CardSortOptionLabel on CardSortOption {
   String get label {
     switch (this) {
-      case CardSortOption.recent:
-        return 'Recent';
+      case CardSortOption.time:
+        return 'Time';
       case CardSortOption.alphabetical:
         return 'Alphabetical';
       case CardSortOption.pokemon:
@@ -28,6 +40,29 @@ extension CardSortOptionLabel on CardSortOption {
         return 'Trainer';
       case CardSortOption.energy:
         return 'Energy';
+      case CardSortOption.set:
+        return 'Set';
+      case CardSortOption.cardNumber:
+        return 'Card Number';
+      case CardSortOption.rarity:
+        return 'Rarity';
+      case CardSortOption.quantity:
+        return 'Quantity';
+    }
+  }
+}
+
+/// Sub-option for [CardSortOption.time]: which end of the timeline the
+/// list starts from.
+enum TimeSortDirection { newest, oldest }
+
+extension TimeSortDirectionLabel on TimeSortDirection {
+  String get label {
+    switch (this) {
+      case TimeSortDirection.newest:
+        return 'Newest';
+      case TimeSortDirection.oldest:
+        return 'Oldest';
     }
   }
 }
@@ -56,9 +91,12 @@ class _BindersScreenState extends State<BindersScreen> {
 
   String _binderSearch = '';
   String _cardSearch = '';
-  CardSortOption _sortOption = CardSortOption.recent;
+  CardSortOption _sortOption = CardSortOption.time;
   PokemonCardType? _typeFilter;
   String? _subtypeFilter;
+  String? _setFilter;
+  String? _rarityFilter;
+  TimeSortDirection _timeDirection = TimeSortDirection.newest;
 
   /// Every card across every binder/page plus the unassigned bucket,
   /// flattened for the All Cards tab. The binders and `_unassignedCards`
@@ -280,6 +318,9 @@ class _BindersScreenState extends State<BindersScreen> {
                         sortOption: _sortOption,
                         typeFilter: _typeFilter,
                         subtypeFilter: _subtypeFilter,
+                        setFilter: _setFilter,
+                        rarityFilter: _rarityFilter,
+                        timeDirection: _timeDirection,
                         onSearchChanged: (v) =>
                             setState(() => _cardSearch = v),
                         onSortChanged: (option) => setState(() {
@@ -288,11 +329,20 @@ class _BindersScreenState extends State<BindersScreen> {
                           // category wouldn't make sense in the new one.
                           _typeFilter = null;
                           _subtypeFilter = null;
+                          _setFilter = null;
+                          _rarityFilter = null;
+                          _timeDirection = TimeSortDirection.newest;
                         }),
                         onTypeFilterChanged: (t) =>
                             setState(() => _typeFilter = t),
                         onSubtypeFilterChanged: (s) =>
                             setState(() => _subtypeFilter = s),
+                        onSetFilterChanged: (s) =>
+                            setState(() => _setFilter = s),
+                        onRarityFilterChanged: (r) =>
+                            setState(() => _rarityFilter = r),
+                        onTimeDirectionChanged: (d) =>
+                            setState(() => _timeDirection = d),
                         onCardTap: _openCard,
                       ),
               ),
@@ -547,10 +597,16 @@ class _AllCardsTab extends StatelessWidget {
   final CardSortOption sortOption;
   final PokemonCardType? typeFilter;
   final String? subtypeFilter;
+  final String? setFilter;
+  final String? rarityFilter;
+  final TimeSortDirection timeDirection;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<CardSortOption> onSortChanged;
   final ValueChanged<PokemonCardType?> onTypeFilterChanged;
   final ValueChanged<String?> onSubtypeFilterChanged;
+  final ValueChanged<String?> onSetFilterChanged;
+  final ValueChanged<String?> onRarityFilterChanged;
+  final ValueChanged<TimeSortDirection> onTimeDirectionChanged;
   final ValueChanged<PokemonCardData> onCardTap;
 
   const _AllCardsTab({
@@ -559,19 +615,106 @@ class _AllCardsTab extends StatelessWidget {
     required this.sortOption,
     required this.typeFilter,
     required this.subtypeFilter,
+    required this.setFilter,
+    required this.rarityFilter,
+    required this.timeDirection,
     required this.onSearchChanged,
     required this.onSortChanged,
     required this.onTypeFilterChanged,
     required this.onSubtypeFilterChanged,
+    required this.onSetFilterChanged,
+    required this.onRarityFilterChanged,
+    required this.onTimeDirectionChanged,
     required this.onCardTap,
   });
 
-  /// Trainer/Energy cards don't have an elemental [PokemonCardType], so the
-  /// chip row only makes sense for those categories once a supertype is
-  /// selected. Recent/Alphabetical show every card, so they keep the
-  /// original elemental-type chips.
-  bool get _showsSubtypeChips =>
-      sortOption == CardSortOption.trainer || sortOption == CardSortOption.energy;
+  /// The modern Pokémon TCG rarity ladder, in ascending order. The Rarity
+  /// scrollbar always shows all of these (even if the collection doesn't
+  /// currently have a card in every tier), since this is a fixed
+  /// classification rather than something derived from the data.
+  static const _rarityTiers = <String>[
+    'Common',
+    'Uncommon',
+    'Rare',
+    'Double Rare',
+    'Illustration Rare',
+    'Special Illustration Rare',
+    'Hyper Rare',
+    'Promo',
+    'Other/Additional Rarities',
+  ];
+
+  /// Buckets a card's raw [PokemonCardData.rarity] string into one of the
+  /// [_rarityTiers]. Older/looser rarity labels fold into the closest
+  /// modern tier — e.g. "Holo Rare" is a Rare — and anything unrecognized
+  /// falls into "Other/Additional Rarities" rather than being dropped.
+  static String _rarityTier(String rawRarity) {
+    switch (rawRarity) {
+      case 'Common':
+        return 'Common';
+      case 'Uncommon':
+        return 'Uncommon';
+      case 'Rare':
+      case 'Holo Rare':
+      case 'Rare Holo':
+        return 'Rare';
+      case 'Double Rare':
+        return 'Double Rare';
+      case 'Illustration Rare':
+        return 'Illustration Rare';
+      case 'Special Illustration Rare':
+        return 'Special Illustration Rare';
+      case 'Hyper Rare':
+        return 'Hyper Rare';
+      case 'Promo':
+        return 'Promo';
+      default:
+        return 'Other/Additional Rarities';
+    }
+  }
+
+  /// A friendlier chip label for each rarity tier.
+  static const _rarityTierLabels = <String, String>{
+    'Common': 'Common',
+    'Uncommon': 'Uncommon',
+    'Rare': 'Rare',
+    'Double Rare': 'Double Rare',
+    'Illustration Rare': 'Illustration Rare',
+    'Special Illustration Rare': 'Special Illustration Rare',
+    'Hyper Rare': 'Hyper Rare',
+    'Promo': 'Promo',
+    'Other/Additional Rarities': 'Other/Additional Rarities',
+  };
+
+  /// Energy cards are filterable by either their elemental [type] (Grass,
+  /// Fire, Water, …) or their [subtype] (Basic/Special) — two different
+  /// underlying fields collapsed into a single scrollbar selection. Keys
+  /// for the elemental options are the [PokemonCardType.name] strings;
+  /// 'Basic' and 'Special' are matched against [subtype] instead.
+  static bool _matchesEnergyFilter(PokemonCardData card, String? filterKey) {
+    if (filterKey == null) return true;
+    if (filterKey == 'Basic' || filterKey == 'Special') {
+      return card.subtype == filterKey;
+    }
+    return card.type.name == filterKey;
+  }
+
+  List<String> _setOptionsIn(List<PokemonCardData> allCards) {
+    final seen = <String>{};
+    final ordered = <String>[];
+    for (final card in allCards) {
+      if (seen.add(card.setName)) ordered.add(card.setName);
+    }
+    return ordered;
+  }
+
+  /// Parses the leading number out of a "4/102"-style card number, for
+  /// numeric (rather than lexical) sorting. Falls back to 0 if it can't be
+  /// parsed, so odd/blank card numbers sort first rather than crashing.
+  static int _cardNumberValue(PokemonCardData card) {
+    final leading = card.cardNumber.split('/').first;
+    return int.tryParse(leading.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -582,22 +725,138 @@ class _AllCardsTab extends StatelessWidget {
         cards.where((c) => c.supertype == CardSupertype.trainer),
       CardSortOption.energy =>
         cards.where((c) => c.supertype == CardSupertype.energy),
-      CardSortOption.recent || CardSortOption.alphabetical => cards,
+      CardSortOption.time ||
+      CardSortOption.alphabetical ||
+      CardSortOption.set ||
+      CardSortOption.cardNumber ||
+      CardSortOption.rarity ||
+      CardSortOption.quantity =>
+        cards,
     };
 
-    final byChip = _showsSubtypeChips
-        ? bySupertype.where(
-            (c) => subtypeFilter == null || c.subtype == subtypeFilter)
-        : bySupertype.where(
-            (c) => typeFilter == null || c.type == typeFilter);
+    final byChip = switch (sortOption) {
+      CardSortOption.pokemon =>
+        bySupertype.where((c) => typeFilter == null || c.type == typeFilter),
+      CardSortOption.trainer =>
+        bySupertype.where(
+            (c) => subtypeFilter == null || c.subtype == subtypeFilter),
+      CardSortOption.energy =>
+        bySupertype.where((c) => _matchesEnergyFilter(c, subtypeFilter)),
+      CardSortOption.set =>
+        bySupertype.where((c) => setFilter == null || c.setName == setFilter),
+      CardSortOption.rarity =>
+        bySupertype.where(
+            (c) => rarityFilter == null || _rarityTier(c.rarity) == rarityFilter),
+      CardSortOption.time ||
+      CardSortOption.alphabetical ||
+      CardSortOption.cardNumber ||
+      CardSortOption.quantity =>
+        bySupertype,
+    };
 
     final filtered = byChip
         .where((c) => c.name.toLowerCase().contains(search.toLowerCase()))
         .toList();
 
-    if (sortOption == CardSortOption.alphabetical) {
-      filtered.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    switch (sortOption) {
+      case CardSortOption.time:
+        filtered.sort((a, b) => timeDirection == TimeSortDirection.newest
+            ? b.dateAdded.compareTo(a.dateAdded)
+            : a.dateAdded.compareTo(b.dateAdded));
+        break;
+      case CardSortOption.alphabetical:
+        filtered.sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+      case CardSortOption.set:
+        filtered.sort((a, b) {
+          final bySet = a.setName.compareTo(b.setName);
+          return bySet != 0
+              ? bySet
+              : _cardNumberValue(a).compareTo(_cardNumberValue(b));
+        });
+        break;
+      case CardSortOption.cardNumber:
+        filtered.sort(
+            (a, b) => _cardNumberValue(a).compareTo(_cardNumberValue(b)));
+        break;
+      case CardSortOption.rarity:
+        int rankOf(PokemonCardData c) => _rarityTiers.indexOf(_rarityTier(c.rarity));
+
+        filtered.sort((a, b) {
+          final byRank = rankOf(a).compareTo(rankOf(b));
+          return byRank != 0
+              ? byRank
+              : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+        break;
+      case CardSortOption.quantity:
+        filtered.sort((a, b) => b.quantityOwned.compareTo(a.quantityOwned));
+        break;
+      case CardSortOption.pokemon:
+      case CardSortOption.trainer:
+      case CardSortOption.energy:
+        break;
+    }
+
+    // The scrollbar beneath the search bar always reflects only the
+    // sub-options relevant to the currently selected sort category.
+    Widget? subOptionRow;
+    switch (sortOption) {
+      case CardSortOption.time:
+        subOptionRow = _SubtypeChipRow(
+          options: const {'newest': 'Newest', 'oldest': 'Oldest'},
+          selected: timeDirection.name,
+          onChanged: (value) => onTimeDirectionChanged(
+            value == 'oldest' ? TimeSortDirection.oldest : TimeSortDirection.newest,
+          ),
+        );
+        break;
+      case CardSortOption.pokemon:
+        subOptionRow = _TypeChipRow(selected: typeFilter, onChanged: onTypeFilterChanged);
+        break;
+      case CardSortOption.trainer:
+        subOptionRow = _SubtypeChipRow(
+          options: _kTrainerSubtypeChips,
+          selected: subtypeFilter,
+          onChanged: onSubtypeFilterChanged,
+        );
+        break;
+      case CardSortOption.energy:
+        subOptionRow = _SubtypeChipRow(
+          options: _kEnergySubtypeChips,
+          selected: subtypeFilter,
+          onChanged: onSubtypeFilterChanged,
+        );
+        break;
+      case CardSortOption.set:
+        final setOptions = <String?, String>{
+          null: 'All',
+          for (final setName in _setOptionsIn(cards)) setName: setName,
+        };
+        subOptionRow = _SubtypeChipRow(
+          options: setOptions,
+          selected: setFilter,
+          onChanged: onSetFilterChanged,
+        );
+        break;
+      case CardSortOption.rarity:
+        final rarityOptions = <String?, String>{
+          null: 'All',
+          for (final tier in _rarityTiers) tier: _rarityTierLabels[tier]!,
+        };
+        subOptionRow = _SubtypeChipRow(
+          options: rarityOptions,
+          selected: rarityFilter,
+          onChanged: onRarityFilterChanged,
+        );
+        break;
+      case CardSortOption.alphabetical:
+      case CardSortOption.cardNumber:
+      case CardSortOption.quantity:
+        // These categories have no meaningful sub-options, so no
+        // scrollbar is shown beneath the search bar.
+        subOptionRow = null;
     }
 
     return SingleChildScrollView(
@@ -610,16 +869,10 @@ class _AllCardsTab extends StatelessWidget {
             onChanged: onSearchChanged,
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
-          _showsSubtypeChips
-              ? _SubtypeChipRow(
-                  options: sortOption == CardSortOption.trainer
-                      ? _kTrainerSubtypeChips
-                      : _kEnergySubtypeChips,
-                  selected: subtypeFilter,
-                  onChanged: onSubtypeFilterChanged,
-                )
-              : _TypeChipRow(selected: typeFilter, onChanged: onTypeFilterChanged),
-          const SizedBox(height: PokeBinderSpacing.sp2),
+          if (subOptionRow != null) ...[
+            subOptionRow,
+            const SizedBox(height: PokeBinderSpacing.sp2),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -912,11 +1165,17 @@ class _TypeChipRow extends StatelessWidget {
 
   static const _types = <PokemonCardType?, String>{
     null: 'All',
-    PokemonCardType.fire: '🔥 Fire',
-    PokemonCardType.water: '💧 Water',
-    PokemonCardType.grass: '🌿 Grass',
-    PokemonCardType.electric: '⚡ Electric',
-    PokemonCardType.psychic: '🔮 Psychic',
+    PokemonCardType.colorless: 'Colorless',
+    PokemonCardType.grass: 'Grass',
+    PokemonCardType.fire: 'Fire',
+    PokemonCardType.water: 'Water',
+    PokemonCardType.lightning: 'Lightning',
+    PokemonCardType.fighting: 'Fighting',
+    PokemonCardType.psychic: 'Psychic',
+    PokemonCardType.darkness: 'Darkness',
+    PokemonCardType.metal: 'Metal',
+    PokemonCardType.dragon: 'Dragon',
+    PokemonCardType.fairy: 'Fairy',
   };
 
   @override
@@ -978,15 +1237,29 @@ class _Chip extends StatelessWidget {
 /// elemental-type chips (which don't apply to those supertypes).
 const _kTrainerSubtypeChips = <String?, String>{
   null: 'All',
-  'Item': '🎒 Item',
-  'Supporter': '🧑 Supporter',
-  'Stadium': '🏟️ Stadium',
+  'Item': 'Items',
+  'Supporter': 'Supporters',
+  'Stadium': 'Stadiums',
 };
 
+/// The subtype value stored on energy cards is 'Basic' (matching the TCG's
+/// own terminology). Energy's scrollbar mixes two different fields: the
+/// elemental options below filter by [PokemonCardData.type] (keyed by the
+/// enum's [PokemonCardType.name]), while 'Basic'/'Special' filter by
+/// [PokemonCardData.subtype] — see [_AllCardsTab._matchesEnergyFilter].
 const _kEnergySubtypeChips = <String?, String>{
   null: 'All',
-  'Basic': '⚡ Basic',
-  'Special': '✨ Special',
+  'Basic': 'Basic',
+  'Special': 'Special',
+  'grass': 'Grass',
+  'fire': 'Fire',
+  'water': 'Water',
+  'lightning': 'Lightning',
+  'fighting': 'Fighting',
+  'psychic': 'Psychic',
+  'darkness': 'Darkness',
+  'metal': 'Metal',
+  'fairy': 'Fairy',
 };
 
 /// A string-keyed equivalent of [_TypeChipRow], for the Trainer/Energy
