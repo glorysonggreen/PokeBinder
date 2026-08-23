@@ -55,15 +55,15 @@ extension CardSortOptionLabel on CardSortOption {
       case CardSortOption.trainer:
         return Icons.badge_outlined;
       case CardSortOption.energy:
-        return Icons.bolt_rounded;
+        return Icons.power_rounded;
       case CardSortOption.set:
         return Icons.collections_bookmark_outlined;
       case CardSortOption.cardNumber:
         return Icons.tag_rounded;
       case CardSortOption.rarity:
-        return Icons.auto_awesome_rounded;
+        return Icons.diamond_rounded;
       case CardSortOption.quantity:
-        return Icons.inventory_2_outlined;
+        return Icons.format_list_numbered_rounded;
     }
   }
 }
@@ -80,6 +80,34 @@ extension TimeSortDirectionLabel on TimeSortDirection {
     }
   }
 }
+
+enum BinderSortOption { name, recent, cardCount }
+
+extension BinderSortOptionLabel on BinderSortOption {
+  String get label {
+    switch (this) {
+      case BinderSortOption.name:
+        return 'Name (A–Z)';
+      case BinderSortOption.recent:
+        return 'Recently added';
+      case BinderSortOption.cardCount:
+        return 'Most cards';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case BinderSortOption.name:
+        return Icons.sort_by_alpha_rounded;
+      case BinderSortOption.recent:
+        return Icons.schedule_rounded;
+      case BinderSortOption.cardCount:
+        return Icons.style_rounded;
+    }
+  }
+}
+
+enum BinderViewMode { list, grid }
 
 class BindersScreen extends StatefulWidget {
   const BindersScreen({super.key});
@@ -101,6 +129,9 @@ class _BindersScreenState extends State<BindersScreen> {
   bool _showingUnassigned = false;
 
   String _binderSearch = '';
+  BinderSortOption _binderSort = BinderSortOption.name;
+  bool _groupBindersByCategory = false;
+  BinderViewMode _binderView = BinderViewMode.list;
   String _cardSearch = '';
   CardSortOption _sortOption = CardSortOption.time;
   PokemonCardType? _typeFilter;
@@ -137,6 +168,16 @@ class _BindersScreenState extends State<BindersScreen> {
 
   void _selectUnassigned() {
     setState(() => _showingUnassigned = true);
+  }
+
+  void _toggleBinderPin(BinderData binder) {
+    setState(() {
+      final index = _binders.indexWhere((b) => b.id == binder.id);
+      if (index == -1) return;
+      final updated = _binders[index].copyWith(isPinned: !_binders[index].isPinned);
+      _binders[index] = updated;
+      if (_selectedBinder.id == binder.id) _selectedBinder = updated;
+    });
   }
 
   Future<void> _openNewBinder() async {
@@ -299,10 +340,20 @@ class _BindersScreenState extends State<BindersScreen> {
                         pageIndex: _pageIndex,
                         unassignedCards: _unassignedCards,
                         showingUnassigned: _showingUnassigned,
+                        binderSort: _binderSort,
+                        groupByCategory: _groupBindersByCategory,
+                        binderView: _binderView,
                         onSearchChanged: (v) =>
                             setState(() => _binderSearch = v),
+                        onBinderSortChanged: (option) =>
+                            setState(() => _binderSort = option),
+                        onToggleGroup: () => setState(
+                            () => _groupBindersByCategory = !_groupBindersByCategory),
+                        onBinderViewChanged: (mode) =>
+                            setState(() => _binderView = mode),
                         onSelectBinder: _selectBinder,
                         onSelectUnassigned: _selectUnassigned,
+                        onTogglePin: _toggleBinderPin,
                         onPrevPage: _pageIndex > 0
                             ? () => setState(() => _pageIndex--)
                             : null,
@@ -418,9 +469,16 @@ class _BindersTab extends StatelessWidget {
   final int pageIndex;
   final List<PokemonCardData> unassignedCards;
   final bool showingUnassigned;
+  final BinderSortOption binderSort;
+  final bool groupByCategory;
+  final BinderViewMode binderView;
   final ValueChanged<String> onSearchChanged;
+  final ValueChanged<BinderSortOption> onBinderSortChanged;
+  final VoidCallback onToggleGroup;
+  final ValueChanged<BinderViewMode> onBinderViewChanged;
   final ValueChanged<BinderData> onSelectBinder;
   final VoidCallback onSelectUnassigned;
+  final ValueChanged<BinderData> onTogglePin;
   final VoidCallback? onPrevPage;
   final VoidCallback? onNextPage;
   final ValueChanged<PokemonCardData> onCardTap;
@@ -434,9 +492,16 @@ class _BindersTab extends StatelessWidget {
     required this.pageIndex,
     required this.unassignedCards,
     required this.showingUnassigned,
+    required this.binderSort,
+    required this.groupByCategory,
+    required this.binderView,
     required this.onSearchChanged,
+    required this.onBinderSortChanged,
+    required this.onToggleGroup,
+    required this.onBinderViewChanged,
     required this.onSelectBinder,
     required this.onSelectUnassigned,
+    required this.onTogglePin,
     required this.onPrevPage,
     required this.onNextPage,
     required this.onCardTap,
@@ -469,13 +534,28 @@ class _BindersTab extends StatelessWidget {
             onTap: onNewBinder,
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
+          if (binders.length > 1) ...[
+            _BinderToolbar(
+              sortOption: binderSort,
+              onSortChanged: onBinderSortChanged,
+              groupByCategory: groupByCategory,
+              onToggleGroup: onToggleGroup,
+              viewMode: binderView,
+              onViewModeChanged: onBinderViewChanged,
+            ),
+            const SizedBox(height: PokeBinderSpacing.sp3),
+          ],
           _BinderListPanel(
             binders: binders,
             selectedBinder: selectedBinder,
             showingUnassigned: showingUnassigned,
             unassignedCount: unassignedCards.length,
+            sortOption: binderSort,
+            groupByCategory: groupByCategory,
+            viewMode: binderView,
             onSelect: onSelectBinder,
             onSelectUnassigned: onSelectUnassigned,
+            onTogglePin: onTogglePin,
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
           Row(
@@ -1012,25 +1092,143 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
+class _BinderSection {
+  final String? title;
+  final List<BinderData> binders;
+
+  const _BinderSection({this.title, required this.binders});
+}
+
 class _BinderListPanel extends StatelessWidget {
   final List<BinderData> binders;
   final BinderData selectedBinder;
   final bool showingUnassigned;
   final int unassignedCount;
+  final BinderSortOption sortOption;
+  final bool groupByCategory;
+  final BinderViewMode viewMode;
   final ValueChanged<BinderData> onSelect;
   final VoidCallback onSelectUnassigned;
+  final ValueChanged<BinderData> onTogglePin;
 
   const _BinderListPanel({
     required this.binders,
     required this.selectedBinder,
     required this.showingUnassigned,
     required this.unassignedCount,
+    required this.sortOption,
+    required this.groupByCategory,
+    required this.viewMode,
     required this.onSelect,
     required this.onSelectUnassigned,
+    required this.onTogglePin,
   });
+
+  int _compare(BinderData a, BinderData b) {
+    switch (sortOption) {
+      case BinderSortOption.name:
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      case BinderSortOption.recent:
+        return b.createdAtOrEpoch.compareTo(a.createdAtOrEpoch);
+      case BinderSortOption.cardCount:
+        return b.cardCount.compareTo(a.cardCount);
+    }
+  }
+
+  List<_BinderSection> _buildSections() {
+    final pinned = binders.where((b) => b.isPinned).toList()..sort(_compare);
+    final rest = binders.where((b) => !b.isPinned).toList();
+
+    final sections = <_BinderSection>[];
+    if (pinned.isNotEmpty) {
+      sections.add(_BinderSection(title: 'Pinned', binders: pinned));
+    }
+
+    if (groupByCategory) {
+      final byCategory = <String, List<BinderData>>{};
+      for (final binder in rest) {
+        byCategory.putIfAbsent(binder.category, () => []).add(binder);
+      }
+      final categoryNames = byCategory.keys.toList()
+        ..sort((a, b) {
+          if (a.isEmpty) return 1;
+          if (b.isEmpty) return -1;
+          return a.toLowerCase().compareTo(b.toLowerCase());
+        });
+      for (final name in categoryNames) {
+        final list = byCategory[name]!..sort(_compare);
+        sections.add(_BinderSection(
+          title: name.isEmpty ? 'Uncategorized' : name,
+          binders: list,
+        ));
+      }
+    } else {
+      rest.sort(_compare);
+      sections.add(_BinderSection(
+        // Only bother labeling "All Binders" when a Pinned section is
+        // already showing above it — otherwise a single unlabeled run
+        // matches the original, simpler look.
+        title: pinned.isNotEmpty ? 'All Binders' : null,
+        binders: rest,
+      ));
+    }
+
+    return sections;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final sections = _buildSections();
+
+    if (viewMode == BinderViewMode.grid) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          const gap = 8.0;
+          final tileWidth = (constraints.maxWidth - gap) / 2;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final section in sections) ...[
+                if (section.title != null) ...[
+                  _SectionHeader(
+                    title: section.title!,
+                    count: section.binders.length,
+                  ),
+                  const SizedBox(height: PokeBinderSpacing.sp2),
+                ],
+                Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    for (final binder in section.binders)
+                      SizedBox(
+                        width: tileWidth,
+                        child: _BinderGridTile(
+                          binder: binder,
+                          selected:
+                              !showingUnassigned && binder.id == selectedBinder.id,
+                          onTap: () => onSelect(binder),
+                          onTogglePin: () => onTogglePin(binder),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: PokeBinderSpacing.sp3),
+              ],
+              SizedBox(
+                width: tileWidth,
+                child: _BinderGridTile.unassigned(
+                  count: unassignedCount,
+                  selected: showingUnassigned,
+                  onTap: onSelectUnassigned,
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
@@ -1047,17 +1245,26 @@ class _BinderListPanel extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          for (var i = 0; i < binders.length; i++)
-            _BinderListRow(
-              icon: Icons.menu_book_rounded,
-              title: binders[i].name,
-              subtitle:
-                  '${binders[i].pageCount} ${binders[i].pageCount == 1 ? 'page' : 'pages'} · '
-                  '${binders[i].cardCount} ${binders[i].cardCount == 1 ? 'card' : 'cards'}',
-              selected: !showingUnassigned && binders[i].id == selectedBinder.id,
-              showDivider: true,
-              onTap: () => onSelect(binders[i]),
-            ),
+          for (final section in sections) ...[
+            if (section.title != null)
+              _ListSectionHeader(
+                title: section.title!,
+                count: section.binders.length,
+              ),
+            for (final binder in section.binders)
+              _BinderListRow(
+                icon: Icons.menu_book_rounded,
+                title: binder.name,
+                subtitle:
+                    '${binder.pageCount} ${binder.pageCount == 1 ? 'page' : 'pages'} · '
+                    '${binder.cardCount} ${binder.cardCount == 1 ? 'card' : 'cards'}',
+                selected: !showingUnassigned && binder.id == selectedBinder.id,
+                showDivider: true,
+                isPinned: binder.isPinned,
+                onTap: () => onSelect(binder),
+                onTogglePin: () => onTogglePin(binder),
+              ),
+          ],
           _BinderListRow(
             icon: Icons.inbox_rounded,
             title: 'Unassigned',
@@ -1073,6 +1280,38 @@ class _BinderListPanel extends StatelessWidget {
   }
 }
 
+class _ListSectionHeader extends StatelessWidget {
+  final String title;
+  final int count;
+
+  const _ListSectionHeader({required this.title, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: PokeBinderColors.cream2.withValues(alpha: 0.5),
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 5),
+      child: Text('${title.toUpperCase()} · $count', style: PokeBinderText.sectionLabel),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final int count;
+
+  const _SectionHeader({required this.title, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2),
+      child: Text('${title.toUpperCase()} · $count', style: PokeBinderText.sectionLabel),
+    );
+  }
+}
+
 class _BinderListRow extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -1080,7 +1319,9 @@ class _BinderListRow extends StatelessWidget {
   final bool selected;
   final bool showDivider;
   final bool muted;
+  final bool isPinned;
   final VoidCallback onTap;
+  final VoidCallback? onTogglePin;
 
   const _BinderListRow({
     required this.icon,
@@ -1089,7 +1330,9 @@ class _BinderListRow extends StatelessWidget {
     required this.selected,
     required this.showDivider,
     this.muted = false,
+    this.isPinned = false,
     required this.onTap,
+    this.onTogglePin,
   });
 
   @override
@@ -1155,6 +1398,21 @@ class _BinderListRow extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onTogglePin != null)
+                GestureDetector(
+                  onTap: onTogglePin,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                      size: 15,
+                      color: isPinned
+                          ? PokeBinderColors.red
+                          : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                    ),
+                  ),
+                ),
               Icon(
                 Icons.chevron_right_rounded,
                 size: 18,
@@ -1165,6 +1423,336 @@ class _BinderListRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BinderGridTile extends StatelessWidget {
+  final BinderData? binder;
+  final bool selected;
+  final bool muted;
+  final String? overrideTitle;
+  final String? overrideSubtitle;
+  final IconData? overrideIcon;
+  final VoidCallback onTap;
+  final VoidCallback? onTogglePin;
+
+  const _BinderGridTile({
+    required this.binder,
+    required this.selected,
+    this.muted = false,
+    this.overrideTitle,
+    this.overrideSubtitle,
+    this.overrideIcon,
+    required this.onTap,
+    this.onTogglePin,
+  });
+
+  const _BinderGridTile.unassigned({
+    required int count,
+    required bool selected,
+    required VoidCallback onTap,
+  }) : this(
+          binder: null,
+          selected: selected,
+          muted: true,
+          overrideTitle: 'Unassigned',
+          overrideSubtitle: '$count ${count == 1 ? 'card' : 'cards'} · no binder',
+          overrideIcon: Icons.inbox_rounded,
+          onTap: onTap,
+        );
+
+  @override
+  Widget build(BuildContext context) {
+    final title = overrideTitle ?? binder!.name;
+    final subtitle = overrideSubtitle ??
+        '${binder!.pageCount} ${binder!.pageCount == 1 ? 'page' : 'pages'} · '
+            '${binder!.cardCount} ${binder!.cardCount == 1 ? 'card' : 'cards'}';
+    final icon = overrideIcon ?? Icons.menu_book_rounded;
+    final isPinned = binder?.isPinned ?? false;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(11),
+        decoration: BoxDecoration(
+          color: PokeBinderColors.white,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(
+            color: selected
+                ? PokeBinderColors.red.withValues(alpha: 0.5)
+                : PokeBinderColors.ink.withValues(alpha: 0.08),
+            width: selected ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: PokeBinderColors.ink.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: muted ? null : PokeBinderColors.redGradient,
+                    color: muted ? PokeBinderColors.cream2 : null,
+                    border: muted
+                        ? Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.12))
+                        : null,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 16,
+                    color: muted ? PokeBinderColors.inkSoft : PokeBinderColors.white,
+                  ),
+                ),
+                const Spacer(),
+                if (onTogglePin != null)
+                  GestureDetector(
+                    onTap: onTogglePin,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                        size: 14,
+                        color: isPinned
+                            ? PokeBinderColors.red
+                            : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: PokeBinderText.listRowTitle.copyWith(
+                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                color: selected ? PokeBinderColors.redDeep : PokeBinderColors.ink,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: PokeBinderText.listRowSubtitle,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BinderToolbar extends StatelessWidget {
+  final BinderSortOption sortOption;
+  final ValueChanged<BinderSortOption> onSortChanged;
+  final bool groupByCategory;
+  final VoidCallback onToggleGroup;
+  final BinderViewMode viewMode;
+  final ValueChanged<BinderViewMode> onViewModeChanged;
+
+  const _BinderToolbar({
+    required this.sortOption,
+    required this.onSortChanged,
+    required this.groupByCategory,
+    required this.onToggleGroup,
+    required this.viewMode,
+    required this.onViewModeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _BinderSortSelector(selected: sortOption, onChanged: onSortChanged),
+        const SizedBox(width: PokeBinderSpacing.sp2),
+        _Chip(
+          label: 'Group',
+          icon: Icons.folder_outlined,
+          active: groupByCategory,
+          onTap: onToggleGroup,
+        ),
+        const Spacer(),
+        _BinderViewToggle(mode: viewMode, onChanged: onViewModeChanged),
+      ],
+    );
+  }
+}
+
+class _BinderViewToggle extends StatelessWidget {
+  final BinderViewMode mode;
+  final ValueChanged<BinderViewMode> onChanged;
+
+  const _BinderViewToggle({required this.mode, required this.onChanged});
+
+  Widget _button(BinderViewMode value, IconData icon) {
+    final active = mode == value;
+    return GestureDetector(
+      onTap: () => onChanged(value),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(9),
+          gradient: active ? PokeBinderColors.redGradient : null,
+        ),
+        child: Icon(
+          icon,
+          size: 15,
+          color: active ? PokeBinderColors.white : PokeBinderColors.inkSoft,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.cream2,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _button(BinderViewMode.list, Icons.view_list_rounded),
+          const SizedBox(width: 2),
+          _button(BinderViewMode.grid, Icons.grid_view_rounded),
+        ],
+      ),
+    );
+  }
+}
+
+class _BinderSortSelector extends StatelessWidget {
+  final BinderSortOption selected;
+  final ValueChanged<BinderSortOption> onChanged;
+
+  const _BinderSortSelector({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        highlightColor: PokeBinderColors.red.withValues(alpha: 0.06),
+        splashColor: PokeBinderColors.red.withValues(alpha: 0.06),
+        hoverColor: PokeBinderColors.red.withValues(alpha: 0.05),
+      ),
+      child: PopupMenuButton<BinderSortOption>(
+        initialValue: selected,
+        onSelected: onChanged,
+        offset: const Offset(0, 32),
+        color: PokeBinderColors.white,
+        elevation: 8,
+        shadowColor: PokeBinderColors.ink.withValues(alpha: 0.2),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        ),
+        constraints: const BoxConstraints(minWidth: 175),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        itemBuilder: (context) => [
+          for (final option in BinderSortOption.values)
+            PopupMenuItem(
+              value: option,
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: _BinderSortMenuRow(option: option, selected: option == selected),
+            ),
+        ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: PokeBinderColors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(selected.icon, size: 13, color: PokeBinderColors.inkSoft),
+              const SizedBox(width: 5),
+              Text(selected.label.toUpperCase(), style: PokeBinderText.resultCount),
+              const SizedBox(width: 1),
+              const Icon(
+                Icons.expand_more_rounded,
+                size: 15,
+                color: PokeBinderColors.inkSoft,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BinderSortMenuRow extends StatelessWidget {
+  final BinderSortOption option;
+  final bool selected;
+
+  const _BinderSortMenuRow({required this.option, required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: PokeBinderSpacing.sp2,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: selected ? PokeBinderColors.red.withValues(alpha: 0.08) : null,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            option.icon,
+            size: 16,
+            color: selected ? PokeBinderColors.red : PokeBinderColors.inkSoft,
+          ),
+          const SizedBox(width: PokeBinderSpacing.sp2),
+          Expanded(
+            child: Text(
+              option.label,
+              style: PokeBinderText.chakraPetch(TextStyle(
+                fontSize: 12.5,
+                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                color: selected
+                    ? PokeBinderColors.redDeep
+                    : PokeBinderColors.ink,
+              )),
+            ),
+          ),
+          if (selected)
+            const Padding(
+              padding: EdgeInsets.only(left: PokeBinderSpacing.sp1),
+              child: Icon(
+                Icons.check_rounded,
+                size: 15,
+                color: PokeBinderColors.red,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1215,8 +1803,8 @@ class _TypeChipRow extends StatelessWidget {
 
   static IconData _typeIcon(PokemonCardType? type) {
     if (type == null) return Icons.apps_rounded;
-    if (type == PokemonCardType.colorless) return Icons.circle_outlined;
-    if (type == PokemonCardType.dragon) return Icons.auto_awesome_rounded;
+    if (type == PokemonCardType.colorless) return Icons.circle;
+    if (type == PokemonCardType.dragon) return Icons.all_inclusive_rounded;
     return _elementIcon(type.name);
   }
 }
@@ -1240,9 +1828,9 @@ IconData _elementIcon(String elementKey) {
     case 'metal':
       return Icons.settings_rounded;
     case 'fairy':
-      return Icons.star_rounded;
+      return Icons.local_florist_rounded;
     default:
-      return Icons.circle_outlined;
+      return Icons.help_outline_rounded;
   }
 }
 
@@ -1262,9 +1850,9 @@ IconData _trainerSubtypeIcon(String? key) {
 IconData _energySubtypeIcon(String? key) {
   switch (key) {
     case 'Basic':
-      return Icons.circle_outlined;
+      return Icons.crop_square_rounded;
     case 'Special':
-      return Icons.auto_awesome_rounded;
+      return Icons.flare_rounded;
     case null:
       return Icons.apps_rounded;
     default:
