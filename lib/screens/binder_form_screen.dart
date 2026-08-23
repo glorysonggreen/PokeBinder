@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
-
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 
-/// What the Add/Edit Binder screen hands back to the caller when it pops.
-/// Exactly one of [binder] or [deleted] applies:
-/// - Cancel: the screen pops with no result at all (null), nothing to do.
-/// - Create/Save: pops with `BinderFormResult.saved(binder)`.
-/// - Delete: pops with `BinderFormResult.deleted()`.
 class BinderFormResult {
   final BinderData? binder;
   final bool deleted;
@@ -24,8 +18,6 @@ class BinderFormResult {
         deleted = true;
 }
 
-/// Add/Edit Binder screen. Pass [existingBinder] to edit (and offer
-/// deleting) that binder; leave it null to create a new one.
 class BinderFormScreen extends StatefulWidget {
   final BinderData? existingBinder;
 
@@ -231,6 +223,9 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                 label: 'Description (optional)',
                 child: TextField(
                   controller: _descriptionController,
+                  keyboardType: TextInputType.multiline,
+                  minLines: 3,
+                  maxLines: 5,
                   decoration:
                       pokeInputDecoration(hint: "What's this binder for?"),
                 ),
@@ -263,7 +258,9 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   child: InkWell(
                     onTap: _confirmDelete,
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
+                      padding: EdgeInsets.symmetric(
+                        vertical: PokeBinderSpacing.sp2,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -272,7 +269,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                             size: 14,
                             color: PokeBinderColors.danger,
                           ),
-                          SizedBox(width: 5),
+                          SizedBox(width: PokeBinderSpacing.sp2),
                           Text(
                             'Delete Binder',
                             style: TextStyle(

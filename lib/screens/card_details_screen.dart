@@ -1,7 +1,5 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
@@ -13,11 +11,6 @@ import 'card_form_screen.dart';
 class CardDetailsScreen extends StatefulWidget {
   final PokemonCardData card;
   final List<BinderData> binders;
-
-  /// Called with the card's state *before* this edit and the form result
-  /// describing the edit, so the caller (which owns the actual binder/card
-  /// data) can place the updated card correctly — including moving it to a
-  /// different binder or page if that's what changed.
   final void Function(PokemonCardData oldCard, CardFormResult result) onSave;
 
   const CardDetailsScreen({
@@ -125,7 +118,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
               const SizedBox(height: PokeBinderSpacing.sp4),
 
               Text(card.name, style: PokeBinderText.heading),
-              const SizedBox(height: 2),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 '${card.setName} · #${card.cardNumber} · ${card.rarity}',
                 style: PokeBinderText.subtitle,
@@ -244,7 +237,7 @@ class _FieldTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('$label:', style: PokeBinderText.fieldLabel),
-                const SizedBox(height: 2),
+                const SizedBox(height: PokeBinderSpacing.sp1),
                 Text(value, style: PokeBinderText.fieldValue),
               ],
             )
@@ -282,7 +275,7 @@ class _StatBox extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: PokeBinderText.statLabel),
-          const SizedBox(height: 3),
+          const SizedBox(height: PokeBinderSpacing.sp1),
           Text(value, style: PokeBinderText.statNumber),
         ],
       ),

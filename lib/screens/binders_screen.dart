@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
@@ -9,12 +8,6 @@ import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 
-/// How the All Cards tab orders/groups the collection. Time and
-/// Alphabetical (plus Card Number/Rarity/Quantity) span every supertype;
-/// Pokémon/Trainer/Energy additionally restrict the list to that supertype
-/// and swap the chip row beneath the search bar to that supertype's own
-/// subcategories. Set and Rarity swap the chip row to the sets/rarities
-/// actually present in the collection.
 enum CardSortOption {
   time,
   alphabetical,
@@ -50,10 +43,31 @@ extension CardSortOptionLabel on CardSortOption {
         return 'Quantity';
     }
   }
+
+  IconData get icon {
+    switch (this) {
+      case CardSortOption.time:
+        return Icons.schedule_rounded;
+      case CardSortOption.alphabetical:
+        return Icons.sort_by_alpha_rounded;
+      case CardSortOption.pokemon:
+        return Icons.catching_pokemon;
+      case CardSortOption.trainer:
+        return Icons.badge_outlined;
+      case CardSortOption.energy:
+        return Icons.bolt_rounded;
+      case CardSortOption.set:
+        return Icons.collections_bookmark_outlined;
+      case CardSortOption.cardNumber:
+        return Icons.tag_rounded;
+      case CardSortOption.rarity:
+        return Icons.auto_awesome_rounded;
+      case CardSortOption.quantity:
+        return Icons.inventory_2_outlined;
+    }
+  }
 }
 
-/// Sub-option for [CardSortOption.time]: which end of the timeline the
-/// list starts from.
 enum TimeSortDirection { newest, oldest }
 
 extension TimeSortDirectionLabel on TimeSortDirection {
@@ -76,9 +90,6 @@ class BindersScreen extends StatefulWidget {
 
 class _BindersScreenState extends State<BindersScreen> {
   final List<BinderData> _binders = BinderData.sampleBinders;
-
-  /// Trainer/Energy sample cards start out unassigned since the sample
-  /// binders (Kanto Starters, Rare Holos, Trade Bait) are Pokémon-only.
   final List<PokemonCardData> _unassignedCards = PokemonCardData.library
       .where((c) => c.supertype != CardSupertype.pokemon)
       .toList();
@@ -98,9 +109,6 @@ class _BindersScreenState extends State<BindersScreen> {
   String? _rarityFilter;
   TimeSortDirection _timeDirection = TimeSortDirection.newest;
 
-  /// Every card across every binder/page plus the unassigned bucket,
-  /// flattened for the All Cards tab. The binders and `_unassignedCards`
-  /// are the single source of truth — this is just a view over them.
   List<PokemonCardData> get _allCards => [
         for (final binder in _binders)
           for (final page in binder.pages) ...page,
@@ -213,8 +221,6 @@ class _BindersScreenState extends State<BindersScreen> {
     });
   }
 
-  /// Removes any card with [id] from wherever it currently sits (a binder
-  /// page or the unassigned bucket). No-op if it isn't found.
   void _removeCardById(String id) {
     if (_unassignedCards.any((c) => c.id == id)) {
       _unassignedCards.removeWhere((c) => c.id == id);
@@ -235,9 +241,6 @@ class _BindersScreenState extends State<BindersScreen> {
     }
   }
 
-  /// Inserts [card] into the given binder's page (padding with empty pages
-  /// if [pageIndex] is beyond the binder's current page count), or into the
-  /// unassigned bucket if [binderId] is [kUnassignedBinderId].
   void _insertCard(PokemonCardData card, String binderId, int pageIndex) {
     if (binderId == kUnassignedBinderId) {
       _unassignedCards.add(card);
@@ -354,7 +357,6 @@ class _BindersScreenState extends State<BindersScreen> {
   }
 }
 
-/// Matches the mockup's `.tabbar-top`.
 class _TopTabBar extends StatelessWidget {
   final int index;
   final List<String> labels;
@@ -410,8 +412,6 @@ class _TopTabBar extends StatelessWidget {
   }
 }
 
-/// The "Binders" sub-tab: search, binder list, and the selected binder's
-/// current page as a 3-column grid.
 class _BindersTab extends StatelessWidget {
   final List<BinderData> binders;
   final BinderData selectedBinder;
@@ -536,13 +536,14 @@ class _BindersTab extends StatelessWidget {
                             onTap: () => onCardTap(card),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: PokeBinderSpacing.sp1),
                         Text(
                           card.name,
                           style: PokeBinderText.cardName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           '${card.setName} · #${card.cardNumber}',
                           style: PokeBinderText.cardMeta,
@@ -557,7 +558,7 @@ class _BindersTab extends StatelessWidget {
                         height: cardHeight,
                         child: AddCardTile(onTap: onAddCard),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: PokeBinderSpacing.sp1),
                       Text(
                         'Add Card Manually',
                         style: PokeBinderText.cardName,
@@ -600,9 +601,6 @@ class _BindersTab extends StatelessWidget {
   }
 }
 
-/// The "All Cards" sub-tab: search, a sort/category selector, a chip row
-/// that adapts to the selected category, and a flat grid of every matching
-/// card with its name beneath it.
 class _AllCardsTab extends StatelessWidget {
   final List<PokemonCardData> cards;
   final String search;
@@ -640,10 +638,6 @@ class _AllCardsTab extends StatelessWidget {
     required this.onCardTap,
   });
 
-  /// The modern Pokémon TCG rarity ladder, in ascending order. The Rarity
-  /// scrollbar always shows all of these (even if the collection doesn't
-  /// currently have a card in every tier), since this is a fixed
-  /// classification rather than something derived from the data.
   static const _rarityTiers = <String>[
     'Common',
     'Uncommon',
@@ -656,10 +650,6 @@ class _AllCardsTab extends StatelessWidget {
     'Other/Additional Rarities',
   ];
 
-  /// Buckets a card's raw [PokemonCardData.rarity] string into one of the
-  /// [_rarityTiers]. Older/looser rarity labels fold into the closest
-  /// modern tier — e.g. "Holo Rare" is a Rare — and anything unrecognized
-  /// falls into "Other/Additional Rarities" rather than being dropped.
   static String _rarityTier(String rawRarity) {
     switch (rawRarity) {
       case 'Common':
@@ -685,7 +675,6 @@ class _AllCardsTab extends StatelessWidget {
     }
   }
 
-  /// A friendlier chip label for each rarity tier.
   static const _rarityTierLabels = <String, String>{
     'Common': 'Common',
     'Uncommon': 'Uncommon',
@@ -698,11 +687,29 @@ class _AllCardsTab extends StatelessWidget {
     'Other/Additional Rarities': 'Other/Additional Rarities',
   };
 
-  /// Energy cards are filterable by either their elemental [type] (Grass,
-  /// Fire, Water, …) or their [subtype] (Basic/Special) — two different
-  /// underlying fields collapsed into a single scrollbar selection. Keys
-  /// for the elemental options are the [PokemonCardType.name] strings;
-  /// 'Basic' and 'Special' are matched against [subtype] instead.
+  static IconData _rarityTierIcon(String tier) {
+    switch (tier) {
+      case 'Common':
+        return Icons.circle_outlined;
+      case 'Uncommon':
+        return Icons.star_border_rounded;
+      case 'Rare':
+        return Icons.star_rounded;
+      case 'Double Rare':
+        return Icons.stars_rounded;
+      case 'Illustration Rare':
+        return Icons.brush_rounded;
+      case 'Special Illustration Rare':
+        return Icons.auto_awesome_rounded;
+      case 'Hyper Rare':
+        return Icons.workspace_premium_rounded;
+      case 'Promo':
+        return Icons.local_offer_rounded;
+      default:
+        return Icons.category_rounded;
+    }
+  }
+
   static bool _matchesEnergyFilter(PokemonCardData card, String? filterKey) {
     if (filterKey == null) return true;
     if (filterKey == 'Basic' || filterKey == 'Special') {
@@ -720,9 +727,6 @@ class _AllCardsTab extends StatelessWidget {
     return ordered;
   }
 
-  /// Parses the leading number out of a "4/102"-style card number, for
-  /// numeric (rather than lexical) sorting. Falls back to 0 if it can't be
-  /// parsed, so odd/blank card numbers sort first rather than crashing.
   static int _cardNumberValue(PokemonCardData card) {
     final leading = card.cardNumber.split('/').first;
     return int.tryParse(leading.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
@@ -819,6 +823,9 @@ class _AllCardsTab extends StatelessWidget {
         subOptionRow = _SubtypeChipRow(
           options: const {'newest': 'Newest', 'oldest': 'Oldest'},
           selected: timeDirection.name,
+          iconFor: (key) => key == 'oldest'
+              ? Icons.arrow_upward_rounded
+              : Icons.arrow_downward_rounded,
           onChanged: (value) => onTimeDirectionChanged(
             value == 'oldest' ? TimeSortDirection.oldest : TimeSortDirection.newest,
           ),
@@ -831,6 +838,7 @@ class _AllCardsTab extends StatelessWidget {
         subOptionRow = _SubtypeChipRow(
           options: _kTrainerSubtypeChips,
           selected: subtypeFilter,
+          iconFor: _trainerSubtypeIcon,
           onChanged: onSubtypeFilterChanged,
         );
         break;
@@ -838,6 +846,7 @@ class _AllCardsTab extends StatelessWidget {
         subOptionRow = _SubtypeChipRow(
           options: _kEnergySubtypeChips,
           selected: subtypeFilter,
+          iconFor: _energySubtypeIcon,
           onChanged: onSubtypeFilterChanged,
         );
         break;
@@ -849,6 +858,9 @@ class _AllCardsTab extends StatelessWidget {
         subOptionRow = _SubtypeChipRow(
           options: setOptions,
           selected: setFilter,
+          iconFor: (key) => key == null
+              ? Icons.apps_rounded
+              : Icons.collections_bookmark_outlined,
           onChanged: onSetFilterChanged,
         );
         break;
@@ -860,6 +872,8 @@ class _AllCardsTab extends StatelessWidget {
         subOptionRow = _SubtypeChipRow(
           options: rarityOptions,
           selected: rarityFilter,
+          iconFor: (key) =>
+              key == null ? Icons.apps_rounded : _rarityTierIcon(key),
           onChanged: onRarityFilterChanged,
         );
         break;
@@ -928,13 +942,14 @@ class _AllCardsTab extends StatelessWidget {
                               onTap: () => onCardTap(card),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: PokeBinderSpacing.sp1),
                           Text(
                             card.name,
                             style: PokeBinderText.cardName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             '${card.setName} · #${card.cardNumber}',
                             style: PokeBinderText.cardMeta,
@@ -953,7 +968,6 @@ class _AllCardsTab extends StatelessWidget {
   }
 }
 
-/// Matches the mockup's `.search-bar`.
 class _SearchBar extends StatelessWidget {
   final String hint;
   final ValueChanged<String> onChanged;
@@ -963,7 +977,10 @@ class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: PokeBinderSpacing.sp2,
+      ),
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
         borderRadius: BorderRadius.circular(12),
@@ -995,8 +1012,6 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-/// Matches the mockup's `.panel` containing `.list-row`s, plus a trailing
-/// "Unassigned" row for cards with no binder.
 class _BinderListPanel extends StatelessWidget {
   final List<BinderData> binders;
   final BinderData selectedBinder;
@@ -1058,9 +1073,6 @@ class _BinderListPanel extends StatelessWidget {
   }
 }
 
-/// A single row in the binder list — used for both real binders and the
-/// trailing "Unassigned" bucket ([muted] swaps the leading icon to the
-/// neutral inbox styling used for that row).
 class _BinderListRow extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -1084,7 +1096,6 @@ class _BinderListRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Ink(
       decoration: BoxDecoration(
-        color: selected ? PokeBinderColors.red.withValues(alpha: 0.07) : null,
         border: showDivider
             ? Border(
                 bottom: BorderSide(
@@ -1093,8 +1104,9 @@ class _BinderListRow extends StatelessWidget {
               )
             : null,
       ),
-      child: InkWell(
+      child: GestureDetector(
         onTap: onTap,
+        behavior: HitTestBehavior.opaque,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           child: Row(
@@ -1138,7 +1150,7 @@ class _BinderListRow extends StatelessWidget {
                         color: selected ? PokeBinderColors.redDeep : PokeBinderColors.ink,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: PokeBinderSpacing.sp1),
                     Text(subtitle, style: PokeBinderText.listRowSubtitle),
                   ],
                 ),
@@ -1158,7 +1170,6 @@ class _BinderListRow extends StatelessWidget {
   }
 }
 
-/// Matches the mockup's `.chip-row` / `.chip` type filters.
 class _TypeChipRow extends StatelessWidget {
   final PokemonCardType? selected;
   final ValueChanged<PokemonCardType?> onChanged;
@@ -1183,7 +1194,7 @@ class _TypeChipRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 30,
+      height: 32,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -1192,6 +1203,7 @@ class _TypeChipRow extends StatelessWidget {
               padding: const EdgeInsets.only(right: 6),
               child: _Chip(
                 label: entry.value,
+                icon: _typeIcon(entry.key),
                 active: selected == entry.key,
                 onTap: () => onChanged(entry.key),
               ),
@@ -1200,37 +1212,129 @@ class _TypeChipRow extends StatelessWidget {
       ),
     );
   }
+
+  static IconData _typeIcon(PokemonCardType? type) {
+    if (type == null) return Icons.apps_rounded;
+    if (type == PokemonCardType.colorless) return Icons.circle_outlined;
+    if (type == PokemonCardType.dragon) return Icons.auto_awesome_rounded;
+    return _elementIcon(type.name);
+  }
+}
+
+IconData _elementIcon(String elementKey) {
+  switch (elementKey) {
+    case 'grass':
+      return Icons.eco_rounded;
+    case 'fire':
+      return Icons.local_fire_department_rounded;
+    case 'water':
+      return Icons.water_drop_rounded;
+    case 'lightning':
+      return Icons.bolt_rounded;
+    case 'fighting':
+      return Icons.sports_mma_rounded;
+    case 'psychic':
+      return Icons.psychology_rounded;
+    case 'darkness':
+      return Icons.dark_mode_rounded;
+    case 'metal':
+      return Icons.settings_rounded;
+    case 'fairy':
+      return Icons.star_rounded;
+    default:
+      return Icons.circle_outlined;
+  }
+}
+
+IconData _trainerSubtypeIcon(String? key) {
+  switch (key) {
+    case 'Item':
+      return Icons.inventory_2_outlined;
+    case 'Supporter':
+      return Icons.person_outline_rounded;
+    case 'Stadium':
+      return Icons.stadium_outlined;
+    default:
+      return Icons.apps_rounded;
+  }
+}
+
+IconData _energySubtypeIcon(String? key) {
+  switch (key) {
+    case 'Basic':
+      return Icons.circle_outlined;
+    case 'Special':
+      return Icons.auto_awesome_rounded;
+    case null:
+      return Icons.apps_rounded;
+    default:
+      return _elementIcon(key);
+  }
 }
 
 class _Chip extends StatelessWidget {
   final String label;
+  final IconData icon;
   final bool active;
   final VoidCallback onTap;
 
-  const _Chip({required this.label, required this.active, required this.onTap});
+  const _Chip({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: active ? null : PokeBinderColors.cream2,
           gradient: active ? PokeBinderColors.redGradient : null,
+          border: active
+              ? null
+              : Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.06)),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: PokeBinderColors.redDeep.withValues(alpha: 0.28),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
-        child: Text(
-          label,
-          style: active ? PokeBinderText.chipLabelActive : PokeBinderText.chipLabel,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: active
+                  ? PokeBinderColors.white
+                  : PokeBinderColors.inkSoft,
+            ),
+            const SizedBox(width: 5),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 150),
+              style: active
+                  ? PokeBinderText.chipLabelActive
+                  : PokeBinderText.chipLabel,
+              child: Text(label),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Chip options shown when Sort is set to Trainer or Energy, replacing the
-/// elemental-type chips (which don't apply to those supertypes).
 const _kTrainerSubtypeChips = <String?, String>{
   null: 'All',
   'Item': 'Items',
@@ -1238,11 +1342,6 @@ const _kTrainerSubtypeChips = <String?, String>{
   'Stadium': 'Stadiums',
 };
 
-/// The subtype value stored on energy cards is 'Basic' (matching the TCG's
-/// own terminology). Energy's scrollbar mixes two different fields: the
-/// elemental options below filter by [PokemonCardData.type] (keyed by the
-/// enum's [PokemonCardType.name]), while 'Basic'/'Special' filter by
-/// [PokemonCardData.subtype] — see [_AllCardsTab._matchesEnergyFilter].
 const _kEnergySubtypeChips = <String?, String>{
   null: 'All',
   'Basic': 'Basic',
@@ -1258,23 +1357,24 @@ const _kEnergySubtypeChips = <String?, String>{
   'fairy': 'Fairy',
 };
 
-/// A string-keyed equivalent of [_TypeChipRow], for the Trainer/Energy
-/// subtype chips.
 class _SubtypeChipRow extends StatelessWidget {
   final Map<String?, String> options;
   final String? selected;
   final ValueChanged<String?> onChanged;
 
+  final IconData Function(String? key) iconFor;
+
   const _SubtypeChipRow({
     required this.options,
     required this.selected,
     required this.onChanged,
+    required this.iconFor,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 30,
+      height: 32,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -1283,6 +1383,7 @@ class _SubtypeChipRow extends StatelessWidget {
               padding: const EdgeInsets.only(right: 6),
               child: _Chip(
                 label: entry.value,
+                icon: iconFor(entry.key),
                 active: selected == entry.key,
                 onTap: () => onChanged(entry.key),
               ),
@@ -1293,8 +1394,6 @@ class _SubtypeChipRow extends StatelessWidget {
   }
 }
 
-/// The "SORT: RECENT ▾" control, matching the mockup's `.result-count`
-/// styling but tappable, opening a menu of every [CardSortOption].
 class _SortSelector extends StatelessWidget {
   final CardSortOption selected;
   final ValueChanged<CardSortOption> onChanged;
@@ -1303,41 +1402,116 @@ class _SortSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<CardSortOption>(
-      initialValue: selected,
-      onSelected: onChanged,
-      offset: const Offset(0, 20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      itemBuilder: (context) => [
-        for (final option in CardSortOption.values)
-          PopupMenuItem(
-            value: option,
-            height: 36,
+    return Theme(
+      // Swaps the menu items' default grey Material hover/splash for a
+      // faint themed red, so pressing an option feels consistent with the
+      // rest of the app instead of a generic system dropdown.
+      data: Theme.of(context).copyWith(
+        highlightColor: PokeBinderColors.red.withValues(alpha: 0.06),
+        splashColor: PokeBinderColors.red.withValues(alpha: 0.06),
+        hoverColor: PokeBinderColors.red.withValues(alpha: 0.05),
+      ),
+      child: PopupMenuButton<CardSortOption>(
+        initialValue: selected,
+        onSelected: onChanged,
+        offset: const Offset(0, 32),
+        color: PokeBinderColors.white,
+        elevation: 8,
+        shadowColor: PokeBinderColors.ink.withValues(alpha: 0.2),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        ),
+        constraints: const BoxConstraints(minWidth: 190),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        itemBuilder: (context) => [
+          for (final option in CardSortOption.values)
+            PopupMenuItem(
+              value: option,
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: _SortMenuRow(option: option, selected: option == selected),
+            ),
+        ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: PokeBinderColors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('SORT: ${selected.label.toUpperCase()}',
+                  style: PokeBinderText.resultCount),
+              const SizedBox(width: 1),
+              const Icon(
+                Icons.expand_more_rounded,
+                size: 15,
+                color: PokeBinderColors.inkSoft,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SortMenuRow extends StatelessWidget {
+  final CardSortOption option;
+  final bool selected;
+
+  const _SortMenuRow({required this.option, required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: PokeBinderSpacing.sp2,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: selected ? PokeBinderColors.red.withValues(alpha: 0.08) : null,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            option.icon,
+            size: 16,
+            color: selected ? PokeBinderColors.red : PokeBinderColors.inkSoft,
+          ),
+          const SizedBox(width: PokeBinderSpacing.sp2),
+          Expanded(
             child: Text(
               option.label,
-              style: option == selected
-                  ? const TextStyle(fontWeight: FontWeight.bold)
-                  : null,
+              style: PokeBinderText.chakraPetch(TextStyle(
+                fontSize: 12.5,
+                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                color: selected
+                    ? PokeBinderColors.redDeep
+                    : PokeBinderColors.ink,
+              )),
             ),
           ),
-      ],
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('SORT: ${selected.label.toUpperCase()}',
-              style: PokeBinderText.resultCount),
-          const Icon(
-            Icons.arrow_drop_down,
-            size: 16,
-            color: PokeBinderColors.inkSoft,
-          ),
+          if (selected)
+            const Padding(
+              padding: EdgeInsets.only(left: PokeBinderSpacing.sp1),
+              child: Icon(
+                Icons.check_rounded,
+                size: 15,
+                color: PokeBinderColors.red,
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-/// Matches the mockup's `.empty-state`.
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
@@ -1349,7 +1523,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           children: [
             Text('🔍', style: TextStyle(fontSize: 22)),
-            SizedBox(height: 6),
+            SizedBox(height: PokeBinderSpacing.sp2),
             Text(
               'No cards match your search.',
               style: PokeBinderText.subtitle,

@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-
 import '../theme/pokebinder_theme.dart';
 
-/// The rounded white input styling shared by every text field, number
-/// field, and dropdown across the form screens, matching the mockup's
-/// `.form-field input, .form-field select` style.
 InputDecoration pokeInputDecoration({String? hint}) {
   final border = OutlineInputBorder(
     borderRadius: BorderRadius.circular(10),
@@ -31,8 +27,6 @@ InputDecoration pokeInputDecoration({String? hint}) {
   );
 }
 
-/// A label + input pair with the small uppercase bold label above the
-/// field, matching the mockup's `.form-field`.
 class LabeledFormField extends StatelessWidget {
   final String label;
   final Widget child;
@@ -57,7 +51,6 @@ class LabeledFormField extends StatelessWidget {
   }
 }
 
-/// Two fields side by side with the gap the mockup's `.grid2` uses.
 class FormFieldRow extends StatelessWidget {
   final Widget left;
   final Widget right;
