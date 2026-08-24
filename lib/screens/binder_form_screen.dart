@@ -168,7 +168,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   controller: _nameController,
                   decoration: pokeInputDecoration(
                     hint: 'e.g. Johto Journey',
-                    icon: Icons.folder_outlined,
+                    icon: Icons.menu_book_outlined,
                   ),
                   onChanged: (_) {
                     if (_nameError != null) setState(() => _nameError = null);

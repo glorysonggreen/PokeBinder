@@ -17,6 +17,44 @@ enum PokemonCardType {
 
 enum CardSupertype { pokemon, trainer, energy }
 
+IconData rarityIconFor(String rarity) {
+  switch (rarity) {
+    case 'Common':
+      return Icons.circle_outlined;
+    case 'Uncommon':
+      return Icons.star_border_rounded;
+    case 'Rare':
+      return Icons.star_rounded;
+    case 'Double Rare':
+      return Icons.stars_rounded;
+    case 'Illustration Rare':
+      return Icons.brush_rounded;
+    case 'Special Illustration Rare':
+      return Icons.auto_awesome_rounded;
+    case 'Hyper Rare':
+      return Icons.workspace_premium_rounded;
+    case 'Promo':
+      return Icons.local_offer_rounded;
+    default:
+      return Icons.category_rounded;
+  }
+}
+
+IconData conditionIconFor(String code) {
+  switch (code) {
+    case 'NM':
+      return Icons.verified_outlined;
+    case 'LP':
+      return Icons.check_circle_outline_rounded;
+    case 'MP':
+      return Icons.remove_circle_outline_rounded;
+    case 'DMG':
+      return Icons.broken_image_outlined;
+    default:
+      return Icons.help_outline_rounded;
+  }
+}
+
 extension PokemonCardTypeGradient on PokemonCardType {
   List<Color> get gradientColors {
     switch (this) {
@@ -46,12 +84,6 @@ extension PokemonCardTypeGradient on PokemonCardType {
   }
 }
 
-/// Only the fields the Card Details screen actually displays, matching the
-/// mockup's "Card Details" screen (name, set line, qty/condition,
-/// binder/page, est. value, notes).
-///
-/// If a Pokemon card model already exists elsewhere in this project, reuse
-/// that one instead of this file and drop this duplicate.
 @immutable
 class PokemonCardData {
   final String id;
@@ -61,10 +93,6 @@ class PokemonCardData {
   final String rarity;
   final PokemonCardType type;
   final CardSupertype supertype;
-
-  /// Only meaningful for Trainer ("Item"/"Supporter"/"Stadium") and Energy
-  /// ("Basic"/"Special") cards; null for Pokémon cards, which use [type]
-  /// instead.
   final String? subtype;
   final int quantityOwned;
   final String condition;
@@ -72,14 +100,7 @@ class PokemonCardData {
   final int page;
   final double estimatedValue;
   final String notes;
-
-  /// Optional artwork. When null, the card renders a placeholder silhouette
-  /// in the type's gradient colors, same as the mockup's SVG critter icons.
   final String? imageAssetPath;
-
-  /// When this card was added to the collection. Drives the "Time" sort
-  /// option's Newest/Oldest ordering. Defaults to now for freshly
-  /// created/scanned cards.
   final DateTime dateAdded;
 
   PokemonCardData({
@@ -101,9 +122,6 @@ class PokemonCardData {
     DateTime? dateAdded,
   }) : dateAdded = dateAdded ?? DateTime.now();
 
-  /// Returns a copy of this card with the given fields replaced. Used by the
-  /// Add/Edit Card form so an edit produces a new immutable card rather than
-  /// mutating the original in place.
   PokemonCardData copyWith({
     String? name,
     String? setName,
@@ -141,8 +159,6 @@ class PokemonCardData {
     );
   }
 
-  /// Sample data matching the mockup's Charizard example, for
-  /// previewing/testing the screen standalone.
   static final sample = PokemonCardData(
     id: 'sample-charizard',
     dateAdded: DateTime(2023, 1, 15),
@@ -160,12 +176,6 @@ class PokemonCardData {
     imageAssetPath: '../assets/charizard_base_set.jpg',
   );
 
-  /// The full sample collection shown across the Binders and All Cards
-  /// screens, matching the mockup's "All Cards" example set (12 cards).
-  /// Only Charizard has real artwork checked into assets/ so far — every
-  /// other card intentionally has no imageAssetPath, so the binder grid
-  /// shows the universal card back for it, same as it will for any card
-  /// added before its own artwork is scanned in.
   static final library = <PokemonCardData>[
     sample,
     PokemonCardData(

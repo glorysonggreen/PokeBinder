@@ -90,15 +90,11 @@ class FormFieldRow extends StatelessWidget {
 class PokeDropdownOption<T> {
   final T value;
   final String label;
-
-  const PokeDropdownOption(this.value, this.label);
+  final IconData? icon;
+  
+  const PokeDropdownOption(this.value, this.label, {this.icon});
 }
 
-/// A dropdown field styled to match the SORT ▸ ... popup menus used on the
-/// All Cards and Binders screens: a rounded white field that opens a
-/// rounded white menu with a soft shadow, a faint red highlight on the
-/// selected row, and a check mark next to the current value — instead of
-/// the plain system-default Material dropdown look.
 class PokeDropdownField<T> extends StatelessWidget {
   final T value;
   final List<PokeDropdownOption<T>> options;
@@ -117,6 +113,10 @@ class PokeDropdownField<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected =
         options.firstWhere((o) => o.value == value, orElse: () => options.first);
+    // Per-option icons (e.g. Rarity/Condition) take over from the static
+    // field icon once a value is selected, so the field icon updates
+    // dynamically along with the chosen option.
+    final displayIcon = selected.icon ?? icon;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -154,6 +154,7 @@ class PokeDropdownField<T> extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   child: _PokeDropdownMenuRow(
                     label: option.label,
+                    icon: option.icon,
                     selected: option.value == value,
                   ),
                 ),
@@ -167,8 +168,8 @@ class PokeDropdownField<T> extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  if (icon != null) ...[
-                    Icon(icon,
+                  if (displayIcon != null) ...[
+                    Icon(displayIcon,
                         size: 16,
                         color: PokeBinderColors.redDeep.withValues(alpha: 0.55)),
                     const SizedBox(width: 10),
@@ -198,9 +199,14 @@ class PokeDropdownField<T> extends StatelessWidget {
 
 class _PokeDropdownMenuRow extends StatelessWidget {
   final String label;
+  final IconData? icon;
   final bool selected;
 
-  const _PokeDropdownMenuRow({required this.label, required this.selected});
+  const _PokeDropdownMenuRow({
+    required this.label,
+    this.icon,
+    required this.selected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -215,6 +221,14 @@ class _PokeDropdownMenuRow extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (icon != null) ...[
+            Icon(icon,
+                size: 15,
+                color: selected
+                    ? PokeBinderColors.redDeep
+                    : PokeBinderColors.inkSoft),
+            const SizedBox(width: 8),
+          ],
           Expanded(
             child: Text(
               label,

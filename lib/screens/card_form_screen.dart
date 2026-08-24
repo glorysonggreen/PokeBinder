@@ -287,9 +287,10 @@ class _CardFormScreenState extends State<CardFormScreen> {
                   label: 'Rarity',
                   child: PokeDropdownField<String>(
                     value: _rarity,
-                    icon: Icons.star_outline_rounded,
+                    icon: Icons.diamond_rounded,
                     options: [
-                      for (final r in _kRarityOptions) PokeDropdownOption(r, r),
+                      for (final r in _kRarityOptions)
+                        PokeDropdownOption(r, r, icon: rarityIconFor(r)),
                     ],
                     onChanged: (value) => setState(() => _rarity = value),
                   ),
@@ -298,10 +299,11 @@ class _CardFormScreenState extends State<CardFormScreen> {
                   label: 'Condition',
                   child: PokeDropdownField<String>(
                     value: _conditionCode,
-                    icon: Icons.verified_outlined,
+                    icon: Icons.health_and_safety_outlined,
                     options: [
                       for (final c in _kConditionOptions)
-                        PokeDropdownOption(c.$2, c.$1),
+                        PokeDropdownOption(c.$2, c.$1,
+                            icon: conditionIconFor(c.$2)),
                     ],
                     onChanged: (value) => setState(() => _conditionCode = value),
                   ),
