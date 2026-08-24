@@ -17,6 +17,7 @@ enum CardSortOption {
   set,
   cardNumber,
   rarity,
+  condition,
   quantity,
 }
 
@@ -39,6 +40,8 @@ extension CardSortOptionLabel on CardSortOption {
         return 'Card Number';
       case CardSortOption.rarity:
         return 'Rarity';
+      case CardSortOption.condition:
+        return 'Condition';
       case CardSortOption.quantity:
         return 'Quantity';
     }
@@ -62,6 +65,8 @@ extension CardSortOptionLabel on CardSortOption {
         return Icons.tag_rounded;
       case CardSortOption.rarity:
         return Icons.diamond_rounded;
+      case CardSortOption.condition:
+        return Icons.health_and_safety_outlined;
       case CardSortOption.quantity:
         return Icons.format_list_numbered_rounded;
     }
@@ -135,6 +140,7 @@ class _BindersScreenState extends State<BindersScreen> {
   String? _subtypeFilter;
   String? _setFilter;
   String? _rarityFilter;
+  String? _conditionFilter;
   TimeSortDirection _timeDirection = TimeSortDirection.newest;
 
   List<PokemonCardData> get _allCards => [
@@ -375,6 +381,7 @@ class _BindersScreenState extends State<BindersScreen> {
                         subtypeFilter: _subtypeFilter,
                         setFilter: _setFilter,
                         rarityFilter: _rarityFilter,
+                        conditionFilter: _conditionFilter,
                         timeDirection: _timeDirection,
                         onSearchChanged: (v) =>
                             setState(() => _cardSearch = v),
@@ -386,6 +393,7 @@ class _BindersScreenState extends State<BindersScreen> {
                           _subtypeFilter = null;
                           _setFilter = null;
                           _rarityFilter = null;
+                          _conditionFilter = null;
                           _timeDirection = TimeSortDirection.newest;
                         }),
                         onTypeFilterChanged: (t) =>
@@ -396,6 +404,8 @@ class _BindersScreenState extends State<BindersScreen> {
                             setState(() => _setFilter = s),
                         onRarityFilterChanged: (r) =>
                             setState(() => _rarityFilter = r),
+                        onConditionFilterChanged: (c) =>
+                            setState(() => _conditionFilter = c),
                         onTimeDirectionChanged: (d) =>
                             setState(() => _timeDirection = d),
                         onCardTap: _openCard,
@@ -684,6 +694,7 @@ class _AllCardsTab extends StatelessWidget {
   final String? subtypeFilter;
   final String? setFilter;
   final String? rarityFilter;
+  final String? conditionFilter;
   final TimeSortDirection timeDirection;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<CardSortOption> onSortChanged;
@@ -691,6 +702,7 @@ class _AllCardsTab extends StatelessWidget {
   final ValueChanged<String?> onSubtypeFilterChanged;
   final ValueChanged<String?> onSetFilterChanged;
   final ValueChanged<String?> onRarityFilterChanged;
+  final ValueChanged<String?> onConditionFilterChanged;
   final ValueChanged<TimeSortDirection> onTimeDirectionChanged;
   final ValueChanged<PokemonCardData> onCardTap;
 
@@ -702,6 +714,7 @@ class _AllCardsTab extends StatelessWidget {
     required this.subtypeFilter,
     required this.setFilter,
     required this.rarityFilter,
+    required this.conditionFilter,
     required this.timeDirection,
     required this.onSearchChanged,
     required this.onSortChanged,
@@ -709,6 +722,7 @@ class _AllCardsTab extends StatelessWidget {
     required this.onSubtypeFilterChanged,
     required this.onSetFilterChanged,
     required this.onRarityFilterChanged,
+    required this.onConditionFilterChanged,
     required this.onTimeDirectionChanged,
     required this.onCardTap,
   });
@@ -783,6 +797,32 @@ class _AllCardsTab extends StatelessWidget {
     }
   }
 
+  // Standard TCG condition order from best to worst, matching the codes
+  // used by the Condition dropdown on the Add/Edit Card form.
+  static const _conditionOrder = <String>['NM', 'LP', 'MP', 'DMG'];
+
+  static const _conditionLabels = <String, String>{
+    'NM': 'Near Mint',
+    'LP': 'Lightly Played',
+    'MP': 'Moderately Played',
+    'DMG': 'Damaged',
+  };
+
+  static IconData _conditionIcon(String code) {
+    switch (code) {
+      case 'NM':
+        return Icons.verified_outlined;
+      case 'LP':
+        return Icons.check_circle_outline_rounded;
+      case 'MP':
+        return Icons.remove_circle_outline_rounded;
+      case 'DMG':
+        return Icons.broken_image_outlined;
+      default:
+        return Icons.help_outline_rounded;
+    }
+  }
+
   static bool _matchesEnergyFilter(PokemonCardData card, String? filterKey) {
     if (filterKey == null) return true;
     if (filterKey == 'Basic' || filterKey == 'Special') {
@@ -819,6 +859,7 @@ class _AllCardsTab extends StatelessWidget {
       CardSortOption.set ||
       CardSortOption.cardNumber ||
       CardSortOption.rarity ||
+      CardSortOption.condition ||
       CardSortOption.quantity =>
         cards,
     };
@@ -836,6 +877,9 @@ class _AllCardsTab extends StatelessWidget {
       CardSortOption.rarity =>
         bySupertype.where(
             (c) => rarityFilter == null || _rarityTier(c.rarity) == rarityFilter),
+      CardSortOption.condition =>
+        bySupertype.where(
+            (c) => conditionFilter == null || c.condition == conditionFilter),
       CardSortOption.time ||
       CardSortOption.alphabetical ||
       CardSortOption.cardNumber ||
@@ -874,6 +918,17 @@ class _AllCardsTab extends StatelessWidget {
 
         filtered.sort((a, b) {
           final byRank = rankOf(a).compareTo(rankOf(b));
+          return byRank != 0
+              ? byRank
+              : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+        break;
+      case CardSortOption.condition:
+        int conditionRankOf(PokemonCardData c) =>
+            _conditionOrder.indexOf(c.condition);
+
+        filtered.sort((a, b) {
+          final byRank = conditionRankOf(a).compareTo(conditionRankOf(b));
           return byRank != 0
               ? byRank
               : a.name.toLowerCase().compareTo(b.name.toLowerCase());
@@ -961,6 +1016,19 @@ class _AllCardsTab extends StatelessWidget {
           iconFor: (key) =>
               key == null ? Icons.apps_rounded : _rarityTierIcon(key),
           onChanged: onRarityFilterChanged,
+        );
+        break;
+      case CardSortOption.condition:
+        final conditionOptions = <String?, String>{
+          null: 'All',
+          for (final code in _conditionOrder) code: _conditionLabels[code]!,
+        };
+        subOptionRow = _SubtypeChipRow(
+          options: conditionOptions,
+          selected: conditionFilter,
+          iconFor: (key) =>
+              key == null ? Icons.apps_rounded : _conditionIcon(key),
+          onChanged: onConditionFilterChanged,
         );
         break;
       case CardSortOption.alphabetical:
