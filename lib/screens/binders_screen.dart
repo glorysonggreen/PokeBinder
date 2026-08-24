@@ -774,28 +774,9 @@ class _AllCardsTab extends StatelessWidget {
     'Other/Additional Rarities': 'Other/Additional Rarities',
   };
 
-  static IconData _rarityTierIcon(String tier) {
-    switch (tier) {
-      case 'Common':
-        return Icons.circle_outlined;
-      case 'Uncommon':
-        return Icons.star_border_rounded;
-      case 'Rare':
-        return Icons.star_rounded;
-      case 'Double Rare':
-        return Icons.stars_rounded;
-      case 'Illustration Rare':
-        return Icons.brush_rounded;
-      case 'Special Illustration Rare':
-        return Icons.auto_awesome_rounded;
-      case 'Hyper Rare':
-        return Icons.workspace_premium_rounded;
-      case 'Promo':
-        return Icons.local_offer_rounded;
-      default:
-        return Icons.category_rounded;
-    }
-  }
+  // Delegates to the shared mapping in pokemon_card_data.dart so this menu
+  // and the Add/Edit Card form's Rarity dropdown never drift out of sync.
+  static IconData _rarityTierIcon(String tier) => rarityIconFor(tier);
 
   // Standard TCG condition order from best to worst, matching the codes
   // used by the Condition dropdown on the Add/Edit Card form.
@@ -808,20 +789,9 @@ class _AllCardsTab extends StatelessWidget {
     'DMG': 'Damaged',
   };
 
-  static IconData _conditionIcon(String code) {
-    switch (code) {
-      case 'NM':
-        return Icons.verified_outlined;
-      case 'LP':
-        return Icons.check_circle_outline_rounded;
-      case 'MP':
-        return Icons.remove_circle_outline_rounded;
-      case 'DMG':
-        return Icons.broken_image_outlined;
-      default:
-        return Icons.help_outline_rounded;
-    }
-  }
+  // Delegates to the shared mapping in pokemon_card_data.dart so this menu
+  // and the Add/Edit Card form's Condition dropdown never drift out of sync.
+  static IconData _conditionIcon(String code) => conditionIconFor(code);
 
   static bool _matchesEnergyFilter(PokemonCardData card, String? filterKey) {
     if (filterKey == null) return true;
