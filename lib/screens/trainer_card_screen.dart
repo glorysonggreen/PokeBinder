@@ -3,6 +3,7 @@ import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/pokemon_card_widget.dart';
 
 class TrainerCardScreen extends StatelessWidget {
   final String trainerName;
@@ -113,6 +114,7 @@ class TrainerCardScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _TrainerStatBox(
+                      icon: Icons.style_rounded,
                       value: '$_totalCardCount',
                       label: 'Total cards',
                     ),
@@ -120,6 +122,7 @@ class TrainerCardScreen extends StatelessWidget {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: _TrainerStatBox(
+                      icon: Icons.menu_book_rounded,
                       value: '$binderCount',
                       label: 'Binders',
                     ),
@@ -152,15 +155,7 @@ class TrainerCardScreen extends StatelessWidget {
                       style: PokeBinderText.sectionLabel,
                     ),
                   ),
-                  Text(
-                    'Coming soon',
-                    style: PokeBinderText.chakraPetch(const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      color: PokeBinderColors.goldDeep,
-                    )),
-                  ),
+                  const _SoftPill(label: 'COMING SOON'),
                 ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
@@ -181,6 +176,33 @@ class TrainerCardScreen extends StatelessWidget {
   }
 }
 
+class _SoftPill extends StatelessWidget {
+  final String label;
+
+  const _SoftPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.cream2.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: PokeBinderColors.gold.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        label,
+        style: PokeBinderText.chakraPetch(const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.0,
+          color: PokeBinderColors.goldDeep,
+        )),
+      ),
+    );
+  }
+}
+
 class _TrainerHeaderPanel extends StatelessWidget {
   final String trainerName;
   final String trainerTitle;
@@ -196,10 +218,7 @@ class _TrainerHeaderPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        vertical: PokeBinderSpacing.sp5,
-        horizontal: PokeBinderSpacing.sp4,
-      ),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -210,53 +229,109 @@ class _TrainerHeaderPanel extends StatelessWidget {
         border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         boxShadow: kCardElevation,
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Container(
-            width: 82,
-            height: 82,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: PokeBinderColors.redGradient,
-              border: Border.all(color: PokeBinderColors.gold, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: PokeBinderColors.redDeep.withValues(alpha: 0.22),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                  spreadRadius: -2,
+          Positioned(
+            right: -22,
+            top: -22,
+            child: Transform.rotate(
+              angle: -0.35,
+              child: Icon(
+                Icons.catching_pokemon,
+                size: 132,
+                color: PokeBinderColors.redDeep.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: PokeBinderSpacing.sp5,
+              horizontal: PokeBinderSpacing.sp4,
+            ),
+            child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: PokeBinderColors.gold.withValues(alpha: 0.32),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 82,
+                      height: 82,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: PokeBinderColors.redGradient,
+                        border: Border.all(color: PokeBinderColors.gold, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: PokeBinderColors.redDeep.withValues(alpha: 0.22),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                            spreadRadius: -2,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.catching_pokemon,
+                        size: 36,
+                        color: PokeBinderColors.white,
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: PokeBinderSpacing.sp3),
+                Text(
+                  trainerName,
+                  style: PokeBinderText.chakraPetch(const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.2,
+                    color: PokeBinderColors.ink,
+                  )),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: PokeBinderColors.cream2.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: PokeBinderColors.gold.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(
+                    trainerTitle.toUpperCase(),
+                    style: PokeBinderText.chakraPetch(const TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                      color: PokeBinderColors.goldDeep,
+                    )),
+                  ),
+                ),
+                const SizedBox(height: PokeBinderSpacing.sp4),
+                Container(
+                  height: 1,
+                  width: 40,
+                  color: PokeBinderColors.ink.withValues(alpha: 0.08),
+                ),
+                const SizedBox(height: PokeBinderSpacing.sp4),
+                favoriteCard != null
+                    ? _FavoriteCardTag(card: favoriteCard!)
+                    : const SizedBox.shrink(),
               ],
             ),
-            child: const Icon(
-              Icons.catching_pokemon,
-              size: 36,
-              color: PokeBinderColors.white,
-            ),
           ),
-          const SizedBox(height: PokeBinderSpacing.sp3),
-          Text(
-            trainerName,
-            style: PokeBinderText.chakraPetch(const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.2,
-              color: PokeBinderColors.ink,
-            )),
-          ),
-          const SizedBox(height: 3),
-          Text(trainerTitle, style: PokeBinderText.subtitle),
-          const SizedBox(height: PokeBinderSpacing.sp3),
-          Container(
-            height: 1,
-            width: 40,
-            color: PokeBinderColors.ink.withValues(alpha: 0.08),
-          ),
-          const SizedBox(height: PokeBinderSpacing.sp3),
-          favoriteCard != null
-              ? _FavoriteCardTag(card: favoriteCard!)
-              : const SizedBox.shrink(),
         ],
       ),
     );
@@ -271,10 +346,8 @@ class _FavoriteCardTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: PokeBinderSpacing.sp4,
-        vertical: PokeBinderSpacing.sp2,
-      ),
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: PokeBinderColors.redGradient,
@@ -286,37 +359,53 @@ class _FavoriteCardTag extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.star_rounded,
-                size: 12,
-                color: PokeBinderColors.white,
-              ),
-              const SizedBox(width: 5),
-              Text('Favorite Card', style: PokeBinderText.chipLabelActive),
-            ],
+          SizedBox(
+            width: 38,
+            child: AspectRatio(
+              aspectRatio: kPokemonCardAspectRatio,
+              child: PokemonCard(card: card),
+            ),
           ),
-          const SizedBox(height: 3),
-          Text(
-            card.name,
-            style: PokeBinderText.chakraPetch(const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: PokeBinderColors.white,
-            )),
-          ),
-          Text(
-            '${card.setName} • #${card.cardNumber}',
-            style: PokeBinderText.chakraPetch(TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              color: PokeBinderColors.white.withValues(alpha: 0.85),
-            )),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 12,
+                      color: PokeBinderColors.white,
+                    ),
+                    const SizedBox(width: 5),
+                    Text('Favorite Card', style: PokeBinderText.chipLabelActive),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  card.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: PokeBinderText.chakraPetch(const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: PokeBinderColors.white,
+                  )),
+                ),
+                Text(
+                  '${card.setName} • #${card.cardNumber}',
+                  overflow: TextOverflow.ellipsis,
+                  style: PokeBinderText.chakraPetch(TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                    color: PokeBinderColors.white.withValues(alpha: 0.85),
+                  )),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -325,10 +414,15 @@ class _FavoriteCardTag extends StatelessWidget {
 }
 
 class _TrainerStatBox extends StatelessWidget {
+  final IconData icon;
   final String value;
   final String label;
 
-  const _TrainerStatBox({required this.value, required this.label});
+  const _TrainerStatBox({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -347,6 +441,8 @@ class _TrainerStatBox extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Icon(icon, size: 16, color: PokeBinderColors.goldDeep),
+          const SizedBox(height: 6),
           Text(value, style: PokeBinderText.statNumber),
           const SizedBox(height: 3),
           Text(
@@ -365,8 +461,17 @@ class _FavoriteBinderPanel extends StatelessWidget {
 
   const _FavoriteBinderPanel({required this.binder, this.onTap});
 
+  PokemonCardData? get _coverCard {
+    for (final page in binder.pages) {
+      if (page.isNotEmpty) return page.first;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final coverCard = _coverCard;
+
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
@@ -384,19 +489,29 @@ class _FavoriteBinderPanel extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
+              SizedBox(
                 width: 44,
                 height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(11),
-                  gradient: PokeBinderColors.redGradient,
-                ),
-                child: const Icon(
-                  Icons.menu_book_rounded,
-                  size: 18,
-                  color: PokeBinderColors.white,
-                ),
+                child: coverCard?.imageAssetPath != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(11),
+                        child: Image.asset(
+                          coverCard!.imageAssetPath!,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(11),
+                          gradient: PokeBinderColors.redGradient,
+                        ),
+                        child: const Icon(
+                          Icons.menu_book_rounded,
+                          size: 18,
+                          color: PokeBinderColors.white,
+                        ),
+                      ),
               ),
               const SizedBox(width: PokeBinderSpacing.sp3),
               Expanded(
@@ -492,10 +607,27 @@ class _LockedBadgeSlot extends StatelessWidget {
             color: PokeBinderColors.cream2.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            Icons.lock_outline_rounded,
-            size: 16,
-            color: PokeBinderColors.inkSoft.withValues(alpha: 0.5),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.lock_outline_rounded,
+                  size: 16,
+                  color: PokeBinderColors.inkSoft.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'LOCKED',
+                  style: PokeBinderText.chakraPetch(TextStyle(
+                    fontSize: 7,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.6,
+                    color: PokeBinderColors.inkSoft.withValues(alpha: 0.45),
+                  )),
+                ),
+              ],
+            ),
           ),
         ),
       ),
