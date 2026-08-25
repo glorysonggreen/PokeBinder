@@ -32,8 +32,6 @@ const double kPokemonCardImageWidthPx = 600;
 const double kPokemonCardImageHeightPx = 825;
 const double kPokemonCardImageAspectRatio = kPokemonCardImageWidthPx / kPokemonCardImageHeightPx;
 const double kCardInteractionHeightBuffer = 1.25;
-// Space reserved below each grid tile for the two-line name/set caption
-// (a small gap plus the cardName and cardMeta text rows).
 const double kCardCaptionHeight = 30.0;
 
 class PokeBinderSpacing {
@@ -83,10 +81,10 @@ class PokeBinderText {
   );
 
   static final statLabel = chakraPetch(const TextStyle(
-    fontSize: 8,
+    fontSize: 9.5,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.8,
-    color: PokeBinderColors.inkSoft,
+    color: PokeBinderColors.ink,
   ));
 
   static const statNumber = TextStyle(
