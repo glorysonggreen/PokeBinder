@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onOpenScan;
   final VoidCallback onOpenMore;
   final VoidCallback onOpenDecks;
+  final VoidCallback onOpenTrainerCard;
 
   const HomeScreen({
     super.key,
@@ -26,6 +27,7 @@ class HomeScreen extends StatefulWidget {
     required this.onOpenScan,
     required this.onOpenMore,
     required this.onOpenDecks,
+    required this.onOpenTrainerCard,
   });
 
   @override
@@ -129,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _TrainerAvatar(onTap: widget.onOpenMore),
+                    _TrainerAvatar(onTap: widget.onOpenTrainerCard),
                     const SizedBox(width: PokeBinderSpacing.sp3),
                     Expanded(
                       child: Column(
