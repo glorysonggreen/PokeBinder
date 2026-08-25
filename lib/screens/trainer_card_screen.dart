@@ -461,17 +461,8 @@ class _FavoriteBinderPanel extends StatelessWidget {
 
   const _FavoriteBinderPanel({required this.binder, this.onTap});
 
-  PokemonCardData? get _coverCard {
-    for (final page in binder.pages) {
-      if (page.isNotEmpty) return page.first;
-    }
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final coverCard = _coverCard;
-
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(14),
@@ -492,26 +483,18 @@ class _FavoriteBinderPanel extends StatelessWidget {
               SizedBox(
                 width: 44,
                 height: 44,
-                child: coverCard?.imageAssetPath != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(11),
-                        child: Image.asset(
-                          coverCard!.imageAssetPath!,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Container(
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(11),
-                          gradient: PokeBinderColors.redGradient,
-                        ),
-                        child: const Icon(
-                          Icons.menu_book_rounded,
-                          size: 18,
-                          color: PokeBinderColors.white,
-                        ),
-                      ),
+                child: Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(11),
+                    gradient: PokeBinderColors.redGradient,
+                  ),
+                  child: const Icon(
+                    Icons.menu_book_rounded,
+                    size: 18,
+                    color: PokeBinderColors.white,
+                  ),
+                ),
               ),
               const SizedBox(width: PokeBinderSpacing.sp3),
               Expanded(
