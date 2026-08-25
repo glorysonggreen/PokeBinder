@@ -19,6 +19,80 @@ class BackLink extends StatelessWidget {
   }
 }
 
+class CollectionSearchBar extends StatelessWidget {
+  final String hint;
+  final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap;
+  final bool enabled;
+  final Widget? trailing;
+
+  const CollectionSearchBar({
+    super.key,
+    required this.hint,
+    this.onChanged,
+    this.onTap,
+    this.enabled = true,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final field = Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: PokeBinderSpacing.sp2,
+      ),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.09)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.search,
+            size: 16,
+            color: PokeBinderColors.inkSoft,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: IgnorePointer(
+              ignoring: !enabled,
+              child: TextField(
+                enabled: enabled,
+                onChanged: onChanged,
+                style: const TextStyle(fontSize: 11.5, color: PokeBinderColors.ink),
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: hint,
+                  hintStyle: const TextStyle(color: Color(0xFFA89C86)),
+                ),
+              ),
+            ),
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ],
+        ],
+      ),
+    );
+
+    if (onTap == null) return field;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: field,
+      ),
+    );
+  }
+}
+
 class PillButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;

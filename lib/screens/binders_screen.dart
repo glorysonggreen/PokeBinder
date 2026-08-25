@@ -538,7 +538,7 @@ class _BindersTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SearchBar(
+          CollectionSearchBar(
             hint: 'Search binders…',
             onChanged: onSearchChanged,
           ),
@@ -1008,7 +1008,7 @@ class _AllCardsTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SearchBar(
+          CollectionSearchBar(
             hint: 'Search all ${cards.length} cards by name…',
             onChanged: onSearchChanged,
           ),
@@ -1080,50 +1080,6 @@ class _AllCardsTab extends StatelessWidget {
                 );
               },
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
-  final String hint;
-  final ValueChanged<String> onChanged;
-
-  const _SearchBar({required this.hint, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: PokeBinderSpacing.sp2,
-      ),
-      decoration: BoxDecoration(
-        color: PokeBinderColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.09)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search,
-            size: 16,
-            color: PokeBinderColors.inkSoft,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              onChanged: onChanged,
-              style: const TextStyle(fontSize: 11.5, color: PokeBinderColors.ink),
-              decoration: InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                hintText: hint,
-                hintStyle: const TextStyle(color: Color(0xFFA89C86)),
-              ),
-            ),
-          ),
         ],
       ),
     );
