@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
+import '../models/binder_data.dart';
 import '../theme/pokebinder_theme.dart';
+import 'trainer_card_screen.dart';
 
-class MoreScreen extends StatelessWidget {
-  final VoidCallback? onOpenTrainerCard;
+class MoreScreen extends StatefulWidget {
   final VoidCallback? onOpenStats;
   final VoidCallback? onOpenWishlist;
   final VoidCallback? onOpenSettings;
+  final ValueChanged<BinderData>? onOpenBinder;
+  final bool initialShowTrainerCard;
 
   const MoreScreen({
     super.key,
-    this.onOpenTrainerCard,
     this.onOpenStats,
     this.onOpenWishlist,
     this.onOpenSettings,
+    this.onOpenBinder,
+    this.initialShowTrainerCard = false,
   });
+
+  @override
+  State<MoreScreen> createState() => _MoreScreenState();
+}
+
+class _MoreScreenState extends State<MoreScreen> {
+  late bool _showingTrainerCard = widget.initialShowTrainerCard;
 
   void _handleTap(BuildContext context, VoidCallback? onTap, String label) {
     if (onTap != null) {
@@ -27,13 +38,20 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_showingTrainerCard) {
+      return TrainerCardScreen(
+        onBack: () => setState(() => _showingTrainerCard = false),
+        onOpenBinder: widget.onOpenBinder,
+      );
+    }
+
     final rows = [
       _MoreRowData(
         icon: Icons.badge_rounded,
         gradient: PokeBinderColors.redGradient,
         title: 'Trainer Card',
         subtitle: 'Profile, badges, favorite deck',
-        onTap: () => _handleTap(context, onOpenTrainerCard, 'Trainer Card'),
+        onTap: () => setState(() => _showingTrainerCard = true),
       ),
       _MoreRowData(
         icon: Icons.bar_chart_rounded,
@@ -41,7 +59,7 @@ class MoreScreen extends StatelessWidget {
         title: 'Collection Statistics',
         subtitle: 'Value, rarity, set breakdown',
         onTap: () =>
-            _handleTap(context, onOpenStats, 'Collection Statistics'),
+            _handleTap(context, widget.onOpenStats, 'Collection Statistics'),
       ),
       _MoreRowData(
         icon: Icons.swap_horiz_rounded,
@@ -49,14 +67,14 @@ class MoreScreen extends StatelessWidget {
         title: 'Wishlist & Trade List',
         subtitle: 'Cards you want or will trade',
         onTap: () =>
-            _handleTap(context, onOpenWishlist, 'Wishlist & Trade List'),
+            _handleTap(context, widget.onOpenWishlist, 'Wishlist & Trade List'),
       ),
       _MoreRowData(
         icon: Icons.settings_rounded,
         gradient: PokeBinderColors.slateGradient,
         title: 'Settings',
         subtitle: 'Account, backup, export',
-        onTap: () => _handleTap(context, onOpenSettings, 'Settings'),
+        onTap: () => _handleTap(context, widget.onOpenSettings, 'Settings'),
       ),
     ];
 

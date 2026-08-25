@@ -21,6 +21,8 @@ class _AppShellState extends State<AppShell> {
   int _bindersLinkToken = 0;
   int _bindersInitialTabIndex = 0;
   String? _bindersInitialBinderId;
+  int _moreLinkToken = 0;
+  bool _moreInitialShowTrainerCard = false;
 
   void _switchTab(AppTab tab) => setState(() => _tab = tab);
 
@@ -30,6 +32,14 @@ class _AppShellState extends State<AppShell> {
       _bindersInitialTabIndex = tabIndex;
       _bindersInitialBinderId = binderId;
       _tab = AppTab.binders;
+    });
+  }
+
+  void _openTrainerCard() {
+    setState(() {
+      _moreLinkToken++;
+      _moreInitialShowTrainerCard = true;
+      _tab = AppTab.more;
     });
   }
 
@@ -48,6 +58,7 @@ class _AppShellState extends State<AppShell> {
             onOpenScan: () => _switchTab(AppTab.scan),
             onOpenMore: () => _switchTab(AppTab.more),
             onOpenDecks: () => _switchTab(AppTab.decks),
+            onOpenTrainerCard: _openTrainerCard,
           ),
           BindersScreen(
             key: ValueKey(_bindersLinkToken),
@@ -62,7 +73,12 @@ class _AppShellState extends State<AppShell> {
                 'Put together and manage your battle decks from your '
                 'collection here.',
           ),
-          const MoreScreen(),
+          MoreScreen(
+            key: ValueKey(_moreLinkToken),
+            initialShowTrainerCard: _moreInitialShowTrainerCard,
+            onOpenBinder: (BinderData binder) =>
+                _openBinders(tabIndex: 0, binderId: binder.id),
+          ),
         ],
       ),
       bottomNavigationBar: AppNavBar(
