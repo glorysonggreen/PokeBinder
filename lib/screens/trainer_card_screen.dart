@@ -23,6 +23,15 @@ class TrainerCardScreen extends StatelessWidget {
   int get _totalCardCount =>
       PokemonCardData.library.fold(0, (sum, c) => sum + c.quantityOwned);
 
+  PokemonCardData? get _favoriteCard {
+    final library = PokemonCardData.library;
+    if (library.isEmpty) return null;
+    final byName = library.where(
+      (c) => c.name.toLowerCase() == favoritePokemon.toLowerCase(),
+    );
+    return byName.isNotEmpty ? byName.first : library.first;
+  }
+
   BinderData? get _favoriteBinder {
     final binders = BinderData.sampleBinders;
     if (binders.isEmpty) return null;
@@ -96,7 +105,7 @@ class TrainerCardScreen extends StatelessWidget {
               _TrainerHeaderPanel(
                 trainerName: trainerName,
                 trainerTitle: trainerTitle,
-                favoritePokemon: favoritePokemon,
+                favoriteCard: _favoriteCard,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
 
@@ -175,12 +184,12 @@ class TrainerCardScreen extends StatelessWidget {
 class _TrainerHeaderPanel extends StatelessWidget {
   final String trainerName;
   final String trainerTitle;
-  final String favoritePokemon;
+  final PokemonCardData? favoriteCard;
 
   const _TrainerHeaderPanel({
     required this.trainerName,
     required this.trainerTitle,
-    required this.favoritePokemon,
+    required this.favoriteCard,
   });
 
   @override
@@ -245,43 +254,69 @@ class _TrainerHeaderPanel extends StatelessWidget {
             color: PokeBinderColors.ink.withValues(alpha: 0.08),
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
-          _TrainerTag(label: 'Favorite: $favoritePokemon'),
+          favoriteCard != null
+              ? _FavoriteCardTag(card: favoriteCard!)
+              : const SizedBox.shrink(),
         ],
       ),
     );
   }
 }
 
-class _TrainerTag extends StatelessWidget {
-  final String label;
+class _FavoriteCardTag extends StatelessWidget {
+  final PokemonCardData card;
 
-  const _TrainerTag({required this.label});
+  const _FavoriteCardTag({required this.card});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: PokeBinderSpacing.sp4,
+        vertical: PokeBinderSpacing.sp2,
+      ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: PokeBinderColors.goldGradient,
+        borderRadius: BorderRadius.circular(14),
+        gradient: PokeBinderColors.redGradient,
         boxShadow: [
           BoxShadow(
-            color: PokeBinderColors.goldDeep.withValues(alpha: 0.28),
+            color: PokeBinderColors.redDeep.withValues(alpha: 0.28),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star_rounded, size: 12, color: PokeBinderColors.ink),
-          const SizedBox(width: 5),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.star_rounded,
+                size: 12,
+                color: PokeBinderColors.white,
+              ),
+              const SizedBox(width: 5),
+              Text('Favorite Card', style: PokeBinderText.chipLabelActive),
+            ],
+          ),
+          const SizedBox(height: 3),
           Text(
-            label,
-            style: PokeBinderText.chipLabelActive.copyWith(
-              color: PokeBinderColors.ink,
-            ),
+            card.name,
+            style: PokeBinderText.chakraPetch(const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: PokeBinderColors.white,
+            )),
+          ),
+          Text(
+            '${card.setName} • #${card.cardNumber}',
+            style: PokeBinderText.chakraPetch(TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w500,
+              color: PokeBinderColors.white.withValues(alpha: 0.85),
+            )),
           ),
         ],
       ),
