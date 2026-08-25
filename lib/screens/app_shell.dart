@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/binder_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/app_nav_bar.dart';
 import 'binders_screen.dart';
+import 'home_screen.dart';
 import 'scanner_screen.dart';
 
 class AppShell extends StatefulWidget {
@@ -15,6 +17,20 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   late AppTab _tab = widget.initialTab;
+  int _bindersLinkToken = 0;
+  int _bindersInitialTabIndex = 0;
+  String? _bindersInitialBinderId;
+
+  void _switchTab(AppTab tab) => setState(() => _tab = tab);
+
+  void _openBinders({int tabIndex = 0, String? binderId}) {
+    setState(() {
+      _bindersLinkToken++;
+      _bindersInitialTabIndex = tabIndex;
+      _bindersInitialBinderId = binderId;
+      _tab = AppTab.binders;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,24 +38,29 @@ class _AppShellState extends State<AppShell> {
       backgroundColor: PokeBinderColors.cream,
       body: IndexedStack(
         index: AppTab.values.indexOf(_tab),
-        children: const [
-          _ComingSoonScreen(
-            tab: AppTab.home,
-            title: 'Your Pokédex home',
-            description:
-                'A quick-glance dashboard — recent pulls, collection value, '
-                'and shortcuts to your binders — lands here next.',
+        children: [
+          HomeScreen(
+            onOpenAllCards: () => _openBinders(tabIndex: 1),
+            onOpenBinders: () => _openBinders(tabIndex: 0),
+            onOpenBinder: (BinderData binder) =>
+                _openBinders(tabIndex: 0, binderId: binder.id),
+            onOpenScan: () => _switchTab(AppTab.scan),
+            onOpenMore: () => _switchTab(AppTab.more),
           ),
-          BindersScreen(),
-          ScannerScreen(),
-          _ComingSoonScreen(
+          BindersScreen(
+            key: ValueKey(_bindersLinkToken),
+            initialTabIndex: _bindersInitialTabIndex,
+            initialBinderId: _bindersInitialBinderId,
+          ),
+          const ScannerScreen(),
+          const _ComingSoonScreen(
             tab: AppTab.decks,
             title: 'Deck building',
             description:
                 'Put together and manage your battle decks from your '
                 'collection here.',
           ),
-          _ComingSoonScreen(
+          const _ComingSoonScreen(
             tab: AppTab.more,
             title: 'More',
             description:

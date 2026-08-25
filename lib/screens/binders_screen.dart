@@ -113,7 +113,14 @@ extension BinderSortOptionLabel on BinderSortOption {
 }
 
 class BindersScreen extends StatefulWidget {
-  const BindersScreen({super.key});
+  final int initialTabIndex;
+  final String? initialBinderId;
+
+  const BindersScreen({
+    super.key,
+    this.initialTabIndex = 0,
+    this.initialBinderId,
+  });
 
   @override
   State<BindersScreen> createState() => _BindersScreenState();
@@ -125,9 +132,14 @@ class _BindersScreenState extends State<BindersScreen> {
       .where((c) => c.supertype != CardSupertype.pokemon)
       .toList();
 
-  int _tabIndex = 0;
+  late int _tabIndex = widget.initialTabIndex;
 
-  late BinderData _selectedBinder = _binders.first;
+  late BinderData _selectedBinder = widget.initialBinderId != null
+      ? _binders.firstWhere(
+          (b) => b.id == widget.initialBinderId,
+          orElse: () => _binders.first,
+        )
+      : _binders.first;
   int _pageIndex = 0;
   bool _showingUnassigned = false;
 
