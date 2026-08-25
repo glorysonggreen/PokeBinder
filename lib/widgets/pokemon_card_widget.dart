@@ -95,7 +95,7 @@ class _CardFrame extends StatelessWidget {
                       begin: Alignment(-1, -1),
                       end: Alignment(0.2, 0.4),
                       colors: [
-                        Color(0x59FFFFFF), // rgba(255,255,255,.35)
+                        Color(0x59FFFFFF),
                         Color(0x00FFFFFF),
                       ],
                     ),

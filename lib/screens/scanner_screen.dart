@@ -143,7 +143,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 180),
                       child: Text(
-                        _scanning ? 'Scanning…' : 'Align card within frame',
+                        _scanning ? 'Scanning…' : 'Align Card Within Frame',
                         key: ValueKey(_scanning),
                         style: PokeBinderText.chakraPetch(TextStyle(
                           fontSize: 10,
@@ -182,7 +182,7 @@ class _ScannerScreenState extends State<ScannerScreen>
               Center(
                 child: _GhostLinkButton(
                   icon: Icons.edit_outlined,
-                  label: 'Or enter card details manually',
+                  label: 'Or Enter Card Details Manually',
                   onTap: _openManualEntry,
                 ),
               ),

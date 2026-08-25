@@ -132,20 +132,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('HOME DASHBOARD', style: PokeBinderText.eyebrow),
+                const SizedBox(height: PokeBinderSpacing.sp2),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    _TrainerAvatar(onTap: widget.onOpenMore),
+                    const SizedBox(width: PokeBinderSpacing.sp3),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('HOME DASHBOARD', style: PokeBinderText.eyebrow),
-                          const SizedBox(height: 3),
                           Text(
                             'Welcome back, ${widget.trainerName}',
                             style: PokeBinderText.heading,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: PokeBinderSpacing.sp1),
                           Text(
                             'Your collection at a glance',
                             style: PokeBinderText.subtitle,
@@ -153,8 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: PokeBinderSpacing.sp3),
-                    _TrainerAvatar(onTap: widget.onOpenMore),
                   ],
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
@@ -273,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
                 PillButton(
-                  label: 'Scan a new card',
+                  label: 'Scan a New Card',
                   icon: Icons.center_focus_strong_rounded,
                   onTap: widget.onOpenScan,
                 ),
@@ -307,8 +307,8 @@ class _TrainerAvatar extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Container(
-          width: 42,
-          height: 42,
+          width: 50,
+          height: 50,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -316,15 +316,16 @@ class _TrainerAvatar extends StatelessWidget {
             border: Border.all(color: PokeBinderColors.gold, width: 2),
             boxShadow: [
               BoxShadow(
-                color: PokeBinderColors.redDeep.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+                color: PokeBinderColors.redDeep.withValues(alpha: 0.18),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
+                spreadRadius: -2,
               ),
             ],
           ),
           child: const Icon(
             Icons.catching_pokemon,
-            size: 20,
+            size: 24,
             color: PokeBinderColors.white,
           ),
         ),

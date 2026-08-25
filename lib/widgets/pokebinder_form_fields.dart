@@ -113,9 +113,6 @@ class PokeDropdownField<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected =
         options.firstWhere((o) => o.value == value, orElse: () => options.first);
-    // Per-option icons (e.g. Rarity/Condition) take over from the static
-    // field icon once a value is selected, so the field icon updates
-    // dynamically along with the chosen option.
     final displayIcon = selected.icon ?? icon;
 
     return LayoutBuilder(
@@ -125,8 +122,6 @@ class PokeDropdownField<T> extends StatelessWidget {
             : 190.0;
 
         return Theme(
-          // Swaps the menu items' default grey Material hover/splash for a
-          // faint themed red, matching the SORT menus elsewhere in the app.
           data: Theme.of(context).copyWith(
             highlightColor: PokeBinderColors.red.withValues(alpha: 0.06),
             splashColor: PokeBinderColors.red.withValues(alpha: 0.06),

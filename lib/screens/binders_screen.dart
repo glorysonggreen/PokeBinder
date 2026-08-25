@@ -94,9 +94,9 @@ extension BinderSortOptionLabel on BinderSortOption {
       case BinderSortOption.name:
         return 'Alphabetically';
       case BinderSortOption.recent:
-        return 'Recently added';
+        return 'Recently Added';
       case BinderSortOption.cardCount:
-        return 'Most cards';
+        return 'Most Cards';
     }
   }
 
