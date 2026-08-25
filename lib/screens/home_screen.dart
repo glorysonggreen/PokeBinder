@@ -2,10 +2,19 @@ import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/binder_card_tile.dart';
 import '../widgets/pokebinder_controls.dart';
-import '../widgets/pokemon_card_widget.dart';
+import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
+
+final List<BoxShadow> _kCardElevation = [
+  BoxShadow(
+    color: PokeBinderColors.ink.withValues(alpha: 0.06),
+    blurRadius: 10,
+    offset: const Offset(0, 3),
+  ),
+];
 
 class HomeScreen extends StatefulWidget {
   final String trainerName;
@@ -14,6 +23,7 @@ class HomeScreen extends StatefulWidget {
   final ValueChanged<BinderData> onOpenBinder;
   final VoidCallback onOpenScan;
   final VoidCallback onOpenMore;
+  final VoidCallback onOpenDecks;
 
   const HomeScreen({
     super.key,
@@ -23,6 +33,7 @@ class HomeScreen extends StatefulWidget {
     required this.onOpenBinder,
     required this.onOpenScan,
     required this.onOpenMore,
+    required this.onOpenDecks,
   });
 
   @override
@@ -46,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<PokemonCardData> get _recentlyAdded {
     final sorted = [..._cards]
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
-    return sorted.take(3).toList();
+    return sorted.take(2).toList();
   }
 
   int get _totalCardCount =>
@@ -79,6 +90,28 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _openNewBinder() async {
+    final result = await Navigator.of(context).push<BinderFormResult>(
+      MaterialPageRoute(builder: (_) => const BinderFormScreen()),
+    );
+    final created = result?.binder;
+    if (created == null) return;
+    setState(() => _binders.add(created));
+  }
+
+  Future<void> _openAddCardManually() async {
+    final result = await Navigator.of(context).push<CardFormResult>(
+      MaterialPageRoute(
+        builder: (_) => CardFormScreen(
+          binders: _binders,
+          defaultBinderId: kUnassignedBinderId,
+        ),
+      ),
+    );
+    if (result == null || result.card == null) return;
+    setState(() => _cards.add(result.card!));
+  }
+
   @override
   Widget build(BuildContext context) {
     final continueBinder = _continueBinder;
@@ -99,22 +132,38 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('HOME DASHBOARD', style: PokeBinderText.eyebrow),
-                const SizedBox(height: 2),
-                Text(
-                  'Welcome back, ${widget.trainerName}',
-                  style: PokeBinderText.heading,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Your collection at a glance',
-                  style: PokeBinderText.subtitle,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('HOME DASHBOARD', style: PokeBinderText.eyebrow),
+                          const SizedBox(height: 3),
+                          Text(
+                            'Welcome back, ${widget.trainerName}',
+                            style: PokeBinderText.heading,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Your collection at a glance',
+                            style: PokeBinderText.subtitle,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp3),
+                    _TrainerAvatar(onTap: widget.onOpenMore),
+                  ],
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
-                _HomeSearchBar(
-                  cardCount: _totalCardCount,
+                CollectionSearchBar(
+                  hint: 'Search your whole collection…',
+                  enabled: false,
                   onTap: widget.onOpenAllCards,
+                  trailing: _CardCountBadge(count: _totalCardCount),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp3),
 
@@ -147,36 +196,80 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
+                Text('QUICK ACTIONS', style: PokeBinderText.sectionLabel),
+                const SizedBox(height: PokeBinderSpacing.sp2),
+                Row(
+                  children: [
+                    Expanded(
+                      child: PillButton(
+                        label: 'New Binder',
+                        icon: Icons.add,
+                        ghost: true,
+                        onTap: _openNewBinder,
+                      ),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    Expanded(
+                      child: PillButton(
+                        label: 'New Deck',
+                        icon: Icons.add,
+                        ghost: true,
+                        onTap: widget.onOpenDecks,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: PokeBinderSpacing.sp4),
+
                 _ContinueBinderPanel(
                   binder: continueBinder,
                   onTap: () => widget.onOpenBinder(continueBinder),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
-                Text('RECENTLY ADDED', style: PokeBinderText.sectionLabel),
-                const SizedBox(height: PokeBinderSpacing.sp2),
-                if (recentCards.isEmpty)
-                  Text(
-                    'Scan or add a card to see it here.',
-                    style: PokeBinderText.subtitle,
-                  )
-                else
-                  Row(
-                    children: [
-                      for (var i = 0; i < recentCards.length; i++) ...[
-                        if (i != 0) const SizedBox(width: PokeBinderSpacing.sp2),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => _openCard(recentCards[i]),
-                            child: AspectRatio(
-                              aspectRatio: kPokemonCardImageAspectRatio,
-                              child: PokemonCard(card: recentCards[i]),
-                            ),
-                          ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'RECENTLY ADDED',
+                        style: PokeBinderText.sectionLabel,
+                      ),
+                    ),
+                    if (_cards.isNotEmpty)
+                      GestureDetector(
+                        onTap: widget.onOpenAllCards,
+                        child: Text(
+                          'View All',
+                          style: PokeBinderText.chakraPetch(const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                            color: PokeBinderColors.redDeep,
+                          )),
                         ),
-                      ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: PokeBinderSpacing.sp2),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var i = 0; i < recentCards.length; i++) ...[
+                      if (i != 0) const SizedBox(width: PokeBinderSpacing.sp2),
+                      Expanded(
+                        child: _RecentCardTile(
+                          card: recentCards[i],
+                          onTap: () => _openCard(recentCards[i]),
+                        ),
+                      ),
                     ],
-                  ),
+                    if (recentCards.isNotEmpty)
+                      const SizedBox(width: PokeBinderSpacing.sp2),
+                    Expanded(
+                      child: _AddCardManuallyTile(onTap: _openAddCardManually),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
                 PillButton(
@@ -200,55 +293,66 @@ String _formatCompactCurrency(double value) {
   return '\u20b1${value.toStringAsFixed(0)}';
 }
 
-class _HomeSearchBar extends StatelessWidget {
-  final int cardCount;
+class _TrainerAvatar extends StatelessWidget {
   final VoidCallback onTap;
 
-  const _HomeSearchBar({required this.cardCount, required this.onTap});
+  const _TrainerAvatar({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: PokeBinderColors.white,
-      borderRadius: BorderRadius.circular(12),
+      color: Colors.transparent,
+      shape: const CircleBorder(),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        customBorder: const CircleBorder(),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          width: 42,
+          height: 42,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.09)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.search, size: 16, color: PokeBinderColors.inkSoft),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Search your whole collection…',
-                  style: TextStyle(fontSize: 11.5, color: Color(0xFFA89C86)),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: PokeBinderColors.cream2,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  '$cardCount cards',
-                  style: PokeBinderText.chakraPetch(const TextStyle(
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w600,
-                    color: PokeBinderColors.inkSoft,
-                  )),
-                ),
+            shape: BoxShape.circle,
+            gradient: PokeBinderColors.redGradient,
+            border: Border.all(color: PokeBinderColors.gold, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: PokeBinderColors.redDeep.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
+          child: const Icon(
+            Icons.catching_pokemon,
+            size: 20,
+            color: PokeBinderColors.white,
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _CardCountBadge extends StatelessWidget {
+  final int count;
+
+  const _CardCountBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.cream2,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        '$count cards',
+        style: PokeBinderText.chakraPetch(const TextStyle(
+          fontSize: 8.5,
+          fontWeight: FontWeight.w600,
+          color: PokeBinderColors.inkSoft,
+        )),
       ),
     );
   }
@@ -279,20 +383,17 @@ class _StatBox extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-            boxShadow: [
-              BoxShadow(
-                color: PokeBinderColors.ink.withValues(alpha: 0.05),
-                blurRadius: 3,
-                offset: const Offset(0, 1),
-              ),
-            ],
+            boxShadow: _kCardElevation,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(value, style: PokeBinderText.statNumber),
-              const SizedBox(height: 2),
-              Text(label, style: PokeBinderText.statLabel),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
+              ),
             ],
           ),
         ),
@@ -309,15 +410,7 @@ class _ContinueBinderPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    PokemonCardData? firstCard;
-    for (final page in binder.pages) {
-      if (page.isNotEmpty) {
-        firstCard = page.first;
-        break;
-      }
-    }
-    final gradientColors =
-        firstCard?.type.gradientColors ?? PokeBinderColors.redGradient.colors;
+    final gradientColors = PokeBinderColors.redGradient.colors;
 
     return Material(
       color: Colors.transparent,
@@ -326,37 +419,49 @@ class _ContinueBinderPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-            boxShadow: [
-              BoxShadow(
-                color: PokeBinderColors.ink.withValues(alpha: 0.06),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            boxShadow: _kCardElevation,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('CONTINUE A BINDER', style: PokeBinderText.sectionLabel),
-              const SizedBox(height: PokeBinderSpacing.sp2),
+              Row(
+                children: [
+                  Text('CONTINUE A BINDER', style: PokeBinderText.sectionLabel),
+                  if (binder.isPinned) ...[
+                    const SizedBox(width: 5),
+                    const Icon(
+                      Icons.push_pin_rounded,
+                      size: 11,
+                      color: PokeBinderColors.redDeep,
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp3),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    width: 38,
-                    height: 38,
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(11),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: gradientColors,
                       ),
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      size: 18,
+                      color: PokeBinderColors.white,
                     ),
                   ),
                   const SizedBox(width: PokeBinderSpacing.sp3),
@@ -367,7 +472,7 @@ class _ContinueBinderPanel extends StatelessWidget {
                         Text(
                           binder.name,
                           style: PokeBinderText.listRowTitle
-                              .copyWith(fontWeight: FontWeight.bold),
+                              .copyWith(fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -377,17 +482,11 @@ class _ContinueBinderPanel extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFBEBCB),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Open',
-                      style: PokeBinderText.chipLabel
-                          .copyWith(color: PokeBinderColors.goldDeep),
-                    ),
+                  const SizedBox(width: PokeBinderSpacing.sp2),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: PokeBinderColors.inkSoft,
                   ),
                 ],
               ),
@@ -395,6 +494,61 @@ class _ContinueBinderPanel extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _RecentCardTile extends StatelessWidget {
+  final PokemonCardData card;
+  final VoidCallback onTap;
+
+  const _RecentCardTile({required this.card, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        BinderCardTile(card: card, onTap: onTap),
+        const SizedBox(height: PokeBinderSpacing.sp1),
+        Text(
+          card.name,
+          textAlign: TextAlign.center,
+          style: PokeBinderText.cardName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '${card.setName} · #${card.cardNumber}',
+          textAlign: TextAlign.center,
+          style: PokeBinderText.cardMeta,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}
+
+class _AddCardManuallyTile extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AddCardManuallyTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        AddCardTile(onTap: onTap),
+        const SizedBox(height: PokeBinderSpacing.sp1),
+        Text(
+          'Add Card Manually',
+          style: PokeBinderText.cardName,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 }

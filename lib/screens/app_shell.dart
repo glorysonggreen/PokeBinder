@@ -46,6 +46,7 @@ class _AppShellState extends State<AppShell> {
                 _openBinders(tabIndex: 0, binderId: binder.id),
             onOpenScan: () => _switchTab(AppTab.scan),
             onOpenMore: () => _switchTab(AppTab.more),
+            onOpenDecks: () => _switchTab(AppTab.decks),
           ),
           BindersScreen(
             key: ValueKey(_bindersLinkToken),
