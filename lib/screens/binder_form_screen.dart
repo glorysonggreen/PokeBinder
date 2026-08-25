@@ -62,8 +62,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
     }
 
     final existing = widget.existingBinder;
-    // Pages already in the binder always stay — this field can only grow
-    // the binder, never shrink it out from under existing cards.
     final minPages = existing?.pageCount ?? 1;
     final requestedPages = int.tryParse(_pagesController.text);
     if (requestedPages == null || requestedPages < 1) {

@@ -27,7 +27,7 @@ const _kConditionOptions = [
 class CardFormResult {
   final PokemonCardData? card;
   final String? binderId;
-  final int? pageIndex; // zero-based
+  final int? pageIndex;
   final bool deleted;
 
   const CardFormResult.saved({
@@ -147,9 +147,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
       setName: _setController.text.trim(),
       cardNumber: _cardNumberController.text.trim(),
       rarity: _rarity,
-      // Manually entered cards have no scanned artwork, so the color that
-      // drives their placeholder silhouette just keeps whatever type the
-      // card already had, defaulting to colorless for brand-new cards.
       type: widget.existingCard?.type ?? PokemonCardType.colorless,
       quantityOwned: quantity,
       condition: _conditionCode,
@@ -158,8 +155,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
       estimatedValue: value < 0 ? 0 : value,
       notes: _notesController.text.trim(),
       imageAssetPath: widget.existingCard?.imageAssetPath,
-      // Preserve the original add date when editing; a brand-new card is
-      // timestamped now so it shows up first under Sort ▸ Time ▸ Newest.
       dateAdded: widget.existingCard?.dateAdded ?? DateTime.now(),
     );
 

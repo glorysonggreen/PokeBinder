@@ -125,7 +125,7 @@ class _BindersScreenState extends State<BindersScreen> {
       .where((c) => c.supertype != CardSupertype.pokemon)
       .toList();
 
-  int _tabIndex = 0; // 0 = Binders, 1 = All Cards
+  int _tabIndex = 0;
 
   late BinderData _selectedBinder = _binders.first;
   int _pageIndex = 0;
@@ -221,8 +221,6 @@ class _BindersScreenState extends State<BindersScreen> {
         return;
       }
       setState(() {
-        // Cards in the deleted binder move to Unassigned rather than
-        // disappearing.
         final deleted = _binders.firstWhere((b) => b.id == _selectedBinder.id);
         for (final page in deleted.pages) {
           for (final card in page) {
@@ -387,8 +385,6 @@ class _BindersScreenState extends State<BindersScreen> {
                             setState(() => _cardSearch = v),
                         onSortChanged: (option) => setState(() {
                           _sortOption = option;
-                          // A stale chip selection from the previous
-                          // category wouldn't make sense in the new one.
                           _typeFilter = null;
                           _subtypeFilter = null;
                           _setFilter = null;
@@ -774,12 +770,8 @@ class _AllCardsTab extends StatelessWidget {
     'Other/Additional Rarities': 'Other/Additional Rarities',
   };
 
-  // Delegates to the shared mapping in pokemon_card_data.dart so this menu
-  // and the Add/Edit Card form's Rarity dropdown never drift out of sync.
   static IconData _rarityTierIcon(String tier) => rarityIconFor(tier);
 
-  // Standard TCG condition order from best to worst, matching the codes
-  // used by the Condition dropdown on the Add/Edit Card form.
   static const _conditionOrder = <String>['NM', 'LP', 'MP', 'DMG'];
 
   static const _conditionLabels = <String, String>{
@@ -789,8 +781,6 @@ class _AllCardsTab extends StatelessWidget {
     'DMG': 'Damaged',
   };
 
-  // Delegates to the shared mapping in pokemon_card_data.dart so this menu
-  // and the Add/Edit Card form's Condition dropdown never drift out of sync.
   static IconData _conditionIcon(String code) => conditionIconFor(code);
 
   static bool _matchesEnergyFilter(PokemonCardData card, String? filterKey) {
@@ -908,10 +898,6 @@ class _AllCardsTab extends StatelessWidget {
         filtered.sort((a, b) => b.quantityOwned.compareTo(a.quantityOwned));
         break;
       case CardSortOption.pokemon:
-        // When no specific type chip is selected ("All"), group cards by
-        // type in the standard TCG type order (Colorless, Grass, Fire,
-        // Water, Lightning, Fighting, Psychic, Darkness, Metal, Dragon,
-        // Fairy), then alphabetically within each type.
         if (typeFilter == null) {
           filtered.sort((a, b) {
             final byType = a.type.index.compareTo(b.type.index);
@@ -926,8 +912,6 @@ class _AllCardsTab extends StatelessWidget {
         break;
     }
 
-    // The scrollbar beneath the search bar always reflects only the
-    // sub-options relevant to the currently selected sort category.
     Widget? subOptionRow;
     switch (sortOption) {
       case CardSortOption.time:
@@ -1004,8 +988,6 @@ class _AllCardsTab extends StatelessWidget {
       case CardSortOption.alphabetical:
       case CardSortOption.cardNumber:
       case CardSortOption.quantity:
-        // These categories have no meaningful sub-options, so no
-        // scrollbar is shown beneath the search bar.
         subOptionRow = null;
     }
 
@@ -1136,9 +1118,6 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-// The binder list only ever displays a capped number of binders per
-// section on screen — this keeps the Compact/Grid List View scannable
-// even for collections with a lot of binders.
 const int kMaxBindersPerSection = 4;
 const int kMaxPinnedBinders = 2;
 
@@ -1200,8 +1179,7 @@ class _BinderListPanel extends StatelessWidget {
     final rest = binders.where((b) => !b.isPinned).toList()..sort(_compare);
 
     final sections = <_BinderSection>[];
-    // Pinned binders always sit on top of the list, whether or not the
-    // caps below are in effect.
+
     if (pinned.isNotEmpty) {
       sections.add(_BinderSection(
         title: 'Pinned Binders',
@@ -1210,9 +1188,6 @@ class _BinderListPanel extends StatelessWidget {
       ));
     }
 
-    // Unassigned always has a spot in All Binders, so real binders only
-    // fill the remaining slots up to the on-screen cap — unless the
-    // user has opted to view every binder.
     final allSlotsForBinders = (kMaxBindersPerSection - 1).clamp(0, kMaxBindersPerSection);
     sections.add(_BinderSection(
       title: 'All Binders',
@@ -1818,9 +1793,6 @@ class _SortSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      // Swaps the menu items' default grey Material hover/splash for a
-      // faint themed red, so pressing an option feels consistent with the
-      // rest of the app instead of a generic system dropdown.
       data: Theme.of(context).copyWith(
         highlightColor: PokeBinderColors.red.withValues(alpha: 0.06),
         splashColor: PokeBinderColors.red.withValues(alpha: 0.06),
