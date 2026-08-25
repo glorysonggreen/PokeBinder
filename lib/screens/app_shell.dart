@@ -4,6 +4,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/app_nav_bar.dart';
 import 'binders_screen.dart';
 import 'home_screen.dart';
+import 'more_screen.dart';
 import 'scanner_screen.dart';
 
 class AppShell extends StatefulWidget {
@@ -61,13 +62,7 @@ class _AppShellState extends State<AppShell> {
                 'Put together and manage your battle decks from your '
                 'collection here.',
           ),
-          const _ComingSoonScreen(
-            tab: AppTab.more,
-            title: 'More',
-            description:
-                'Trainer profile, wishlist, trade list, stats, and settings '
-                'will live here.',
-          ),
+          const MoreScreen(),
         ],
       ),
       bottomNavigationBar: AppNavBar(

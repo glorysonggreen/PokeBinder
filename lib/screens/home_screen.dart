@@ -8,14 +8,6 @@ import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 
-final List<BoxShadow> _kCardElevation = [
-  BoxShadow(
-    color: PokeBinderColors.ink.withValues(alpha: 0.06),
-    blurRadius: 10,
-    offset: const Offset(0, 3),
-  ),
-];
-
 class HomeScreen extends StatefulWidget {
   final String trainerName;
   final VoidCallback onOpenAllCards;
@@ -384,7 +376,7 @@ class _StatBox extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-            boxShadow: _kCardElevation,
+            boxShadow: kCardElevation,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -425,7 +417,7 @@ class _ContinueBinderPanel extends StatelessWidget {
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-            boxShadow: _kCardElevation,
+            boxShadow: kCardElevation,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

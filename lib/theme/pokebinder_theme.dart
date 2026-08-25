@@ -22,6 +22,24 @@ class PokeBinderColors {
     end: Alignment.bottomRight,
     colors: [Color(0xFFE0402A), redDeep],
   );
+
+  static const goldGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFF6D68B), goldDeep],
+  );
+
+  static const tealGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF8FD0D8), teal],
+  );
+
+  static const slateGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFE6E6E6), Color(0xFFBDBDBD)],
+  );
 }
 
 const double kPokemonCardAspectRatio = 5 / 7;
@@ -32,6 +50,8 @@ const double kPokemonCardImageWidthPx = 600;
 const double kPokemonCardImageHeightPx = 825;
 const double kPokemonCardImageAspectRatio = kPokemonCardImageWidthPx / kPokemonCardImageHeightPx;
 const double kCardInteractionHeightBuffer = 1.25;
+// Space reserved below each grid tile for the two-line name/set caption
+// (a small gap plus the cardName and cardMeta text rows).
 const double kCardCaptionHeight = 30.0;
 
 class PokeBinderSpacing {
@@ -44,6 +64,14 @@ class PokeBinderSpacing {
   static const sp5 = 20.0;
   static const sp6 = 24.0;
 }
+
+final List<BoxShadow> kCardElevation = [
+  BoxShadow(
+    color: PokeBinderColors.ink.withValues(alpha: 0.06),
+    blurRadius: 10,
+    offset: const Offset(0, 3),
+  ),
+];
 
 class PokeBinderText {
   PokeBinderText._();
