@@ -5,6 +5,13 @@ import '../theme/pokebinder_theme.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 
+class _ScanEntry {
+  final PokemonCardData card;
+  final DateTime scannedAt;
+
+  const _ScanEntry({required this.card, required this.scannedAt});
+}
+
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
 
@@ -19,8 +26,35 @@ class _ScannerScreenState extends State<ScannerScreen>
     duration: const Duration(milliseconds: 2200),
   )..repeat(reverse: true);
 
+  static const _kMaxRecentScans = 3;
+
+  late final List<PokemonCardData> _demoPool = [
+    'Charizard',
+    'Gyarados',
+    'Mewtwo',
+    'Pikachu',
+    'Blastoise',
+    'Alakazam',
+    'Vaporeon',
+  ].map((name) => PokemonCardData.library.firstWhere((c) => c.name == name)).toList();
+  int _demoIndex = 0;
+
   bool _scanning = false;
-  PokemonCardData? _lastScan = PokemonCardData.sample;
+
+  late final List<_ScanEntry> _recentScans = [
+    _ScanEntry(
+      card: PokemonCardData.sample,
+      scannedAt: DateTime.now().subtract(const Duration(minutes: 6)),
+    ),
+    _ScanEntry(
+      card: PokemonCardData.library.firstWhere((c) => c.name == 'Pikachu'),
+      scannedAt: DateTime.now().subtract(const Duration(minutes: 19)),
+    ),
+    _ScanEntry(
+      card: PokemonCardData.library.firstWhere((c) => c.name == 'Blastoise'),
+      scannedAt: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+  ];
 
   final List<BinderData> _binders = BinderData.sampleBinders;
 
@@ -37,10 +71,15 @@ class _ScannerScreenState extends State<ScannerScreen>
     await Future.delayed(const Duration(milliseconds: 950));
     if (!mounted) return;
 
-    final result = PokemonCardData.sample;
+    final result = _demoPool[_demoIndex % _demoPool.length];
+    _demoIndex++;
+
     setState(() {
       _scanning = false;
-      _lastScan = result;
+      _recentScans.insert(0, _ScanEntry(card: result, scannedAt: DateTime.now()));
+      if (_recentScans.length > _kMaxRecentScans) {
+        _recentScans.removeRange(_kMaxRecentScans, _recentScans.length);
+      }
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -59,29 +98,13 @@ class _ScannerScreenState extends State<ScannerScreen>
     );
   }
 
-  void _viewLastScan() {
-    final card = _lastScan;
-    if (card == null) return;
+  void _viewScan(PokemonCardData card) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CardDetailsScreen(
           card: card,
           binders: _binders,
           onSave: (_, __) {},
-        ),
-      ),
-    );
-  }
-
-  void _addLastScan() {
-    final card = _lastScan;
-    if (card == null) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CardFormScreen(
-          existingCard: card,
-          binders: _binders,
-          defaultBinderId: _binders.first.id,
         ),
       ),
     );
@@ -117,14 +140,20 @@ class _ScannerScreenState extends State<ScannerScreen>
                   children: [
                     _Viewfinder(sweep: _sweep, scanning: _scanning),
                     const SizedBox(height: PokeBinderSpacing.sp3),
-                    Text(
-                      _scanning ? 'Scanning…' : 'Align card within frame',
-                      style: PokeBinderText.chakraPetch(const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.4,
-                        color: PokeBinderColors.inkSoft,
-                      )),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: Text(
+                        _scanning ? 'Scanning…' : 'Align card within frame',
+                        key: ValueKey(_scanning),
+                        style: PokeBinderText.chakraPetch(TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.4,
+                          color: _scanning
+                              ? PokeBinderColors.redDeep
+                              : PokeBinderColors.inkSoft,
+                        )),
+                      ),
                     ),
                   ],
                 ),
@@ -151,38 +180,31 @@ class _ScannerScreenState extends State<ScannerScreen>
               const SizedBox(height: PokeBinderSpacing.sp4),
 
               Center(
-                child: InkWell(
+                child: _GhostLinkButton(
+                  icon: Icons.edit_outlined,
+                  label: 'Or enter card details manually',
                   onTap: _openManualEntry,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.edit_outlined,
-                            size: 13, color: PokeBinderColors.inkSoft),
-                        const SizedBox(width: 5),
-                        Text(
-                          'Or enter card details manually',
-                          style: PokeBinderText.chakraPetch(const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
-                            color: PokeBinderColors.inkSoft,
-                          )),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp5),
 
-              if (_lastScan != null) ...[
-                Text('LAST SCAN RESULT', style: PokeBinderText.sectionLabel),
+              if (_recentScans.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Text('RECENT SCANS', style: PokeBinderText.sectionLabel),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    Expanded(
+                      child: Divider(
+                        color: PokeBinderColors.ink.withValues(alpha: 0.08),
+                        height: 1,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: PokeBinderSpacing.sp2),
-                _LastScanPanel(
-                  card: _lastScan!,
-                  onTap: _viewLastScan,
-                  onAdd: _addLastScan,
+                _RecentScansPanel(
+                  scans: _recentScans,
+                  onTapScan: _viewScan,
                 ),
               ],
             ],
@@ -201,89 +223,112 @@ class _Viewfinder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 190,
-      padding: const EdgeInsets.all(20),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      width: 230,
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1C2A2C), Color(0xFF0C1517)],
+          colors: [Color(0xFF223234), Color(0xFF0C1517)],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.32),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
+          if (scanning)
+            BoxShadow(
+              color: PokeBinderColors.gold.withValues(alpha: 0.25),
+              blurRadius: 26,
+              spreadRadius: 1,
+            ),
         ],
+        border: Border.all(
+          color: PokeBinderColors.gold.withValues(alpha: scanning ? 0.3 : 0.12),
+        ),
       ),
       child: AspectRatio(
-        aspectRatio: 5 / 7,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: PokeBinderColors.gold.withValues(alpha: 0.75),
-                    width: 2,
+        aspectRatio: kPokemonCardImageAspectRatio,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(0, -0.2),
+                      radius: 1.1,
+                      colors: [Color(0x1AFFFFFF), Color(0x00FFFFFF)],
+                    ),
                   ),
                 ),
               ),
-            ),
-            for (final alignment in const [
-              Alignment.topLeft,
-              Alignment.topRight,
-              Alignment.bottomLeft,
-              Alignment.bottomRight,
-            ])
-              _Corner(alignment: alignment),
-            AnimatedBuilder(
-              animation: sweep,
-              builder: (context, child) {
-                final y = -1 + 2 * sweep.value;
-                return Align(
-                  alignment: Alignment(0, y),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Container(
-                      width: double.infinity,
-                      height: 2,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2),
-                        gradient: LinearGradient(
-                          colors: [
-                            PokeBinderColors.gold.withValues(alpha: 0),
-                            PokeBinderColors.gold,
-                            PokeBinderColors.gold.withValues(alpha: 0),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: PokeBinderColors.gold.withValues(alpha: 0.7),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            if (scanning)
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: PokeBinderColors.gold.withValues(alpha: 0.08),
+                    border: Border.all(
+                      color: PokeBinderColors.gold.withValues(alpha: 0.5),
+                      width: 1.2,
+                    ),
                   ),
                 ),
               ),
-          ],
+              for (final alignment in const [
+                Alignment.topLeft,
+                Alignment.topRight,
+                Alignment.bottomLeft,
+                Alignment.bottomRight,
+              ])
+                _Corner(alignment: alignment),
+              AnimatedBuilder(
+                animation: sweep,
+                builder: (context, child) {
+                  final y = -1 + 2 * sweep.value;
+                  return Align(
+                    alignment: Alignment(0, y),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Container(
+                        width: double.infinity,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(2),
+                          gradient: LinearGradient(
+                            colors: [
+                              PokeBinderColors.gold.withValues(alpha: 0),
+                              PokeBinderColors.gold,
+                              PokeBinderColors.gold.withValues(alpha: 0),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: PokeBinderColors.gold.withValues(alpha: 0.75),
+                              blurRadius: 9,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              if (scanning)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: PokeBinderColors.gold.withValues(alpha: 0.06),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -304,8 +349,8 @@ class _Corner extends StatelessWidget {
     return Align(
       alignment: alignment,
       child: Container(
-        width: 16,
-        height: 16,
+        width: 18,
+        height: 18,
         decoration: BoxDecoration(
           border: Border(
             top: isTop ? side : BorderSide.none,
@@ -319,6 +364,12 @@ class _Corner extends StatelessWidget {
             bottomLeft: !isTop && isLeft ? const Radius.circular(6) : Radius.zero,
             bottomRight: !isTop && !isLeft ? const Radius.circular(6) : Radius.zero,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: PokeBinderColors.gold.withValues(alpha: 0.55),
+              blurRadius: 6,
+            ),
+          ],
         ),
       ),
     );
@@ -333,94 +384,137 @@ class _CaptureButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedScale(
-        scale: scanning ? 0.94 : 1,
-        duration: const Duration(milliseconds: 120),
-        child: SizedBox(
-          width: 64,
-          height: 64,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: PokeBinderColors.cream,
-                  boxShadow: [
-                    BoxShadow(
-                      color: PokeBinderColors.redDeep,
-                      offset: const Offset(0, 2),
-                    ),
-                    BoxShadow(
-                      color: PokeBinderColors.red.withValues(alpha: 0.45),
-                      blurRadius: 16,
-                      offset: const Offset(0, 9),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: PokeBinderColors.white.withValues(alpha: 0.6),
-                    width: 2,
-                  ),
-                ),
-              ),
-              ClipPath(
-                clipper: _TopHalfClipper(),
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFEC5138), PokeBinderColors.red],
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                width: 60,
-                height: 6,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [PokeBinderColors.ink, Color(0xFF100D0B)],
-                  ),
-                ),
-              ),
-              if (scanning)
-                const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: PokeBinderColors.ink,
-                  ),
-                )
-              else
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: PokeBinderColors.white,
-                    border: Border.all(color: PokeBinderColors.ink, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: PokeBinderColors.white.withValues(alpha: 0.55),
-                        spreadRadius: 2,
+    return SizedBox(
+      width: 90,
+      height: 90,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: PokeBinderColors.red.withValues(alpha: scanning ? 0.16 : 0.08),
+            ),
+          ),
+          AnimatedScale(
+            scale: scanning ? 0.94 : 1,
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            child: Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: onTap,
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: PokeBinderColors.cream,
+                          boxShadow: [
+                            BoxShadow(
+                              color: PokeBinderColors.redDeep,
+                              offset: const Offset(0, 2),
+                            ),
+                            BoxShadow(
+                              color: PokeBinderColors.red.withValues(alpha: 0.4),
+                              blurRadius: 16,
+                              offset: const Offset(0, 9),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: PokeBinderColors.white.withValues(alpha: 0.7),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      ClipPath(
+                        clipper: _TopHalfClipper(),
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFFEC5138), PokeBinderColors.red],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 9,
+                        left: 14,
+                        child: Container(
+                          width: 16,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withValues(alpha: 0.55),
+                                Colors.white.withValues(alpha: 0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 60,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [PokeBinderColors.ink, Color(0xFF100D0B)],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: PokeBinderColors.white,
+                          border: Border.all(color: PokeBinderColors.ink, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: PokeBinderColors.white.withValues(alpha: 0.55),
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-            ],
+              ),
+            ),
           ),
-        ),
+          if (scanning)
+            IgnorePointer(
+              child: SizedBox(
+                width: 78,
+                height: 78,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: PokeBinderColors.gold.withValues(alpha: 0.85),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -436,81 +530,44 @@ class _TopHalfClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
-class _LastScanPanel extends StatelessWidget {
-  final PokemonCardData card;
+class _GhostLinkButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
-  final VoidCallback onAdd;
 
-  const _LastScanPanel({
-    required this.card,
+  const _GhostLinkButton({
+    required this.icon,
+    required this.label,
     required this.onTap,
-    required this.onAdd,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: PokeBinderColors.white,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-            boxShadow: [
-              BoxShadow(
-                color: PokeBinderColors.ink.withValues(alpha: 0.06),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: PokeBinderColors.red.withValues(alpha: 0.22)),
           ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 40,
-                  height: 56,
-                  child: card.imageAssetPath != null
-                      ? Image.asset(card.imageAssetPath!, fit: BoxFit.cover)
-                      : DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: card.type.gradientColors,
-                            ),
-                          ),
-                        ),
-                ),
+              Icon(icon, size: 13, color: PokeBinderColors.redDeep.withValues(alpha: 0.8)),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: PokeBinderText.chakraPetch(const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.bold,
+                  color: PokeBinderColors.redDeep,
+                )),
               ),
-              const SizedBox(width: PokeBinderSpacing.sp3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      card.name,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: PokeBinderColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${card.setName} · #${card.cardNumber} · ${card.rarity}',
-                      style: PokeBinderText.listRowSubtitle,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: PokeBinderSpacing.sp2),
-              _AddTag(onTap: onAdd),
             ],
           ),
         ),
@@ -519,42 +576,165 @@ class _LastScanPanel extends StatelessWidget {
   }
 }
 
-class _AddTag extends StatelessWidget {
-  final VoidCallback onTap;
+class _RecentScansPanel extends StatelessWidget {
+  final List<_ScanEntry> scans;
+  final ValueChanged<PokemonCardData> onTapScan;
 
-  const _AddTag({required this.onTap});
+  const _RecentScansPanel({required this.scans, required this.onTapScan});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              colors: [PokeBinderColors.gold, PokeBinderColors.goldDeep],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: PokeBinderColors.goldDeep.withValues(alpha: 0.35),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+    return Container(
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: PokeBinderColors.ink.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 0; i < scans.length; i++) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                indent: 62,
+                color: PokeBinderColors.ink.withValues(alpha: 0.06),
               ),
-            ],
-          ),
-          child: Text(
-            'Add',
-            style: PokeBinderText.chakraPetch(const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: PokeBinderColors.white,
-            )),
-          ),
+            _ScanRow(
+              entry: scans[i],
+              isNewest: i == 0,
+              onTap: () => onTapScan(scans[i].card),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ScanRow extends StatelessWidget {
+  final _ScanEntry entry;
+  final bool isNewest;
+  final VoidCallback onTap;
+
+  const _ScanRow({
+    required this.entry,
+    required this.isNewest,
+    required this.onTap,
+  });
+
+  String get _relativeTime {
+    final diff = DateTime.now().difference(entry.scannedAt);
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final card = entry.card;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        child: Row(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 40,
+                    height: 56,
+                    child: card.imageAssetPath != null
+                        ? Image.asset(card.imageAssetPath!, fit: BoxFit.cover)
+                        : DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: card.type.gradientColors,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+                if (isNewest)
+                  Positioned(
+                    top: -4,
+                    left: -4,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: PokeBinderColors.gold,
+                        border: Border.all(color: PokeBinderColors.white, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: PokeBinderColors.gold.withValues(alpha: 0.7),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: PokeBinderSpacing.sp3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    card.name,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: PokeBinderColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${card.setName} · #${card.cardNumber} · ${card.rarity}',
+                    style: PokeBinderText.listRowSubtitle,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: PokeBinderSpacing.sp2),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _relativeTime,
+                  style: PokeBinderText.chakraPetch(TextStyle(
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
+                    color: PokeBinderColors.inkSoft.withValues(alpha: 0.8),
+                  )),
+                ),
+                const SizedBox(height: 3),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: PokeBinderColors.inkSoft,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
