@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../theme/pokebinder_theme.dart';
+import 'settings_screen.dart';
+import 'stats_screen.dart';
 import 'trainer_card_screen.dart';
+import 'wishlist_screen.dart';
 
 class MoreScreen extends StatefulWidget {
   final VoidCallback? onOpenStats;
@@ -26,16 +29,6 @@ class MoreScreen extends StatefulWidget {
 class _MoreScreenState extends State<MoreScreen> {
   late bool _showingTrainerCard = widget.initialShowTrainerCard;
 
-  void _handleTap(BuildContext context, VoidCallback? onTap, String label) {
-    if (onTap != null) {
-      onTap();
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label is coming soon')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_showingTrainerCard) {
@@ -58,23 +51,45 @@ class _MoreScreenState extends State<MoreScreen> {
         gradient: PokeBinderColors.goldGradient,
         title: 'Collection Statistics',
         subtitle: 'Value, rarity, set breakdown',
-        onTap: () =>
-            _handleTap(context, widget.onOpenStats, 'Collection Statistics'),
+        onTap: () {
+          if (widget.onOpenStats != null) {
+            widget.onOpenStats!();
+            return;
+          }
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const StatsScreen()),
+          );
+        },
       ),
       _MoreRowData(
         icon: Icons.swap_horiz_rounded,
         gradient: PokeBinderColors.tealGradient,
         title: 'Wishlist & Trade List',
         subtitle: 'Cards you want or will trade',
-        onTap: () =>
-            _handleTap(context, widget.onOpenWishlist, 'Wishlist & Trade List'),
+        onTap: () {
+          if (widget.onOpenWishlist != null) {
+            widget.onOpenWishlist!();
+            return;
+          }
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const WishlistScreen()),
+          );
+        },
       ),
       _MoreRowData(
         icon: Icons.settings_rounded,
         gradient: PokeBinderColors.slateGradient,
         title: 'Settings',
         subtitle: 'Account, backup, export',
-        onTap: () => _handleTap(context, widget.onOpenSettings, 'Settings'),
+        onTap: () {
+          if (widget.onOpenSettings != null) {
+            widget.onOpenSettings!();
+            return;
+          }
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SettingsScreen()),
+          );
+        },
       ),
     ];
 

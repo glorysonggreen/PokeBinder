@@ -93,6 +93,70 @@ class CollectionSearchBar extends StatelessWidget {
   }
 }
 
+/// A pill-shaped two-or-more-way tab switcher, matching the "segmented"
+/// control used for things like Wishlist / Trade list.
+class SegmentedTabBar extends StatelessWidget {
+  final int index;
+  final List<String> labels;
+  final ValueChanged<int> onChanged;
+
+  const SegmentedTabBar({
+    super.key,
+    required this.index,
+    required this.labels,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.cream2,
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => onChanged(i),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: i == index ? PokeBinderColors.white : null,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: i == index
+                          ? [
+                              BoxShadow(
+                                color:
+                                    PokeBinderColors.ink.withValues(alpha: 0.12),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Text(
+                      labels[i],
+                      style: i == index
+                          ? PokeBinderText.tabLabelActive
+                          : PokeBinderText.tabLabelInactive,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class PillButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
