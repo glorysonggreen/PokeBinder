@@ -7,6 +7,8 @@ import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
+import 'stats_screen.dart';
+import 'trainer_card_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String trainerName;
@@ -14,9 +16,7 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onOpenBinders;
   final ValueChanged<BinderData> onOpenBinder;
   final VoidCallback onOpenScan;
-  final VoidCallback onOpenMore;
   final VoidCallback onOpenDecks;
-  final VoidCallback onOpenTrainerCard;
 
   const HomeScreen({
     super.key,
@@ -25,9 +25,7 @@ class HomeScreen extends StatefulWidget {
     required this.onOpenBinders,
     required this.onOpenBinder,
     required this.onOpenScan,
-    required this.onOpenMore,
     required this.onOpenDecks,
-    required this.onOpenTrainerCard,
   });
 
   @override
@@ -67,6 +65,27 @@ class _HomeScreenState extends State<HomeScreen> {
           card: card,
           binders: _binders,
           onSave: _handleCardSaved,
+        ),
+      ),
+    );
+  }
+
+  void _openStats() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const StatsScreen()),
+    );
+  }
+
+  void _openTrainerCard() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TrainerCardScreen(
+          trainerName: widget.trainerName,
+          onBack: () => Navigator.of(context).maybePop(),
+          onOpenBinder: (binder) {
+            Navigator.of(context).pop();
+            widget.onOpenBinder(binder);
+          },
         ),
       ),
     );
@@ -131,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _TrainerAvatar(onTap: widget.onOpenTrainerCard),
+                    _TrainerAvatar(onTap: _openTrainerCard),
                     const SizedBox(width: PokeBinderSpacing.sp3),
                     Expanded(
                       child: Column(
@@ -175,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _StatBox(
                         value: _formatCompactCurrency(_totalValue),
                         label: 'Value',
-                        onTap: widget.onOpenMore,
+                        onTap: _openStats,
                       ),
                     ),
                     const SizedBox(width: PokeBinderSpacing.sp2),

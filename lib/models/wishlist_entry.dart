@@ -1,7 +1,4 @@
 import 'package:flutter/foundation.dart';
-
-/// Which list a [WishlistEntry] belongs to: cards the collector wants, or
-/// cards the collector already owns and is willing to trade away.
 enum WishlistEntryKind { wishlist, trade }
 
 @immutable

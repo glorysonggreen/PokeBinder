@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../theme/pokebinder_theme.dart';
 
@@ -93,8 +94,6 @@ class CollectionSearchBar extends StatelessWidget {
   }
 }
 
-/// A pill-shaped two-or-more-way tab switcher, matching the "segmented"
-/// control used for things like Wishlist / Trade list.
 class SegmentedTabBar extends StatelessWidget {
   final int index;
   final List<String> labels;
@@ -152,6 +151,83 @@ class SegmentedTabBar extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class AuthLinkText extends StatefulWidget {
+  final String prefix;
+  final String linkLabel;
+  final VoidCallback onTap;
+  final TextAlign textAlign;
+
+  const AuthLinkText({
+    super.key,
+    this.prefix = '',
+    required this.linkLabel,
+    required this.onTap,
+    this.textAlign = TextAlign.center,
+  });
+
+  @override
+  State<AuthLinkText> createState() => _AuthLinkTextState();
+}
+
+class _AuthLinkTextState extends State<AuthLinkText> {
+  late final _recognizer = TapGestureRecognizer()..onTap = widget.onTap;
+
+  @override
+  void dispose() {
+    _recognizer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      textAlign: widget.textAlign,
+      text: TextSpan(
+        style: PokeBinderText.subtitle,
+        children: [
+          if (widget.prefix.isNotEmpty) TextSpan(text: widget.prefix),
+          TextSpan(
+            text: widget.linkLabel,
+            style: PokeBinderText.backLink,
+            recognizer: _recognizer,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PasswordVisibilityToggle extends StatelessWidget {
+  final bool obscured;
+  final VoidCallback onTap;
+
+  const PasswordVisibilityToggle({
+    super.key,
+    required this.obscured,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(
+            obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            size: 16,
+            color: PokeBinderColors.inkSoft,
+          ),
+        ),
       ),
     );
   }

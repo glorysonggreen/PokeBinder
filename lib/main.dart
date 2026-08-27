@@ -1,7 +1,7 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 
-import 'screens/app_shell.dart';
+import 'screens/login_screen.dart';
 import 'theme/pokebinder_theme.dart';
 
 void main() {
@@ -31,7 +31,7 @@ class PokeBinderApp extends StatelessWidget {
           primary: PokeBinderColors.red,
         ),
       ),
-      home: const AppShell(),
+      home: const LoginScreen(),
     );
   }
 }

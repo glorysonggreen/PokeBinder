@@ -1,101 +1,91 @@
 import 'package:flutter/material.dart';
-import '../models/wishlist_entry.dart';
+import '../models/deck_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 
-class WishlistFormResult {
-  final WishlistEntry? entry;
+class DeckFormResult {
+  final DeckData? deck;
   final bool deleted;
 
-  const WishlistFormResult.saved(WishlistEntry entry)
-      : entry = entry,
+  const DeckFormResult.saved(DeckData deck)
+      : deck = deck,
         deleted = false;
 
-  const WishlistFormResult.deleted()
-      : entry = null,
+  const DeckFormResult.deleted()
+      : deck = null,
         deleted = true;
 }
 
-class WishlistFormScreen extends StatefulWidget {
-  final WishlistEntry? existingEntry;
-  final WishlistEntryKind initialKind;
+class DeckFormScreen extends StatefulWidget {
+  final DeckData? existingDeck;
 
-  const WishlistFormScreen({
-    super.key,
-    this.existingEntry,
-    this.initialKind = WishlistEntryKind.wishlist,
-  });
+  const DeckFormScreen({super.key, this.existingDeck});
 
   @override
-  State<WishlistFormScreen> createState() => _WishlistFormScreenState();
+  State<DeckFormScreen> createState() => _DeckFormScreenState();
 }
 
-class _WishlistFormScreenState extends State<WishlistFormScreen> {
+class _DeckFormScreenState extends State<DeckFormScreen> {
   late final _nameController =
-      TextEditingController(text: widget.existingEntry?.name ?? '');
-  late final _setController =
-      TextEditingController(text: widget.existingEntry?.setName ?? '');
-  late final _qtyController = TextEditingController(
-    text: '${widget.existingEntry?.quantity ?? 1}',
+      TextEditingController(text: widget.existingDeck?.name ?? '');
+  late final _descriptionController =
+      TextEditingController(text: widget.existingDeck?.description ?? '');
+  late final _sizeController = TextEditingController(
+    text: '${widget.existingDeck?.targetSize ?? 60}',
   );
-  late final _notesController =
-      TextEditingController(text: widget.existingEntry?.notes ?? '');
 
-  late WishlistEntryKind _kind =
-      widget.existingEntry?.kind ?? widget.initialKind;
+  late DeckFormat _format = widget.existingDeck?.format ?? DeckFormat.standard;
 
   String? _nameError;
-  String? _quantityError;
+  String? _sizeError;
 
-  bool get _isEditing => widget.existingEntry != null;
+  bool get _isEditing => widget.existingDeck != null;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _setController.dispose();
-    _qtyController.dispose();
-    _notesController.dispose();
+    _descriptionController.dispose();
+    _sizeController.dispose();
     super.dispose();
   }
 
   void _submit() {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _nameError = 'Give the card a name first.');
+      setState(() => _nameError = 'Give your deck a name first.');
       return;
     }
 
-    final qty = int.tryParse(_qtyController.text);
-    if (qty == null || qty < 1) {
-      setState(() => _quantityError = 'Quantity must be at least 1.');
+    final size = int.tryParse(_sizeController.text);
+    if (size == null || size < 1) {
+      setState(() => _sizeError = 'Target size must be at least 1.');
       return;
     }
 
-    final entry = WishlistEntry(
-      id: widget.existingEntry?.id ??
-          'wishlist-${DateTime.now().microsecondsSinceEpoch}',
+    final existing = widget.existingDeck;
+    final deck = DeckData(
+      id: existing?.id ?? 'deck-${DateTime.now().microsecondsSinceEpoch}',
       name: name,
-      setName: _setController.text.trim(),
-      quantity: qty,
-      notes: _notesController.text.trim(),
-      kind: _kind,
-      dateAdded: widget.existingEntry?.dateAdded ?? DateTime.now(),
+      format: _format,
+      targetSize: size,
+      description: _descriptionController.text.trim(),
+      cards: existing?.cards ?? const [],
+      createdAt: existing?.createdAt ?? DateTime.now(),
     );
 
-    Navigator.of(context).pop(WishlistFormResult.saved(entry));
+    Navigator.of(context).pop(DeckFormResult.saved(deck));
   }
 
   Future<void> _confirmDelete() async {
-    final entry = widget.existingEntry!;
-    final isWishlist = entry.kind == WishlistEntryKind.wishlist;
+    final deck = widget.existingDeck!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Remove entry?'),
+        title: const Text('Delete deck?'),
         content: Text(
-          'This removes "${entry.name}" from your '
-          "${isWishlist ? 'wishlist' : 'trade list'}. This can't be undone.",
+          'This removes "${deck.name}" and its decklist. '
+          "This can't be undone.",
         ),
         actions: [
           TextButton(
@@ -110,7 +100,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
               color: PokeBinderColors.danger,
             ),
             label: const Text(
-              'Remove',
+              'Delete',
               style: TextStyle(color: PokeBinderColors.danger),
             ),
           ),
@@ -119,14 +109,12 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
     );
 
     if (confirmed == true && mounted) {
-      Navigator.of(context).pop(const WishlistFormResult.deleted());
+      Navigator.of(context).pop(const DeckFormResult.deleted());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isWishlist = _kind == WishlistEntryKind.wishlist;
-
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
@@ -141,45 +129,32 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackLink(
-                label: '‹ Wishlist',
                 onTap: () => Navigator.of(context).maybePop(),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              Text('WISHLIST & TRADE', style: PokeBinderText.eyebrow),
+              Text('DECK PLANNER', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
-                _isEditing
-                    ? 'Edit entry'
-                    : (isWishlist ? 'Add to wishlist' : 'Add to trade list'),
+                _isEditing ? 'Edit Deck' : 'Create a Deck',
                 style: PokeBinderText.heading,
               ),
               const SizedBox(height: 4),
               Text(
-                isWishlist
-                    ? "Track a card you're hoping to pull or pick up."
-                    : "List a card you're ready to trade away.",
+                _isEditing
+                    ? "Update the deck's details — its decklist stays put."
+                    : 'Name it and set a target size — you can add cards '
+                        'to it right after.',
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
 
-              SegmentedTabBar(
-                index: isWishlist ? 0 : 1,
-                labels: const ['Wishlist', 'Trade list'],
-                onChanged: (i) => setState(
-                  () => _kind = i == 0
-                      ? WishlistEntryKind.wishlist
-                      : WishlistEntryKind.trade,
-                ),
-              ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
-
               LabeledFormField(
-                label: 'Card name',
+                label: 'Deck name',
                 child: TextField(
                   controller: _nameController,
                   decoration: pokeInputDecoration(
-                    hint: 'e.g. Pikachu VMAX',
-                    icon: Icons.badge_outlined,
+                    hint: 'e.g. Lightning Rush',
+                    icon: Icons.style_outlined,
                   ),
                   onChanged: (_) {
                     if (_nameError != null) setState(() => _nameError = null);
@@ -194,47 +169,52 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
 
               FormFieldRow(
                 left: LabeledFormField(
-                  label: 'Set (optional)',
-                  child: TextField(
-                    controller: _setController,
-                    decoration: pokeInputDecoration(
-                      hint: 'Base Set',
-                      icon: Icons.collections_bookmark_outlined,
-                    ),
+                  label: 'Format',
+                  child: PokeDropdownField<DeckFormat>(
+                    value: _format,
+                    icon: Icons.flag_outlined,
+                    options: [
+                      for (final format in DeckFormat.values)
+                        PokeDropdownOption(format, format.label),
+                    ],
+                    onChanged: (value) => setState(() => _format = value),
                   ),
                 ),
-                right: LabeledFormField(
-                  label: 'Quantity',
-                  child: TextField(
-                    controller: _qtyController,
-                    keyboardType: TextInputType.number,
-                    decoration: pokeInputDecoration(
-                      hint: '1',
-                      icon: Icons.style_outlined,
+                right: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LabeledFormField(
+                      label: 'Target deck size',
+                      child: TextField(
+                        controller: _sizeController,
+                        keyboardType: TextInputType.number,
+                        decoration:
+                            pokeInputDecoration(icon: Icons.format_list_numbered),
+                        onChanged: (_) {
+                          if (_sizeError != null) {
+                            setState(() => _sizeError = null);
+                          }
+                        },
+                      ),
                     ),
-                    onChanged: (_) {
-                      if (_quantityError != null) {
-                        setState(() => _quantityError = null);
-                      }
-                    },
-                  ),
+                    if (_sizeError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+                        child: Text(_sizeError!, style: PokeBinderText.formError),
+                      ),
+                  ],
                 ),
               ),
-              if (_quantityError != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
-                  child: Text(_quantityError!, style: PokeBinderText.formError),
-                ),
 
               LabeledFormField(
-                label: 'Notes (optional)',
+                label: 'Description (optional)',
                 child: TextField(
-                  controller: _notesController,
+                  controller: _descriptionController,
+                  keyboardType: TextInputType.multiline,
                   minLines: 2,
                   maxLines: 5,
-                  keyboardType: TextInputType.multiline,
                   decoration: pokeInputDecoration(
-                    hint: 'Condition, max price, etc.',
+                    hint: "What's the game plan for this deck?",
                   ),
                 ),
               ),
@@ -252,7 +232,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: _isEditing ? 'Save Changes' : 'Add',
+                      label: _isEditing ? 'Save Changes' : '+ Create Deck',
                       icon: _isEditing ? Icons.check : Icons.add,
                       onTap: _submit,
                     ),
@@ -287,7 +267,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
                             ),
                             SizedBox(width: PokeBinderSpacing.sp2),
                             Text(
-                              'Remove entry',
+                              'Delete Deck',
                               style: TextStyle(
                                 color: PokeBinderColors.danger,
                                 fontWeight: FontWeight.bold,

@@ -6,45 +6,48 @@ import 'stats_screen.dart';
 import 'trainer_card_screen.dart';
 import 'wishlist_screen.dart';
 
-class MoreScreen extends StatefulWidget {
+class MoreScreen extends StatelessWidget {
+  final String trainerName;
   final VoidCallback? onOpenStats;
   final VoidCallback? onOpenWishlist;
   final VoidCallback? onOpenSettings;
   final ValueChanged<BinderData>? onOpenBinder;
-  final bool initialShowTrainerCard;
 
   const MoreScreen({
     super.key,
+    this.trainerName = 'Ash',
     this.onOpenStats,
     this.onOpenWishlist,
     this.onOpenSettings,
     this.onOpenBinder,
-    this.initialShowTrainerCard = false,
   });
 
-  @override
-  State<MoreScreen> createState() => _MoreScreenState();
-}
-
-class _MoreScreenState extends State<MoreScreen> {
-  late bool _showingTrainerCard = widget.initialShowTrainerCard;
+  void _openTrainerCard(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TrainerCardScreen(
+          trainerName: trainerName,
+          onBack: () => Navigator.of(context).maybePop(),
+          onOpenBinder: onOpenBinder == null
+              ? null
+              : (binder) {
+                  Navigator.of(context).pop();
+                  onOpenBinder!(binder);
+                },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (_showingTrainerCard) {
-      return TrainerCardScreen(
-        onBack: () => setState(() => _showingTrainerCard = false),
-        onOpenBinder: widget.onOpenBinder,
-      );
-    }
-
     final rows = [
       _MoreRowData(
         icon: Icons.badge_rounded,
         gradient: PokeBinderColors.redGradient,
         title: 'Trainer Card',
         subtitle: 'Profile, badges, favorite deck',
-        onTap: () => setState(() => _showingTrainerCard = true),
+        onTap: () => _openTrainerCard(context),
       ),
       _MoreRowData(
         icon: Icons.bar_chart_rounded,
@@ -52,8 +55,8 @@ class _MoreScreenState extends State<MoreScreen> {
         title: 'Collection Statistics',
         subtitle: 'Value, rarity, set breakdown',
         onTap: () {
-          if (widget.onOpenStats != null) {
-            widget.onOpenStats!();
+          if (onOpenStats != null) {
+            onOpenStats!();
             return;
           }
           Navigator.of(context).push(
@@ -67,8 +70,8 @@ class _MoreScreenState extends State<MoreScreen> {
         title: 'Wishlist & Trade List',
         subtitle: 'Cards you want or will trade',
         onTap: () {
-          if (widget.onOpenWishlist != null) {
-            widget.onOpenWishlist!();
+          if (onOpenWishlist != null) {
+            onOpenWishlist!();
             return;
           }
           Navigator.of(context).push(
@@ -82,8 +85,8 @@ class _MoreScreenState extends State<MoreScreen> {
         title: 'Settings',
         subtitle: 'Account, backup, export',
         onTap: () {
-          if (widget.onOpenSettings != null) {
-            widget.onOpenSettings!();
+          if (onOpenSettings != null) {
+            onOpenSettings!();
             return;
           }
           Navigator.of(context).push(
