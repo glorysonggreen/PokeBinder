@@ -2,7 +2,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/pokebinder_theme.dart';
 
-InputDecoration pokeInputDecoration({String? hint, IconData? icon}) {
+InputDecoration pokeInputDecoration({
+  String? hint,
+  IconData? icon,
+  Widget? suffixIcon,
+}) {
   final border = OutlineInputBorder(
     borderRadius: BorderRadius.circular(12),
     borderSide: BorderSide.none,
@@ -18,6 +22,8 @@ InputDecoration pokeInputDecoration({String? hint, IconData? icon}) {
         ? Icon(icon, size: 16, color: PokeBinderColors.redDeep.withValues(alpha: 0.55))
         : null,
     prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 0),
+    suffixIcon: suffixIcon,
+    suffixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 0),
     contentPadding:
         const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
     border: border,

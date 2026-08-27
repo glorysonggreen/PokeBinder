@@ -71,7 +71,7 @@ class TrainerCardScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BackLink(label: '‹ More', onTap: onBack),
+                  BackLink(onTap: onBack),
                   Material(
                     color: Colors.transparent,
                     child: InkWell(

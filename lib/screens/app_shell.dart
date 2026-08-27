@@ -3,14 +3,20 @@ import '../models/binder_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/app_nav_bar.dart';
 import 'binders_screen.dart';
+import 'decks_screen.dart';
 import 'home_screen.dart';
 import 'more_screen.dart';
 import 'scanner_screen.dart';
 
 class AppShell extends StatefulWidget {
   final AppTab initialTab;
+  final String trainerName;
 
-  const AppShell({super.key, this.initialTab = AppTab.binders});
+  const AppShell({
+    super.key,
+    this.initialTab = AppTab.home,
+    this.trainerName = 'Ash',
+  });
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -21,8 +27,6 @@ class _AppShellState extends State<AppShell> {
   int _bindersLinkToken = 0;
   int _bindersInitialTabIndex = 0;
   String? _bindersInitialBinderId;
-  int _moreLinkToken = 0;
-  bool _moreInitialShowTrainerCard = false;
 
   void _switchTab(AppTab tab) => setState(() => _tab = tab);
 
@@ -35,14 +39,6 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
-  void _openTrainerCard() {
-    setState(() {
-      _moreLinkToken++;
-      _moreInitialShowTrainerCard = true;
-      _tab = AppTab.more;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,14 +47,13 @@ class _AppShellState extends State<AppShell> {
         index: AppTab.values.indexOf(_tab),
         children: [
           HomeScreen(
+            trainerName: widget.trainerName,
             onOpenAllCards: () => _openBinders(tabIndex: 1),
             onOpenBinders: () => _openBinders(tabIndex: 0),
             onOpenBinder: (BinderData binder) =>
                 _openBinders(tabIndex: 0, binderId: binder.id),
             onOpenScan: () => _switchTab(AppTab.scan),
-            onOpenMore: () => _switchTab(AppTab.more),
             onOpenDecks: () => _switchTab(AppTab.decks),
-            onOpenTrainerCard: _openTrainerCard,
           ),
           BindersScreen(
             key: ValueKey(_bindersLinkToken),
@@ -66,16 +61,9 @@ class _AppShellState extends State<AppShell> {
             initialBinderId: _bindersInitialBinderId,
           ),
           const ScannerScreen(),
-          const _ComingSoonScreen(
-            tab: AppTab.decks,
-            title: 'Deck building',
-            description:
-                'Put together and manage your battle decks from your '
-                'collection here.',
-          ),
+          const DecksScreen(),
           MoreScreen(
-            key: ValueKey(_moreLinkToken),
-            initialShowTrainerCard: _moreInitialShowTrainerCard,
+            trainerName: widget.trainerName,
             onOpenBinder: (BinderData binder) =>
                 _openBinders(tabIndex: 0, binderId: binder.id),
           ),
@@ -84,84 +72,6 @@ class _AppShellState extends State<AppShell> {
       bottomNavigationBar: AppNavBar(
         current: _tab,
         onChanged: (tab) => setState(() => _tab = tab),
-      ),
-    );
-  }
-}
-
-class _ComingSoonScreen extends StatelessWidget {
-  final AppTab tab;
-  final String title;
-  final String description;
-
-  const _ComingSoonScreen({
-    required this.tab,
-    required this.title,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(PokeBinderSpacing.sp4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(tab.label.toUpperCase(), style: PokeBinderText.eyebrow),
-              const SizedBox(height: PokeBinderSpacing.sp3),
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: PokeBinderColors.red.withValues(alpha: 0.1),
-                        ),
-                        child: Icon(
-                          tab.activeIcon,
-                          size: 30,
-                          color: PokeBinderColors.redDeep,
-                        ),
-                      ),
-                      const SizedBox(height: PokeBinderSpacing.sp4),
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: PokeBinderText.heading,
-                      ),
-                      const SizedBox(height: PokeBinderSpacing.sp2),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 260),
-                        child: Text(
-                          description,
-                          textAlign: TextAlign.center,
-                          style: PokeBinderText.subtitle,
-                        ),
-                      ),
-                      const SizedBox(height: PokeBinderSpacing.sp2),
-                      Text(
-                        'Coming soon',
-                        style: PokeBinderText.chakraPetch(const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                          color: PokeBinderColors.goldDeep,
-                        )),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
