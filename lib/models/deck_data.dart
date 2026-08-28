@@ -47,6 +47,7 @@ class DeckData {
   final String description;
   final List<DeckCardEntry> cards;
   final DateTime createdAt;
+  final bool isPinned;
 
   DeckData({
     required this.id,
@@ -56,6 +57,7 @@ class DeckData {
     this.description = '',
     List<DeckCardEntry>? cards,
     DateTime? createdAt,
+    this.isPinned = false,
   })  : cards = cards ?? const [],
         createdAt = createdAt ?? DateTime.now();
 
@@ -67,6 +69,7 @@ class DeckData {
     int? targetSize,
     String? description,
     List<DeckCardEntry>? cards,
+    bool? isPinned,
   }) {
     return DeckData(
       id: id,
@@ -76,6 +79,7 @@ class DeckData {
       description: description ?? this.description,
       cards: cards ?? this.cards,
       createdAt: createdAt,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 
@@ -87,6 +91,7 @@ class DeckData {
           targetSize: 15,
           description: 'Aggressive fire deck built around Charizard.',
           createdAt: DateTime.now().subtract(const Duration(days: 12)),
+          isPinned: true,
           cards: const [
             DeckCardEntry(cardId: 'sample-charizard', quantity: 2),
             DeckCardEntry(cardId: 'sample-fire-energy', quantity: 8),

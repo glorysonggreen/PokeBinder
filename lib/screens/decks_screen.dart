@@ -49,6 +49,7 @@ class _DecksScreenState extends State<DecksScreen> {
   String? _selectedDeckId;
   DeckFormat? _formatFilter;
   bool _incompleteOnly = false;
+  bool _viewingAllDecks = false;
 
   @override
   void initState() {
@@ -89,6 +90,18 @@ class _DecksScreenState extends State<DecksScreen> {
 
   bool _isComplete(DeckData deck) => _missingCount(deck) <= 0;
 
+  void _toggleViewAllDecks() {
+    setState(() => _viewingAllDecks = !_viewingAllDecks);
+  }
+
+  void _toggleDeckPin(DeckData deck) {
+    setState(() {
+      final index = _decks.indexWhere((d) => d.id == deck.id);
+      if (index == -1) return;
+      _decks[index] = _decks[index].copyWith(isPinned: !_decks[index].isPinned);
+    });
+  }
+
   Future<void> _openNewDeck() async {
     final result = await Navigator.of(context).push<DeckFormResult>(
       MaterialPageRoute(builder: (_) => const DeckFormScreen()),
@@ -97,6 +110,7 @@ class _DecksScreenState extends State<DecksScreen> {
     setState(() {
       _decks.add(result.deck!);
       _selectedDeckId = result.deck!.id;
+      _viewingAllDecks = false;
     });
   }
 
@@ -158,6 +172,7 @@ class _DecksScreenState extends State<DecksScreen> {
       final index = _decks.indexWhere((d) => d.id == deck.id);
       _decks.insert(index == -1 ? _decks.length : index + 1, copy);
       _selectedDeckId = copy.id;
+      _viewingAllDecks = false;
     });
   }
 
@@ -249,9 +264,9 @@ class _DecksScreenState extends State<DecksScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
+            PokeBinderSpacing.sp5,
+            PokeBinderSpacing.sp5,
+            PokeBinderSpacing.sp5,
             PokeBinderSpacing.sp6,
           ),
           child: Column(
@@ -260,21 +275,21 @@ class _DecksScreenState extends State<DecksScreen> {
               Text('DECK PLANNER', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Your Decks', style: PokeBinderText.heading),
-              const SizedBox(height: PokeBinderSpacing.sp1),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               Text(
                 'Plan decklists and track what you still need to pull.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp5),
 
               PillButton(
-                label: '+ New Deck',
+                label: 'New Deck',
                 icon: Icons.add,
                 onTap: _openNewDeck,
               ),
 
               if (_decks.isNotEmpty) ...[
-                const SizedBox(height: PokeBinderSpacing.sp3),
+                const SizedBox(height: PokeBinderSpacing.sp4),
                 SizedBox(
                   height: 32,
                   child: ListView(
@@ -306,7 +321,7 @@ class _DecksScreenState extends State<DecksScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: PokeBinderSpacing.sp3),
+              const SizedBox(height: PokeBinderSpacing.sp4),
 
               if (_decks.isEmpty)
                 const _EmptyPanel(
@@ -322,14 +337,19 @@ class _DecksScreenState extends State<DecksScreen> {
                   selectedDeckId: _selectedDeckId,
                   readyCountOf: _readyCount,
                   isCompleteOf: _isComplete,
-                  onSelect: (deck) =>
-                      setState(() => _selectedDeckId = deck.id),
+                  viewingAllDecks: _viewingAllDecks,
+                  onToggleViewAllDecks: _toggleViewAllDecks,
+                  onSelect: (deck) => setState(() {
+                    _selectedDeckId = deck.id;
+                    _viewingAllDecks = false;
+                  }),
                   onEdit: _openEditDeck,
                   onDuplicate: _duplicateDeck,
+                  onTogglePin: _toggleDeckPin,
                 ),
 
               if (selectedDeck != null) ...[
-                const SizedBox(height: PokeBinderSpacing.sp4),
+                const SizedBox(height: PokeBinderSpacing.sp5),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -344,24 +364,24 @@ class _DecksScreenState extends State<DecksScreen> {
                     _FormatTag(format: selectedDeck.format),
                   ],
                 ),
-                const SizedBox(height: PokeBinderSpacing.sp3),
+                const SizedBox(height: PokeBinderSpacing.sp4),
                 _DeckStatsRow(
                   deck: selectedDeck,
                   ready: _readyCount(selectedDeck),
                 ),
-                const SizedBox(height: PokeBinderSpacing.sp3),
+                const SizedBox(height: PokeBinderSpacing.sp4),
                 _DeckProgressBar(
                   ready: _readyCount(selectedDeck),
                   target: selectedDeck.targetSize,
                 ),
                 if (selectedDeck.cards.isNotEmpty) ...[
-                  const SizedBox(height: PokeBinderSpacing.sp3),
+                  const SizedBox(height: PokeBinderSpacing.sp4),
                   _DeckTypeBalanceBar(
                     deck: selectedDeck,
                     cardOf: _cardById,
                   ),
                 ],
-                const SizedBox(height: PokeBinderSpacing.sp3),
+                const SizedBox(height: PokeBinderSpacing.sp4),
 
                 if (selectedDeck.cards.isEmpty)
                   const _EmptyPanel(
@@ -375,13 +395,13 @@ class _DecksScreenState extends State<DecksScreen> {
                         _editCardEntry(selectedDeck, entry),
                   ),
 
-                const SizedBox(height: PokeBinderSpacing.sp3),
+                const SizedBox(height: PokeBinderSpacing.sp4),
                 CollectionSearchBar(
                   hint: 'Search your binders for a card to add…',
                   enabled: false,
                   onTap: () => _openAddCards(selectedDeck),
                 ),
-                const SizedBox(height: PokeBinderSpacing.sp2),
+                const SizedBox(height: PokeBinderSpacing.sp3),
                 PillButton(
                   label: '+ Add card to deck',
                   ghost: true,
@@ -470,27 +490,74 @@ class _StatBlock extends StatelessWidget {
   }
 }
 
+const int kMaxPinnedDecks = 2;
+const int kMaxDecksShown = 4;
+
+class _DeckSection {
+  final String title;
+  final List<DeckData> decks;
+  final int totalCount;
+
+  const _DeckSection({
+    required this.title,
+    required this.decks,
+    required this.totalCount,
+  });
+
+  int get hiddenCount => totalCount - decks.length;
+}
+
 class _DeckListPanel extends StatelessWidget {
   final List<DeckData> decks;
   final String? selectedDeckId;
   final int Function(DeckData) readyCountOf;
   final bool Function(DeckData) isCompleteOf;
+  final bool viewingAllDecks;
+  final VoidCallback onToggleViewAllDecks;
   final ValueChanged<DeckData> onSelect;
   final ValueChanged<DeckData> onEdit;
   final ValueChanged<DeckData> onDuplicate;
+  final ValueChanged<DeckData> onTogglePin;
 
   const _DeckListPanel({
     required this.decks,
     required this.selectedDeckId,
     required this.readyCountOf,
     required this.isCompleteOf,
+    required this.viewingAllDecks,
+    required this.onToggleViewAllDecks,
     required this.onSelect,
     required this.onEdit,
     required this.onDuplicate,
+    required this.onTogglePin,
   });
 
-  @override
-  Widget build(BuildContext context) {
+  List<_DeckSection> _buildSections() {
+    final pinned = decks.where((d) => d.isPinned).toList();
+    final rest = decks.where((d) => !d.isPinned).toList();
+
+    final sections = <_DeckSection>[];
+
+    if (pinned.isNotEmpty) {
+      sections.add(_DeckSection(
+        title: 'Pinned Decks',
+        decks: viewingAllDecks ? pinned : pinned.take(kMaxPinnedDecks).toList(),
+        totalCount: pinned.length,
+      ));
+    }
+
+    if (rest.isNotEmpty) {
+      sections.add(_DeckSection(
+        title: 'All Decks',
+        decks: viewingAllDecks ? rest : rest.take(kMaxDecksShown).toList(),
+        totalCount: rest.length,
+      ));
+    }
+
+    return sections;
+  }
+
+  Widget _sectionPanel(List<DeckData> sectionDecks) {
     return Container(
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
@@ -502,7 +569,7 @@ class _DeckListPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(13),
         child: Column(
           children: [
-            for (var i = 0; i < decks.length; i++) ...[
+            for (var i = 0; i < sectionDecks.length; i++) ...[
               if (i != 0)
                 Divider(
                   height: 1,
@@ -510,18 +577,75 @@ class _DeckListPanel extends StatelessWidget {
                   color: PokeBinderColors.ink.withValues(alpha: 0.06),
                 ),
               _DeckRow(
-                deck: decks[i],
-                selected: decks[i].id == selectedDeckId,
-                ready: readyCountOf(decks[i]),
-                complete: isCompleteOf(decks[i]),
-                onTap: () => onSelect(decks[i]),
-                onEdit: () => onEdit(decks[i]),
-                onDuplicate: () => onDuplicate(decks[i]),
+                deck: sectionDecks[i],
+                selected: sectionDecks[i].id == selectedDeckId,
+                ready: readyCountOf(sectionDecks[i]),
+                complete: isCompleteOf(sectionDecks[i]),
+                onTap: () => onSelect(sectionDecks[i]),
+                onEdit: () => onEdit(sectionDecks[i]),
+                onDuplicate: () => onDuplicate(sectionDecks[i]),
+                onTogglePin: () => onTogglePin(sectionDecks[i]),
               ),
             ],
           ],
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = _buildSections();
+    final hiddenCount =
+        sections.fold<int>(0, (sum, section) => sum + section.hiddenCount);
+    final showMultipleSections = sections.length > 1;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final section in sections) ...[
+          if (showMultipleSections) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Text(
+                '${section.title.toUpperCase()} · ${section.totalCount}',
+                style: PokeBinderText.sectionLabel,
+              ),
+            ),
+            const SizedBox(height: PokeBinderSpacing.sp2),
+          ],
+          _sectionPanel(section.decks),
+          if (section != sections.last)
+            const SizedBox(height: PokeBinderSpacing.sp3),
+        ],
+        if (hiddenCount > 0 || viewingAllDecks)
+          Padding(
+            padding: const EdgeInsets.only(top: PokeBinderSpacing.sp2),
+            child: GestureDetector(
+              onTap: onToggleViewAllDecks,
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    viewingAllDecks
+                        ? 'Show Less'
+                        : 'View All Decks (+$hiddenCount)',
+                    style: PokeBinderText.backLink,
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    viewingAllDecks
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
+                    size: 14,
+                    color: PokeBinderText.backLink.color,
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -534,6 +658,7 @@ class _DeckRow extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDuplicate;
+  final VoidCallback onTogglePin;
 
   const _DeckRow({
     required this.deck,
@@ -543,6 +668,7 @@ class _DeckRow extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDuplicate,
+    required this.onTogglePin,
   });
 
   @override
@@ -555,8 +681,8 @@ class _DeckRow extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: PokeBinderSpacing.sp3,
-            vertical: PokeBinderSpacing.sp3,
+            horizontal: PokeBinderSpacing.sp4,
+            vertical: PokeBinderSpacing.sp4,
           ),
           child: Row(
             children: [
@@ -602,6 +728,22 @@ class _DeckRow extends StatelessWidget {
               _StatusTag(
                 ok: complete,
                 label: complete ? '✓ Complete' : 'Missing $missing',
+              ),
+              GestureDetector(
+                onTap: onTogglePin,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    deck.isPinned
+                        ? Icons.push_pin_rounded
+                        : Icons.push_pin_outlined,
+                    size: 15,
+                    color: deck.isPinned
+                        ? PokeBinderColors.red
+                        : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                  ),
+                ),
               ),
               PopupMenuButton<String>(
                 icon: const Icon(
@@ -839,8 +981,8 @@ class _DeckCardEntryRow extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: PokeBinderSpacing.sp3,
-            vertical: PokeBinderSpacing.sp2 + 2,
+            horizontal: PokeBinderSpacing.sp4,
+            vertical: PokeBinderSpacing.sp3,
           ),
           child: Row(
             children: [
@@ -929,7 +1071,7 @@ class _EmptyPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(PokeBinderSpacing.sp4),
+      padding: const EdgeInsets.all(PokeBinderSpacing.sp5),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
