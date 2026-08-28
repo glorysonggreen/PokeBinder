@@ -220,7 +220,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: _isEditing ? 'Save Changes' : '+ Create Deck',
+                      label: _isEditing ? 'Save Changes' : 'Create Deck',
                       icon: _isEditing ? Icons.check : Icons.add,
                       onTap: _submit,
                     ),
