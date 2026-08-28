@@ -175,7 +175,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                     icon: Icons.flag_outlined,
                     options: [
                       for (final format in DeckFormat.values)
-                        PokeDropdownOption(format, format.label),
+                        PokeDropdownOption(format, format.label, icon: format.icon),
                     ],
                     onChanged: (value) => setState(() => _format = value),
                   ),
@@ -187,7 +187,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                     icon: Icons.format_list_numbered,
                     options: [
                       for (final size in _sizeOptions)
-                        PokeDropdownOption(size, '$size cards'),
+                        PokeDropdownOption(size, '$size Cards'),
                     ],
                     onChanged: (value) => setState(() => _targetSize = value),
                   ),

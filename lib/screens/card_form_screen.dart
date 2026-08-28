@@ -354,7 +354,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                       for (final b in widget.binders)
                         PokeDropdownOption(b.id, b.name),
                       const PokeDropdownOption(
-                          kUnassignedBinderId, 'No binder (unassigned)'),
+                          kUnassignedBinderId, 'No Binder (Unassigned)'),
                     ],
                     onChanged: (value) => setState(() => _binderId = value),
                   ),

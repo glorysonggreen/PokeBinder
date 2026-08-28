@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 enum DeckFormat { standard, expanded, casual }
 
@@ -10,7 +10,7 @@ extension DeckFormatMeta on DeckFormat {
       case DeckFormat.expanded:
         return 'Expanded';
       case DeckFormat.casual:
-        return 'Casual / Kitchen table';
+        return 'Casual';
     }
   }
 
@@ -23,6 +23,19 @@ extension DeckFormatMeta on DeckFormat {
         return 'Expanded';
       case DeckFormat.casual:
         return 'Casual';
+    }
+  }
+
+  /// Distinct icon per format, used anywhere a format is shown (filter
+  /// chips, dropdowns, tags) so each one stays visually identifiable.
+  IconData get icon {
+    switch (this) {
+      case DeckFormat.standard:
+        return Icons.verified_rounded;
+      case DeckFormat.expanded:
+        return Icons.open_in_full_rounded;
+      case DeckFormat.casual:
+        return Icons.coffee_rounded;
     }
   }
 }
