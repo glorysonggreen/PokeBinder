@@ -132,8 +132,6 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                 onTap: () => Navigator.of(context).maybePop(),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              Text('DECK PLANNER', style: PokeBinderText.eyebrow),
-              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 _isEditing ? 'Edit Deck' : 'Create a Deck',
                 style: PokeBinderText.heading,
