@@ -18,7 +18,7 @@ extension _DeckFormatAccent on DeckFormat {
       case DeckFormat.expanded:
         return PokeBinderColors.goldDeep;
       case DeckFormat.casual:
-        return PokeBinderColors.inkSoft;
+        return PokeBinderColors.slate;
     }
   }
 }
@@ -88,23 +88,6 @@ class _DecksScreenState extends State<DecksScreen> {
     await _openDeckDetail(result.deck!);
   }
 
-  Future<void> _openEditDeck(DeckData deck) async {
-    final result = await Navigator.of(context).push<DeckFormResult>(
-      MaterialPageRoute(builder: (_) => DeckFormScreen(existingDeck: deck)),
-    );
-    if (result == null) return;
-
-    setState(() {
-      final index = _decks.indexWhere((d) => d.id == deck.id);
-      if (index == -1) return;
-      if (result.deleted) {
-        _decks.removeAt(index);
-      } else {
-        _decks[index] = result.deck!;
-      }
-    });
-  }
-
   /// Opens the full-screen detail view for [deck]. Edits made there are
   /// streamed back live via the callbacks below, so `_decks` stays in
   /// sync no matter how the detail screen gets dismissed.
@@ -121,30 +104,6 @@ class _DecksScreenState extends State<DecksScreen> {
         ),
       ),
     );
-  }
-
-  String _duplicateName(String name) {
-    final match = RegExp(r'^(.*) \(Copy(?: (\d+))?\)$').firstMatch(name);
-    if (match == null) return '$name (Copy)';
-    final base = match.group(1)!;
-    final n = int.tryParse(match.group(2) ?? '1') ?? 1;
-    return '$base (Copy ${n + 1})';
-  }
-
-  void _duplicateDeck(DeckData deck) {
-    final copy = DeckData(
-      id: 'deck-${DateTime.now().microsecondsSinceEpoch}',
-      name: _duplicateName(deck.name),
-      format: deck.format,
-      targetSize: deck.targetSize,
-      description: deck.description,
-      cards: deck.cards,
-    );
-    setState(() {
-      final index = _decks.indexWhere((d) => d.id == deck.id);
-      _decks.insert(index == -1 ? _decks.length : index + 1, copy);
-      _viewingAllDecks = false;
-    });
   }
 
   @override
@@ -244,8 +203,6 @@ class _DecksScreenState extends State<DecksScreen> {
                   viewingAllDecks: _viewingAllDecks,
                   onToggleViewAllDecks: _toggleViewAllDecks,
                   onSelect: _openDeckDetail,
-                  onEdit: _openEditDeck,
-                  onDuplicate: _duplicateDeck,
                   onTogglePin: _toggleDeckPin,
                 ),
             ],
@@ -384,8 +341,6 @@ class _DeckListPanel extends StatelessWidget {
   final bool viewingAllDecks;
   final VoidCallback onToggleViewAllDecks;
   final ValueChanged<DeckData> onSelect;
-  final ValueChanged<DeckData> onEdit;
-  final ValueChanged<DeckData> onDuplicate;
   final ValueChanged<DeckData> onTogglePin;
 
   const _DeckListPanel({
@@ -395,8 +350,6 @@ class _DeckListPanel extends StatelessWidget {
     required this.viewingAllDecks,
     required this.onToggleViewAllDecks,
     required this.onSelect,
-    required this.onEdit,
-    required this.onDuplicate,
     required this.onTogglePin,
   });
 
@@ -449,8 +402,6 @@ class _DeckListPanel extends StatelessWidget {
                 ready: readyCountOf(sectionDecks[i]),
                 complete: isCompleteOf(sectionDecks[i]),
                 onTap: () => onSelect(sectionDecks[i]),
-                onEdit: () => onEdit(sectionDecks[i]),
-                onDuplicate: () => onDuplicate(sectionDecks[i]),
                 onTogglePin: () => onTogglePin(sectionDecks[i]),
               ),
             ],
@@ -522,8 +473,6 @@ class _DeckRow extends StatelessWidget {
   final int ready;
   final bool complete;
   final VoidCallback onTap;
-  final VoidCallback onEdit;
-  final VoidCallback onDuplicate;
   final VoidCallback onTogglePin;
 
   const _DeckRow({
@@ -531,8 +480,6 @@ class _DeckRow extends StatelessWidget {
     required this.ready,
     required this.complete,
     required this.onTap,
-    required this.onEdit,
-    required this.onDuplicate,
     required this.onTogglePin,
   });
 
@@ -556,7 +503,7 @@ class _DeckRow extends StatelessWidget {
                 height: 30,
                 margin: const EdgeInsets.only(right: PokeBinderSpacing.sp3),
                 decoration: BoxDecoration(
-                  color: complete ? _kTagOkFg : deck.format.accentColor,
+                  color: deck.format.accentColor,
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -610,91 +557,9 @@ class _DeckRow extends StatelessWidget {
                   ),
                 ),
               ),
-              Theme(
-                data: Theme.of(context).copyWith(
-                  highlightColor: PokeBinderColors.red.withValues(alpha: 0.06),
-                  splashColor: PokeBinderColors.red.withValues(alpha: 0.06),
-                  hoverColor: PokeBinderColors.red.withValues(alpha: 0.05),
-                ),
-                child: PopupMenuButton<String>(
-                  icon: const Icon(
-                    Icons.more_vert_rounded,
-                    size: 18,
-                    color: PokeBinderColors.inkSoft,
-                  ),
-                  offset: const Offset(0, 32),
-                  padding: EdgeInsets.zero,
-                  color: PokeBinderColors.white,
-                  elevation: 8,
-                  shadowColor: PokeBinderColors.ink.withValues(alpha: 0.2),
-                  surfaceTintColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-                  ),
-                  constraints: const BoxConstraints(minWidth: 175),
-                  onSelected: (value) {
-                    if (value == 'edit') onEdit();
-                    if (value == 'duplicate') onDuplicate();
-                  },
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(
-                      value: 'edit',
-                      height: 38,
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: _DeckActionMenuRow(
-                        icon: Icons.edit_outlined,
-                        label: 'Edit Deck Details',
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'duplicate',
-                      height: 38,
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: _DeckActionMenuRow(
-                        icon: Icons.copy_all_outlined,
-                        label: 'Duplicate Deck',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DeckActionMenuRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _DeckActionMenuRow({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: PokeBinderSpacing.sp2,
-        vertical: 8,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 15, color: PokeBinderColors.inkSoft),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: PokeBinderText.chakraPetch(const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: PokeBinderColors.ink,
-              )),
-            ),
-          ),
-        ],
       ),
     );
   }

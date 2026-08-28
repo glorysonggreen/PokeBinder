@@ -16,7 +16,7 @@ extension _DeckFormatAccent on DeckFormat {
       case DeckFormat.expanded:
         return PokeBinderColors.goldDeep;
       case DeckFormat.casual:
-        return PokeBinderColors.inkSoft;
+        return PokeBinderColors.slate;
     }
   }
 }
