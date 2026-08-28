@@ -363,37 +363,11 @@ class _DecksScreenState extends State<DecksScreen> {
 
               if (!_viewingAllDecks && selectedDeck != null) ...[
                 const SizedBox(height: PokeBinderSpacing.sp5),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'EDITING · ${selectedDeck.name.toUpperCase()}',
-                        style: PokeBinderText.sectionLabel,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: PokeBinderSpacing.sp2),
-                    _FormatTag(format: selectedDeck.format),
-                  ],
-                ),
-                const SizedBox(height: PokeBinderSpacing.sp4),
-                _DeckStatsRow(
+                _DeckOverviewCard(
                   deck: selectedDeck,
                   ready: _readyCount(selectedDeck),
+                  cardOf: _cardById,
                 ),
-                const SizedBox(height: PokeBinderSpacing.sp4),
-                _DeckProgressBar(
-                  ready: _readyCount(selectedDeck),
-                  target: selectedDeck.targetSize,
-                ),
-                if (selectedDeck.cards.isNotEmpty) ...[
-                  const SizedBox(height: PokeBinderSpacing.sp4),
-                  _DeckTypeBalanceBar(
-                    deck: selectedDeck,
-                    cardOf: _cardById,
-                  ),
-                ],
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
                 if (selectedDeck.cards.isEmpty)
@@ -515,19 +489,80 @@ class _FormatTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = format.accentColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        format.shortLabel,
+        format.shortLabel.toUpperCase(),
         style: PokeBinderText.chakraPetch(TextStyle(
           fontSize: 8.5,
           fontWeight: FontWeight.bold,
-          letterSpacing: 0.3,
+          letterSpacing: 0.4,
           color: color,
         )),
+      ),
+    );
+  }
+}
+
+/// Groups deck identity, at-a-glance stats, completion progress, and
+/// type mix into a single card so the "how's this deck doing?" info
+/// reads as one unit instead of loose rows floating on the page.
+class _DeckOverviewCard extends StatelessWidget {
+  final DeckData deck;
+  final int ready;
+  final PokemonCardData? Function(String cardId) cardOf;
+
+  const _DeckOverviewCard({
+    required this.deck,
+    required this.ready,
+    required this.cardOf,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(PokeBinderSpacing.sp4),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: kCardElevation,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('EDITING', style: PokeBinderText.eyebrow),
+                    const SizedBox(height: 2),
+                    Text(
+                      deck.name,
+                      style: PokeBinderText.heading.copyWith(fontSize: 17),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: PokeBinderSpacing.sp2),
+              _FormatTag(format: deck.format),
+            ],
+          ),
+          const SizedBox(height: PokeBinderSpacing.sp4),
+          _DeckStatsRow(deck: deck, ready: ready),
+          const SizedBox(height: PokeBinderSpacing.sp4),
+          _DeckProgressBar(ready: ready, target: deck.targetSize),
+          if (deck.cards.isNotEmpty) ...[
+            const SizedBox(height: PokeBinderSpacing.sp4),
+            _DeckTypeBalanceBar(deck: deck, cardOf: cardOf),
+          ],
+        ],
       ),
     );
   }
@@ -545,36 +580,98 @@ class _DeckStatsRow extends StatelessWidget {
         (deck.targetSize - ready).clamp(0, deck.targetSize).toInt();
     final percent =
         deck.targetSize <= 0 ? 0 : ((ready / deck.targetSize) * 100).round();
+    final complete = missing == 0;
 
     return Row(
       children: [
-        _StatBlock(value: '${deck.cards.length}', label: 'unique cards'),
-        const SizedBox(width: PokeBinderSpacing.sp5),
-        _StatBlock(value: '${deck.cardCount}', label: 'total copies'),
-        const SizedBox(width: PokeBinderSpacing.sp5),
-        _StatBlock(
-          value: missing == 0 ? '$percent%' : '$missing',
-          label: missing == 0 ? 'ready' : 'still needed',
+        Expanded(
+          child: _StatBlock(
+            icon: Icons.style_rounded,
+            value: '${deck.cards.length}',
+            label: 'unique',
+          ),
+        ),
+        _StatDivider(),
+        Expanded(
+          child: _StatBlock(
+            icon: Icons.copy_all_rounded,
+            value: '${deck.cardCount}',
+            label: 'copies',
+          ),
+        ),
+        _StatDivider(),
+        Expanded(
+          child: _StatBlock(
+            icon: complete
+                ? Icons.check_circle_rounded
+                : Icons.pending_actions_rounded,
+            value: complete ? '$percent%' : '$missing',
+            label: complete ? 'ready' : 'needed',
+            color: complete ? _kTagOkFg : null,
+            alignEnd: true,
+          ),
         ),
       ],
     );
   }
 }
 
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 26,
+      color: PokeBinderColors.ink.withValues(alpha: 0.08),
+    );
+  }
+}
+
 class _StatBlock extends StatelessWidget {
+  final IconData icon;
   final String value;
   final String label;
+  final Color? color;
+  final bool alignEnd;
 
-  const _StatBlock({required this.value, required this.label});
+  const _StatBlock({
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.color,
+    this.alignEnd = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final tint = color ?? PokeBinderColors.redDeep;
+    return Row(
+      mainAxisAlignment:
+          alignEnd ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: [
-        Text(value, style: PokeBinderText.statNumber.copyWith(fontSize: 16)),
-        const SizedBox(height: 1),
-        Text(label, style: PokeBinderText.statLabel),
+        Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            color: tint.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 14, color: tint),
+        ),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: PokeBinderText.statNumber.copyWith(
+                fontSize: 16,
+                color: tint,
+              ),
+            ),
+            Text(label.toUpperCase(), style: PokeBinderText.statLabel),
+          ],
+        ),
       ],
     );
   }
@@ -944,23 +1041,44 @@ class _DeckProgressBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: LinearProgressIndicator(
             value: fraction,
-            minHeight: 8,
+            minHeight: 9,
             backgroundColor: PokeBinderColors.cream2,
             valueColor: AlwaysStoppedAnimation<Color>(
               complete ? _kTagOkFg : PokeBinderColors.gold,
             ),
           ),
         ),
-        const SizedBox(height: 5),
-        Text(
-          complete
-              ? '✓ Deck is ready to play!'
-              : '$ready of $target cards ready',
-          style: PokeBinderText.listRowSubtitle.copyWith(
-            color: complete ? _kTagOkFg : PokeBinderColors.inkSoft,
-            fontWeight: complete ? FontWeight.bold : FontWeight.normal,
+        const SizedBox(height: 8),
+        if (complete)
+          Container(
+            width: double.infinity,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: _kTagOkFg.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle_rounded, size: 14, color: _kTagOkFg),
+                const SizedBox(width: 6),
+                Text(
+                  'Deck is ready to play!',
+                  style: PokeBinderText.listRowSubtitle.copyWith(
+                    color: _kTagOkFg,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Text(
+            '$ready of $target cards ready',
+            style: PokeBinderText.listRowSubtitle.copyWith(
+              color: PokeBinderColors.inkSoft,
+            ),
           ),
-        ),
       ],
     );
   }
@@ -999,12 +1117,21 @@ class _DeckTypeBalanceBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('CARD TYPE MIX', style: PokeBinderText.sectionLabel),
-        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('CARD TYPE MIX', style: PokeBinderText.sectionLabel),
+            Text(
+              '$total ${total == 1 ? 'card' : 'cards'}',
+              style: PokeBinderText.sectionLabel,
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: SizedBox(
-            height: 8,
+            height: 9,
             child: Row(
               children: [
                 for (final entry in entries)
@@ -1026,29 +1153,38 @@ class _DeckTypeBalanceBar extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 10,
-          runSpacing: 4,
+          spacing: 8,
+          runSpacing: 6,
           children: [
             for (final entry in entries)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: entry.key.gradientColors,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: entry.key.gradientColors.last.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: entry.key.gradientColors,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${_typeLabel(entry.key)} ${entry.value}',
-                    style: PokeBinderText.cardMeta,
-                  ),
-                ],
+                    const SizedBox(width: 5),
+                    Text(
+                      '${_typeLabel(entry.key)} ${entry.value} · '
+                      '${((entry.value / total) * 100).round()}%',
+                      style: PokeBinderText.cardMeta.copyWith(fontSize: 8.5),
+                    ),
+                  ],
+                ),
               ),
           ],
         ),
