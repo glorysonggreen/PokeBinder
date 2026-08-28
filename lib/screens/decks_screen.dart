@@ -118,13 +118,6 @@ class _DecksScreenState extends State<DecksScreen> {
             final index = _decks.indexWhere((d) => d.id == updated.id);
             if (index != -1) _decks[index] = updated;
           }),
-          onDuplicate: (copy) => setState(() {
-            final index = _decks.indexWhere((d) => d.id == deck.id);
-            _decks.insert(index == -1 ? _decks.length : index + 1, copy);
-          }),
-          onDeleted: () => setState(() {
-            _decks.removeWhere((d) => d.id == deck.id);
-          }),
         ),
       ),
     );

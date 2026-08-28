@@ -5,11 +5,8 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'deck_add_card_screen.dart';
-import 'deck_form_screen.dart';
 
-const _kTagOkBg = Color(0xFFE4EFE7);
 const _kTagOkFg = Color(0xFF2F6B45);
-const _kTagWarnBg = Color(0xFFFBE4E0);
 
 extension _DeckFormatAccent on DeckFormat {
   Color get accentColor {
@@ -37,27 +34,23 @@ class _EntryEditResult {
         quantity = quantity;
 }
 
-/// Full-screen view of a single deck: its stats, card list, and edit
-/// actions. Reached by tapping a deck on the overview (DecksScreen).
+/// Full-screen view of a single deck: its stats and card list.
+/// Reached by tapping a deck on the overview (DecksScreen).
 ///
-/// Edits are pushed back to the caller live via [onDeckChanged] /
-/// [onDuplicate] / [onDeleted] as they happen (rather than only on pop),
-/// so the overview list stays correct no matter how this screen is
-/// dismissed (app-bar back button, system back gesture, etc).
+/// Card edits are pushed back to the caller live via [onDeckChanged] as
+/// they happen (rather than only on pop), so the overview list stays
+/// correct no matter how this screen is dismissed (app-bar back button,
+/// system back gesture, etc).
 class DeckDetailScreen extends StatefulWidget {
   final DeckData deck;
   final PokemonCardData? Function(String cardId) cardOf;
   final ValueChanged<DeckData> onDeckChanged;
-  final ValueChanged<DeckData> onDuplicate;
-  final VoidCallback onDeleted;
 
   const DeckDetailScreen({
     super.key,
     required this.deck,
     required this.cardOf,
     required this.onDeckChanged,
-    required this.onDuplicate,
-    required this.onDeleted,
   });
 
   @override
@@ -76,43 +69,9 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
     return ready > deck.targetSize ? deck.targetSize : ready;
   }
 
-  String _duplicateName(String name) {
-    final match = RegExp(r'^(.*) \(Copy(?: (\d+))?\)$').firstMatch(name);
-    if (match == null) return '$name (Copy)';
-    final base = match.group(1)!;
-    final n = int.tryParse(match.group(2) ?? '1') ?? 1;
-    return '$base (Copy ${n + 1})';
-  }
-
   void _updateDeck(DeckData updated) {
     setState(() => _deck = updated);
     widget.onDeckChanged(updated);
-  }
-
-  Future<void> _openEditDeck() async {
-    final result = await Navigator.of(context).push<DeckFormResult>(
-      MaterialPageRoute(builder: (_) => DeckFormScreen(existingDeck: _deck)),
-    );
-    if (result == null) return;
-    if (result.deleted) {
-      widget.onDeleted();
-      if (mounted) Navigator.of(context).pop();
-    } else {
-      _updateDeck(result.deck!);
-    }
-  }
-
-  void _duplicateDeck() {
-    final copy = DeckData(
-      id: 'deck-${DateTime.now().microsecondsSinceEpoch}',
-      name: _duplicateName(_deck.name),
-      format: _deck.format,
-      targetSize: _deck.targetSize,
-      description: _deck.description,
-      cards: _deck.cards,
-    );
-    widget.onDuplicate(copy);
-    Navigator.of(context).pop();
   }
 
   Future<void> _openAddCards() async {
@@ -160,7 +119,9 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
               ),
               _MiniStepperButton(
                 icon: Icons.add_rounded,
-                onTap: () => setDialogState(() => qty++),
+                onTap: card == null || qty < card.quantityOwned
+                    ? () => setDialogState(() => qty++)
+                    : null,
               ),
             ],
           ),
@@ -219,76 +180,10 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    behavior: HitTestBehavior.opaque,
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: 4, top: 2, bottom: 2),
-                      child: Icon(Icons.arrow_back_rounded,
-                          size: 22, color: PokeBinderColors.ink),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text('DECK', style: PokeBinderText.eyebrow),
-                  ),
-                  Theme(
-                    data: Theme.of(context).copyWith(
-                      highlightColor: PokeBinderColors.red.withValues(alpha: 0.06),
-                      splashColor: PokeBinderColors.red.withValues(alpha: 0.06),
-                      hoverColor: PokeBinderColors.red.withValues(alpha: 0.05),
-                    ),
-                    child: PopupMenuButton<String>(
-                      icon: const Icon(
-                        Icons.more_vert_rounded,
-                        size: 20,
-                        color: PokeBinderColors.inkSoft,
-                      ),
-                      offset: const Offset(0, 32),
-                      padding: EdgeInsets.zero,
-                      color: PokeBinderColors.white,
-                      elevation: 8,
-                      shadowColor: PokeBinderColors.ink.withValues(alpha: 0.2),
-                      surfaceTintColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        side: BorderSide(
-                            color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-                      ),
-                      constraints: const BoxConstraints(minWidth: 175),
-                      onSelected: (value) {
-                        if (value == 'edit') _openEditDeck();
-                        if (value == 'duplicate') _duplicateDeck();
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(
-                          value: 'edit',
-                          height: 38,
-                          padding: EdgeInsets.symmetric(horizontal: 6),
-                          child: _DeckActionMenuRow(
-                            icon: Icons.edit_outlined,
-                            label: 'Edit Deck Details',
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'duplicate',
-                          height: 38,
-                          padding: EdgeInsets.symmetric(horizontal: 6),
-                          child: _DeckActionMenuRow(
-                            icon: Icons.copy_all_outlined,
-                            label: 'Duplicate Deck',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              BackLink(onTap: () => Navigator.of(context).maybePop()),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              Text(_deck.name, style: PokeBinderText.heading),
-              const SizedBox(height: PokeBinderSpacing.sp5),
-
+              Text('DECK DETAILS', style: PokeBinderText.eyebrow),
+              const SizedBox(height: PokeBinderSpacing.sp4),
               _DeckOverviewCard(deck: _deck, ready: ready, cardOf: widget.cardOf),
               const SizedBox(height: PokeBinderSpacing.sp4),
 
@@ -304,53 +199,14 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
                 ),
 
               const SizedBox(height: PokeBinderSpacing.sp4),
-              CollectionSearchBar(
-                hint: 'Search your binders for a card to add…',
-                enabled: false,
-                onTap: _openAddCards,
-              ),
-              const SizedBox(height: PokeBinderSpacing.sp3),
               PillButton(
-                label: '+ Add Card to Deck',
-                ghost: true,
+                label: 'Add Card',
+                icon: Icons.add,
                 onTap: _openAddCards,
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DeckActionMenuRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _DeckActionMenuRow({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: PokeBinderSpacing.sp2,
-        vertical: 8,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 15, color: PokeBinderColors.inkSoft),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: PokeBinderText.chakraPetch(const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: PokeBinderColors.ink,
-              )),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -416,8 +272,6 @@ class _DeckOverviewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('EDITING', style: PokeBinderText.eyebrow),
-                    const SizedBox(height: 2),
                     Text(
                       deck.name,
                       style: PokeBinderText.heading.copyWith(fontSize: 17),
@@ -462,7 +316,6 @@ class _DeckStatsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _StatBlock(
-            icon: Icons.style_rounded,
             value: '${deck.cards.length}',
             label: 'unique',
           ),
@@ -470,7 +323,6 @@ class _DeckStatsRow extends StatelessWidget {
         _StatDivider(),
         Expanded(
           child: _StatBlock(
-            icon: Icons.copy_all_rounded,
             value: '${deck.cardCount}',
             label: 'copies',
           ),
@@ -478,13 +330,9 @@ class _DeckStatsRow extends StatelessWidget {
         _StatDivider(),
         Expanded(
           child: _StatBlock(
-            icon: complete
-                ? Icons.check_circle_rounded
-                : Icons.pending_actions_rounded,
             value: complete ? '$percent%' : '$missing',
             label: complete ? 'ready' : 'needed',
             color: complete ? _kTagOkFg : null,
-            alignEnd: true,
           ),
         ),
       ],
@@ -504,49 +352,35 @@ class _StatDivider extends StatelessWidget {
 }
 
 class _StatBlock extends StatelessWidget {
-  final IconData icon;
   final String value;
   final String label;
   final Color? color;
-  final bool alignEnd;
 
   const _StatBlock({
-    required this.icon,
     required this.value,
     required this.label,
     this.color,
-    this.alignEnd = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final tint = color ?? PokeBinderColors.redDeep;
-    return Row(
-      mainAxisAlignment:
-          alignEnd ? MainAxisAlignment.end : MainAxisAlignment.start,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 26,
-          height: 26,
-          decoration: BoxDecoration(
-            color: tint.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          style: PokeBinderText.statNumber.copyWith(
+            fontSize: 16,
+            color: tint,
           ),
-          child: Icon(icon, size: 14, color: tint),
         ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: PokeBinderText.statNumber.copyWith(
-                fontSize: 16,
-                color: tint,
-              ),
-            ),
-            Text(label.toUpperCase(), style: PokeBinderText.statLabel),
-          ],
+        Text(
+          label.toUpperCase(),
+          textAlign: TextAlign.center,
+          style: PokeBinderText.statLabel,
         ),
       ],
     );
@@ -584,18 +418,19 @@ class _DeckProgressBar extends StatelessWidget {
           Container(
             width: double.infinity,
             padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: _kTagOkFg.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
-                Icon(Icons.check_circle_rounded, size: 14, color: _kTagOkFg),
-                const SizedBox(width: 6),
+                Icon(Icons.check_circle_rounded, size: 13, color: _kTagOkFg),
+                const SizedBox(width: 8),
                 Text(
                   'Deck is ready to play!',
                   style: PokeBinderText.listRowSubtitle.copyWith(
+                    fontSize: 11,
                     color: _kTagOkFg,
                     fontWeight: FontWeight.bold,
                   ),
@@ -668,15 +503,7 @@ class _DeckTypeBalanceBar extends StatelessWidget {
                 for (final entry in entries)
                   Expanded(
                     flex: entry.value,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: entry.key.gradientColors,
-                        ),
-                      ),
-                    ),
+                    child: Container(color: entry.key.gradientColors.last),
                   ),
               ],
             ),
@@ -690,7 +517,7 @@ class _DeckTypeBalanceBar extends StatelessWidget {
             for (final entry in entries)
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: entry.key.gradientColors.last.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
@@ -698,21 +525,19 @@ class _DeckTypeBalanceBar extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: entry.key.gradientColors,
-                        ),
-                      ),
+                    Icon(
+                      entry.key.typeIcon,
+                      size: 13,
+                      color: entry.key.gradientColors.last,
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 6),
                     Text(
                       '${_typeLabel(entry.key)} ${entry.value} · '
                       '${((entry.value / total) * 100).round()}%',
-                      style: PokeBinderText.cardMeta.copyWith(fontSize: 8.5),
+                      style: PokeBinderText.cardMeta.copyWith(
+                        fontSize: 11,
+                        color: PokeBinderColors.ink,
+                      ),
                     ),
                   ],
                 ),
@@ -753,6 +578,7 @@ class _DeckCardListPanel extends StatelessWidget {
                 Divider(
                   height: 1,
                   thickness: 1,
+                  indent: 62,
                   color: PokeBinderColors.ink.withValues(alpha: 0.06),
                 ),
               _DeckCardEntryRow(
@@ -781,63 +607,56 @@ class _DeckCardEntryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final owned = card?.quantityOwned ?? 0;
-    final haveIt = owned >= entry.quantity;
-    final missing = entry.quantity - owned;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: PokeBinderSpacing.sp4,
-            vertical: PokeBinderSpacing.sp3,
-          ),
+          padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
           child: Row(
             children: [
-              CardThumbnail(card: card, width: 26, height: 36),
+              CardThumbnail(
+                card: card,
+                width: 40,
+                height: 56,
+                borderRadius: 8,
+              ),
               const SizedBox(width: PokeBinderSpacing.sp3),
               Expanded(
-                child: Text(
-                  '${card?.name ?? 'Unknown card'} ×${entry.quantity}',
-                  style: PokeBinderText.listRowTitle,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      card?.name ?? 'Unknown card',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: PokeBinderColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      card == null
+                          ? '—'
+                          : '${card!.setName} · #${card!.cardNumber} · '
+                              '${card!.rarity}',
+                      style: PokeBinderText.listRowSubtitle,
+                    ),
+                  ],
                 ),
               ),
-              _StatusTag(
-                ok: haveIt,
-                label: haveIt ? 'Have it' : 'Missing $missing',
+              const SizedBox(width: PokeBinderSpacing.sp2),
+              Text(
+                '×${entry.quantity}',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: PokeBinderColors.redDeep,
+                ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _StatusTag extends StatelessWidget {
-  final bool ok;
-  final String label;
-
-  const _StatusTag({required this.ok, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: ok ? _kTagOkBg : _kTagWarnBg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: PokeBinderText.chakraPetch(TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.3,
-          color: ok ? _kTagOkFg : PokeBinderColors.danger,
-        )),
       ),
     );
   }

@@ -1573,9 +1573,7 @@ class _TypeChipRow extends StatelessWidget {
 
   static IconData _typeIcon(PokemonCardType? type) {
     if (type == null) return Icons.apps_rounded;
-    if (type == PokemonCardType.colorless) return Icons.circle;
-    if (type == PokemonCardType.dragon) return Icons.all_inclusive_rounded;
-    return _elementIcon(type.name);
+    return type.typeIcon;
   }
 }
 
