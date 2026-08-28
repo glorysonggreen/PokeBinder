@@ -29,6 +29,46 @@ class PokemonCard extends StatelessWidget {
   }
 }
 
+/// A small rectangular thumbnail used in compact list rows (deck lists,
+/// card pickers, etc.). Shows the card's artwork when available, otherwise
+/// falls back to a type-colored gradient swatch.
+class CardThumbnail extends StatelessWidget {
+  final PokemonCardData? card;
+  final double width;
+  final double height;
+  final double borderRadius;
+
+  const CardThumbnail({
+    super.key,
+    required this.card,
+    this.width = 26,
+    this.height = 36,
+    this.borderRadius = 6,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final path = card?.imageAssetPath;
+    return Container(
+      width: width,
+      height: height,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        gradient: path == null
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: card?.type.gradientColors ??
+                    const [Color(0xFFE6E6E6), Color(0xFFBDBDBD)],
+              )
+            : null,
+      ),
+      child: path != null ? Image.asset(path, fit: BoxFit.cover) : null,
+    );
+  }
+}
+
 class PokemonCardBack extends StatelessWidget {
   const PokemonCardBack({super.key});
 

@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 heading: 'Welcome to PokéBinder',
                 subtitle: 'Log in to sync your collection',
               ),
-              const SizedBox(height: PokeBinderSpacing.sp5),
+              const SizedBox(height: PokeBinderSpacing.sp6),
 
               LabeledFormField(
                 label: 'Email',
@@ -117,26 +117,26 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               if (_error != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
                   child: Text(_error!, style: PokeBinderText.formError),
                 ),
 
               Align(
                 alignment: Alignment.centerRight,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
+                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp4),
                   child: AuthLinkText(
-                    linkLabel: 'Forgot password?',
+                    linkLabel: 'Forgot Password',
                     onTap: _openForgotPassword,
                   ),
                 ),
               ),
 
-              PillButton(label: 'Log in', onTap: _attemptLogin),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              PillButton(label: 'Log In', onTap: _attemptLogin),
+              const SizedBox(height: PokeBinderSpacing.sp5),
 
-              const _OrDivider(label: 'or continue with'),
-              const SizedBox(height: PokeBinderSpacing.sp3),
+              const _OrDivider(label: 'OR CONTINUE WITH'),
+              const SizedBox(height: PokeBinderSpacing.sp4),
 
               Row(
                 children: [
@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () => _comingSoon('Google'),
                     ),
                   ),
-                  const SizedBox(width: PokeBinderSpacing.sp2),
+                  const SizedBox(width: PokeBinderSpacing.sp3),
                   Expanded(
                     child: PillButton(
                       label: 'Apple',
@@ -157,12 +157,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: PokeBinderSpacing.sp5),
+              const SizedBox(height: PokeBinderSpacing.sp6),
 
               Center(
                 child: AuthLinkText(
                   prefix: "Don't have an account? ",
-                  linkLabel: 'Sign up',
+                  linkLabel: 'Sign Up',
                   onTap: _openSignUp,
                 ),
               ),
@@ -178,15 +178,18 @@ class _AuthBanner extends StatelessWidget {
   final String heading;
   final String subtitle;
 
-  const _AuthBanner({required this.heading, required this.subtitle});
+  const _AuthBanner({
+    required this.heading,
+    required this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
-        horizontal: PokeBinderSpacing.sp4,
-        vertical: PokeBinderSpacing.sp5,
+        horizontal: PokeBinderSpacing.sp5,
+        vertical: PokeBinderSpacing.sp6,
       ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -200,8 +203,8 @@ class _AuthBanner extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 56,
+            height: 56,
             alignment: Alignment.center,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
@@ -217,19 +220,19 @@ class _AuthBanner extends StatelessWidget {
             child: Text(
               'PB',
               style: PokeBinderText.chakraPetch(const TextStyle(
-                fontSize: 12,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: PokeBinderColors.white,
               )),
             ),
           ),
-          const SizedBox(height: PokeBinderSpacing.sp3),
+          const SizedBox(height: PokeBinderSpacing.sp4),
           Text(
             heading,
             textAlign: TextAlign.center,
             style: PokeBinderText.heading,
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: PokeBinderSpacing.sp1),
           Text(
             subtitle,
             textAlign: TextAlign.center,
@@ -259,10 +262,10 @@ class _OrDivider extends StatelessWidget {
       children: [
         line,
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: PokeBinderSpacing.sp2),
+          padding: const EdgeInsets.symmetric(horizontal: PokeBinderSpacing.sp3),
           child: Text(
             label,
-            style: PokeBinderText.listRowSubtitle,
+            style: PokeBinderText.sectionLabel,
           ),
         ),
         line,

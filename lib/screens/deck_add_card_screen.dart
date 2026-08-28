@@ -3,6 +3,7 @@ import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/pokemon_card_widget.dart';
 
 class DeckAddCardScreen extends StatefulWidget {
   final String deckName;
@@ -23,17 +24,28 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
     for (final entry in widget.initialEntries) entry.cardId: entry.quantity,
   };
   String _query = '';
+  CardSupertype? _supertypeFilter;
+  bool _ownedOnly = false;
 
   List<PokemonCardData> get _filtered {
     final q = _query.toLowerCase().trim();
-    final cards = [...PokemonCardData.library]
+    var cards = [...PokemonCardData.library]
       ..sort((a, b) => a.name.compareTo(b.name));
-    if (q.isEmpty) return cards;
-    return cards
-        .where((c) =>
-            c.name.toLowerCase().contains(q) ||
-            c.setName.toLowerCase().contains(q))
-        .toList();
+
+    if (_supertypeFilter != null) {
+      cards = cards.where((c) => c.supertype == _supertypeFilter).toList();
+    }
+    if (_ownedOnly) {
+      cards = cards.where((c) => c.quantityOwned > 0).toList();
+    }
+    if (q.isNotEmpty) {
+      cards = cards
+          .where((c) =>
+              c.name.toLowerCase().contains(q) ||
+              c.setName.toLowerCase().contains(q))
+          .toList();
+    }
+    return cards;
   }
 
   int get _totalSelected => _quantities.values.fold(0, (sum, q) => sum + q);
@@ -94,6 +106,63 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
 
+              SizedBox(
+                height: 32,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    ChoiceChipPill(
+                      label: 'All',
+                      selected: _supertypeFilter == null,
+                      onTap: () => setState(() => _supertypeFilter = null),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    ChoiceChipPill(
+                      label: 'Pokémon',
+                      selected: _supertypeFilter == CardSupertype.pokemon,
+                      onTap: () => setState(() {
+                        _supertypeFilter = _supertypeFilter == CardSupertype.pokemon
+                            ? null
+                            : CardSupertype.pokemon;
+                      }),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    ChoiceChipPill(
+                      label: 'Trainer',
+                      selected: _supertypeFilter == CardSupertype.trainer,
+                      onTap: () => setState(() {
+                        _supertypeFilter = _supertypeFilter == CardSupertype.trainer
+                            ? null
+                            : CardSupertype.trainer;
+                      }),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    ChoiceChipPill(
+                      label: 'Energy',
+                      selected: _supertypeFilter == CardSupertype.energy,
+                      onTap: () => setState(() {
+                        _supertypeFilter = _supertypeFilter == CardSupertype.energy
+                            ? null
+                            : CardSupertype.energy;
+                      }),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    ChoiceChipPill(
+                      label: 'Owned only',
+                      selected: _ownedOnly,
+                      onTap: () => setState(() => _ownedOnly = !_ownedOnly),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp2),
+              Text(
+                '${filtered.length} card${filtered.length == 1 ? '' : 's'} found'
+                '${_totalSelected > 0 ? ' · $_totalSelected in deck' : ''}',
+                style: PokeBinderText.listRowSubtitle,
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp2),
+
               Expanded(
                 child: filtered.isEmpty
                     ? const _EmptyResults()
@@ -146,22 +215,24 @@ class _DeckCardPickerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
+    final selected = quantity > 0;
+
+    return Container(
+      color: selected
+          ? PokeBinderColors.red.withValues(alpha: 0.045)
+          : Colors.transparent,
+      padding: const EdgeInsets.symmetric(
+        horizontal: PokeBinderSpacing.sp2,
+        vertical: PokeBinderSpacing.sp2,
+      ),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 46,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: card.type.gradientColors,
-              ),
               boxShadow: kCardElevation,
             ),
+            child: CardThumbnail(card: card, width: 34, height: 46, borderRadius: 8),
           ),
           const SizedBox(width: PokeBinderSpacing.sp3),
           Expanded(

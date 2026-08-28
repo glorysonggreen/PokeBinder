@@ -55,17 +55,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackLink(onTap: _backToLogin),
-              const SizedBox(height: PokeBinderSpacing.sp2),
-              Text('ACCOUNT RECOVERY', style: PokeBinderText.eyebrow),
+              const SizedBox(height: PokeBinderSpacing.sp3),
+              Text('Reset Your Password', style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
-              Text('Reset your password', style: PokeBinderText.heading),
-              const SizedBox(height: 4),
               Text(
                 "Enter the email on your account and we'll send you a "
                 'reset link.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp5),
 
               if (sentToEmail == null) ...[
                 LabeledFormField(
@@ -84,16 +82,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 if (_error != null)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+                    padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
                     child: Text(_error!, style: PokeBinderText.formError),
                   ),
-                PillButton(label: 'Send reset link', onTap: _sendResetLink),
+                const SizedBox(height: PokeBinderSpacing.sp1),
+                PillButton(label: 'Send Reset Link', onTap: _sendResetLink),
               ] else ...[
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: PokeBinderSpacing.sp4,
-                    vertical: PokeBinderSpacing.sp4,
+                    horizontal: PokeBinderSpacing.sp5,
+                    vertical: PokeBinderSpacing.sp5,
                   ),
                   decoration: BoxDecoration(
                     color: PokeBinderColors.white,
@@ -123,7 +122,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           size: 20,
                         ),
                       ),
-                      const SizedBox(height: PokeBinderSpacing.sp3),
+                      const SizedBox(height: PokeBinderSpacing.sp4),
                       RichText(
                         textAlign: TextAlign.center,
                         text: TextSpan(
@@ -146,15 +145,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: PokeBinderSpacing.sp4),
-                PillButton(label: 'Back to log in', onTap: _backToLogin),
+                const SizedBox(height: PokeBinderSpacing.sp5),
+                PillButton(label: 'Back to Log In', onTap: _backToLogin),
               ],
 
-              const SizedBox(height: PokeBinderSpacing.sp3),
+              const SizedBox(height: PokeBinderSpacing.sp4),
               Center(
                 child: AuthLinkText(
                   prefix: 'Remembered it? ',
-                  linkLabel: 'Log in',
+                  linkLabel: 'Log In',
                   onTap: _backToLogin,
                 ),
               ),

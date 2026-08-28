@@ -4,6 +4,8 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 
+const _kSizePresets = [15, 20, 30, 40, 60];
+
 class DeckFormResult {
   final DeckData? deck;
   final bool deleted;
@@ -31,22 +33,26 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
       TextEditingController(text: widget.existingDeck?.name ?? '');
   late final _descriptionController =
       TextEditingController(text: widget.existingDeck?.description ?? '');
-  late final _sizeController = TextEditingController(
-    text: '${widget.existingDeck?.targetSize ?? 60}',
-  );
 
   late DeckFormat _format = widget.existingDeck?.format ?? DeckFormat.standard;
+  late int _targetSize = widget.existingDeck?.targetSize ?? 60;
 
   String? _nameError;
-  String? _sizeError;
 
   bool get _isEditing => widget.existingDeck != null;
+
+  /// The preset sizes, plus the deck's current size if it's a custom value
+  /// (e.g. set before this field became a dropdown), so editing an existing
+  /// deck never silently changes its target size.
+  List<int> get _sizeOptions {
+    final sizes = {..._kSizePresets, _targetSize}.toList()..sort();
+    return sizes;
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _sizeController.dispose();
     super.dispose();
   }
 
@@ -57,18 +63,12 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
       return;
     }
 
-    final size = int.tryParse(_sizeController.text);
-    if (size == null || size < 1) {
-      setState(() => _sizeError = 'Target size must be at least 1.');
-      return;
-    }
-
     final existing = widget.existingDeck;
     final deck = DeckData(
       id: existing?.id ?? 'deck-${DateTime.now().microsecondsSinceEpoch}',
       name: name,
       format: _format,
-      targetSize: size,
+      targetSize: _targetSize,
       description: _descriptionController.text.trim(),
       cards: existing?.cards ?? const [],
       createdAt: existing?.createdAt ?? DateTime.now(),
@@ -180,29 +180,17 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                     onChanged: (value) => setState(() => _format = value),
                   ),
                 ),
-                right: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LabeledFormField(
-                      label: 'Target deck size',
-                      child: TextField(
-                        controller: _sizeController,
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            pokeInputDecoration(icon: Icons.format_list_numbered),
-                        onChanged: (_) {
-                          if (_sizeError != null) {
-                            setState(() => _sizeError = null);
-                          }
-                        },
-                      ),
-                    ),
-                    if (_sizeError != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
-                        child: Text(_sizeError!, style: PokeBinderText.formError),
-                      ),
-                  ],
+                right: LabeledFormField(
+                  label: 'Target deck size',
+                  child: PokeDropdownField<int>(
+                    value: _targetSize,
+                    icon: Icons.format_list_numbered,
+                    options: [
+                      for (final size in _sizeOptions)
+                        PokeDropdownOption(size, '$size cards'),
+                    ],
+                    onChanged: (value) => setState(() => _targetSize = value),
+                  ),
                 ),
               ),
 
