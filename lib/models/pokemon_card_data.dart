@@ -82,6 +82,34 @@ extension PokemonCardTypeGradient on PokemonCardType {
         return const [Color(0xFFF7C9DC), Color(0xFFD987AC)];
     }
   }
+
+  /// Same icon set used by the type-filter chips on the All Cards screen.
+  IconData get typeIcon {
+    switch (this) {
+      case PokemonCardType.colorless:
+        return Icons.circle;
+      case PokemonCardType.grass:
+        return Icons.eco_rounded;
+      case PokemonCardType.fire:
+        return Icons.local_fire_department_rounded;
+      case PokemonCardType.water:
+        return Icons.water_drop_rounded;
+      case PokemonCardType.lightning:
+        return Icons.bolt_rounded;
+      case PokemonCardType.fighting:
+        return Icons.sports_mma_rounded;
+      case PokemonCardType.psychic:
+        return Icons.psychology_rounded;
+      case PokemonCardType.darkness:
+        return Icons.dark_mode_rounded;
+      case PokemonCardType.metal:
+        return Icons.settings_rounded;
+      case PokemonCardType.dragon:
+        return Icons.all_inclusive_rounded;
+      case PokemonCardType.fairy:
+        return Icons.local_florist_rounded;
+    }
+  }
 }
 
 @immutable

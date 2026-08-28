@@ -25,18 +25,15 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
   };
   String _query = '';
   CardSupertype? _supertypeFilter;
-  bool _ownedOnly = false;
 
   List<PokemonCardData> get _filtered {
     final q = _query.toLowerCase().trim();
     var cards = [...PokemonCardData.library]
       ..sort((a, b) => a.name.compareTo(b.name));
 
+    cards = cards.where((c) => c.quantityOwned > 0).toList();
     if (_supertypeFilter != null) {
       cards = cards.where((c) => c.supertype == _supertypeFilter).toList();
-    }
-    if (_ownedOnly) {
-      cards = cards.where((c) => c.quantityOwned > 0).toList();
     }
     if (q.isNotEmpty) {
       cards = cards
@@ -50,8 +47,13 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
 
   int get _totalSelected => _quantities.values.fold(0, (sum, q) => sum + q);
 
-  void _increment(String cardId) {
-    setState(() => _quantities[cardId] = (_quantities[cardId] ?? 0) + 1);
+  void _increment(PokemonCardData card) {
+    setState(() {
+      final current = _quantities[card.id] ?? 0;
+      if (current < card.quantityOwned) {
+        _quantities[card.id] = current + 1;
+      }
+    });
   }
 
   void _decrement(String cardId) {
@@ -146,12 +148,6 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
                             : CardSupertype.energy;
                       }),
                     ),
-                    const SizedBox(width: PokeBinderSpacing.sp2),
-                    ChoiceChipPill(
-                      label: 'Owned only',
-                      selected: _ownedOnly,
-                      onTap: () => setState(() => _ownedOnly = !_ownedOnly),
-                    ),
                   ],
                 ),
               ),
@@ -175,10 +171,12 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
                         ),
                         itemBuilder: (context, index) {
                           final card = filtered[index];
+                          final quantity = _quantities[card.id] ?? 0;
+                          final atMax = quantity >= card.quantityOwned;
                           return _DeckCardPickerRow(
                             card: card,
-                            quantity: _quantities[card.id] ?? 0,
-                            onIncrement: () => _increment(card.id),
+                            quantity: quantity,
+                            onIncrement: atMax ? null : () => _increment(card),
                             onDecrement: () => _decrement(card.id),
                           );
                         },
@@ -203,7 +201,7 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
 class _DeckCardPickerRow extends StatelessWidget {
   final PokemonCardData card;
   final int quantity;
-  final VoidCallback onIncrement;
+  final VoidCallback? onIncrement;
   final VoidCallback onDecrement;
 
   const _DeckCardPickerRow({
@@ -248,7 +246,8 @@ class _DeckCardPickerRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${card.setName} · own ${card.quantityOwned}',
+                  '${card.setName} · own ${card.quantityOwned}'
+                  '${selected ? ' · $quantity in deck' : ''}',
                   style: PokeBinderText.listRowSubtitle,
                 ),
               ],
@@ -268,7 +267,7 @@ class _DeckCardPickerRow extends StatelessWidget {
 
 class _QuantityStepper extends StatelessWidget {
   final int quantity;
-  final VoidCallback onIncrement;
+  final VoidCallback? onIncrement;
   final VoidCallback onDecrement;
 
   const _QuantityStepper({
