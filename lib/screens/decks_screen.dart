@@ -32,12 +32,17 @@ class DecksScreen extends StatefulWidget {
 
 class _DecksScreenState extends State<DecksScreen> {
   final List<DeckData> _decks = DeckData.sampleDecks;
+  String _deckSearch = '';
   DeckFormat? _formatFilter;
   bool _incompleteOnly = false;
   bool _viewingAllDecks = false;
 
   List<DeckData> get _visibleDecks {
     return _decks.where((deck) {
+      if (_deckSearch.isNotEmpty &&
+          !deck.name.toLowerCase().contains(_deckSearch.toLowerCase())) {
+        return false;
+      }
       if (_formatFilter != null && deck.format != _formatFilter) return false;
       if (_incompleteOnly && _isComplete(deck)) return false;
       return true;
@@ -131,7 +136,13 @@ class _DecksScreenState extends State<DecksScreen> {
                 'Plan decklists and track what you still need to pull.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp5),
+              const SizedBox(height: PokeBinderSpacing.sp4),
+
+              CollectionSearchBar(
+                hint: 'Search decks...',
+                onChanged: (v) => setState(() => _deckSearch = v),
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               PillButton(
                 label: 'New Deck',
@@ -193,7 +204,7 @@ class _DecksScreenState extends State<DecksScreen> {
                 )
               else if (visibleDecks.isEmpty)
                 const _EmptyPanel(
-                  message: 'No decks match these filters.',
+                  message: 'No decks match your search or filters.',
                 )
               else
                 _DeckListPanel(

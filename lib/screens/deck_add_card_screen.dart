@@ -250,8 +250,16 @@ class _DeckCardPickerRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${card.setName} · own ${card.quantityOwned}'
-                  '${selected ? ' · $quantity in deck' : ''}',
+                  '${card.setName} · #${card.cardNumber} · ${card.rarity}',
+                  style: PokeBinderText.listRowSubtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  selected
+                      ? 'Own ${card.quantityOwned} · $quantity In Deck'
+                      : 'Own ${card.quantityOwned}',
                   style: PokeBinderText.listRowSubtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

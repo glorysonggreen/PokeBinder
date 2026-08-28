@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/card_sort_controls.dart' show trainerSubtypeIcon;
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'deck_add_card_screen.dart';
@@ -450,35 +451,77 @@ class _DeckProgressBar extends StatelessWidget {
   }
 }
 
+class _TypeMixSlice {
+  final String label;
+  final int count;
+  final IconData icon;
+  final Color color;
+
+  const _TypeMixSlice({
+    required this.label,
+    required this.count,
+    required this.icon,
+    required this.color,
+  });
+}
+
 class _DeckTypeBalanceBar extends StatelessWidget {
   final DeckData deck;
   final PokemonCardData? Function(String cardId) cardOf;
 
   const _DeckTypeBalanceBar({required this.deck, required this.cardOf});
 
-  Map<PokemonCardType, int> get _typeCounts {
-    final counts = <PokemonCardType, int>{};
-    for (final entry in deck.cards) {
-      final card = cardOf(entry.cardId);
-      if (card == null) continue;
-      counts[card.type] = (counts[card.type] ?? 0) + entry.quantity;
-    }
-    return counts;
-  }
+  static const _trainerColors = <String, Color>{
+    'Item': Color(0xFF3F72A6),
+    'Supporter': Color(0xFF244D77),
+    'Stadium': Color(0xFF7FAAC9),
+  };
 
   String _typeLabel(PokemonCardType type) {
     final name = type.name;
     return '${name[0].toUpperCase()}${name.substring(1)}';
   }
 
+  List<_TypeMixSlice> get _slices {
+    final energyCounts = <PokemonCardType, int>{};
+    final trainerCounts = <String, int>{};
+
+    for (final entry in deck.cards) {
+      final card = cardOf(entry.cardId);
+      if (card == null) continue;
+      if (card.supertype == CardSupertype.trainer) {
+        final key = card.subtype ?? 'Trainer';
+        trainerCounts[key] = (trainerCounts[key] ?? 0) + entry.quantity;
+      } else {
+        energyCounts[card.type] = (energyCounts[card.type] ?? 0) + entry.quantity;
+      }
+    }
+
+    final slices = <_TypeMixSlice>[
+      for (final entry in energyCounts.entries)
+        _TypeMixSlice(
+          label: _typeLabel(entry.key),
+          count: entry.value,
+          icon: entry.key.typeIcon,
+          color: entry.key.gradientColors.last,
+        ),
+      for (final entry in trainerCounts.entries)
+        _TypeMixSlice(
+          label: entry.key,
+          count: entry.value,
+          icon: trainerSubtypeIcon(entry.key == 'Trainer' ? null : entry.key),
+          color: _trainerColors[entry.key] ?? const Color(0xFF5C88AD),
+        ),
+    ];
+    slices.sort((a, b) => b.count.compareTo(a.count));
+    return slices;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final counts = _typeCounts;
-    final total = counts.values.fold(0, (a, b) => a + b);
+    final slices = _slices;
+    final total = slices.fold(0, (sum, s) => sum + s.count);
     if (total == 0) return const SizedBox.shrink();
-
-    final entries = counts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,10 +543,10 @@ class _DeckTypeBalanceBar extends StatelessWidget {
             height: 9,
             child: Row(
               children: [
-                for (final entry in entries)
+                for (final slice in slices)
                   Expanded(
-                    flex: entry.value,
-                    child: Container(color: entry.key.gradientColors.last),
+                    flex: slice.count,
+                    child: Container(color: slice.color),
                   ),
               ],
             ),
@@ -514,26 +557,26 @@ class _DeckTypeBalanceBar extends StatelessWidget {
           spacing: 8,
           runSpacing: 6,
           children: [
-            for (final entry in entries)
+            for (final slice in slices)
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: entry.key.gradientColors.last.withValues(alpha: 0.08),
+                  color: slice.color.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      entry.key.typeIcon,
+                      slice.icon,
                       size: 13,
-                      color: entry.key.gradientColors.last,
+                      color: slice.color,
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${_typeLabel(entry.key)} ${entry.value} · '
-                      '${((entry.value / total) * 100).round()}%',
+                      '${slice.label} ${slice.count} · '
+                      '${((slice.count / total) * 100).round()}%',
                       style: PokeBinderText.cardMeta.copyWith(
                         fontSize: 11,
                         color: PokeBinderColors.ink,
