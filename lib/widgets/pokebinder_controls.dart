@@ -233,6 +233,50 @@ class PasswordVisibilityToggle extends StatelessWidget {
   }
 }
 
+class ChoiceChipPill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const ChoiceChipPill({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: selected ? null : PokeBinderColors.white,
+            gradient: selected ? PokeBinderColors.redGradient : null,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected
+                  ? Colors.transparent
+                  : PokeBinderColors.ink.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Text(
+            label,
+            style: selected
+                ? PokeBinderText.chipLabelActive
+                : PokeBinderText.chipLabel,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class PillButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;

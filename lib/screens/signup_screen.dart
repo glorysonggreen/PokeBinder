@@ -74,16 +74,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackLink(onTap: () => Navigator.of(context).maybePop()),
-              const SizedBox(height: PokeBinderSpacing.sp2),
-              Text('CREATE ACCOUNT', style: PokeBinderText.eyebrow),
+              const SizedBox(height: PokeBinderSpacing.sp3),
+              Text('Create Your Account', style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
-              Text('Create your account', style: PokeBinderText.heading),
-              const SizedBox(height: 4),
               Text(
                 'Start tracking your collection in minutes.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp5),
 
               LabeledFormField(
                 label: 'Trainer name',
@@ -149,21 +147,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               if (_error != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
                   child: Text(_error!, style: PokeBinderText.formError),
                 ),
 
-              const SizedBox(height: PokeBinderSpacing.sp1),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               PillButton(
-                label: '+ Create account',
+                label: '+ Create Account',
                 onTap: _attemptSignUp,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp5),
 
               Center(
                 child: AuthLinkText(
                   prefix: 'Already have an account? ',
-                  linkLabel: 'Log in',
+                  linkLabel: 'Log In',
                   onTap: () => Navigator.of(context).maybePop(),
                 ),
               ),

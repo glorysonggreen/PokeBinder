@@ -13,6 +13,18 @@ extension DeckFormatMeta on DeckFormat {
         return 'Casual / Kitchen table';
     }
   }
+
+  /// Compact version of [label] for use in small tags/chips.
+  String get shortLabel {
+    switch (this) {
+      case DeckFormat.standard:
+        return 'Standard';
+      case DeckFormat.expanded:
+        return 'Expanded';
+      case DeckFormat.casual:
+        return 'Casual';
+    }
+  }
 }
 
 @immutable

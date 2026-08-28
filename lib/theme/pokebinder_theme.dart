@@ -201,14 +201,20 @@ class PokeBinderText {
   ));
 
   static final formLabel = chakraPetch(const TextStyle(
-    fontSize: 8.5,
+    fontSize: 10,
     fontWeight: FontWeight.bold,
-    letterSpacing: 0.6,
+    letterSpacing: 0.7,
     color: PokeBinderColors.inkSoft,
   ));
 
   static const formError = TextStyle(
     fontSize: 11,
     color: PokeBinderColors.danger,
+  );
+
+  static const authLinkText = TextStyle(
+    fontSize: 12,
+    height: 1.4,
+    color: PokeBinderColors.inkSoft,
   );
 }
