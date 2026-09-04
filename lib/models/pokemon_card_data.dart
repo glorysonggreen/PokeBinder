@@ -29,6 +29,13 @@ const kRarityOptions = [
   'Other/Additional Rarities',
 ];
 
+const kConditionOptions = [
+  ('Near Mint', 'NM'),
+  ('Lightly Played', 'LP'),
+  ('Moderately Played', 'MP'),
+  ('Damaged', 'DMG'),
+];
+
 IconData rarityIconFor(String rarity) {
   switch (rarity) {
     case 'Common':

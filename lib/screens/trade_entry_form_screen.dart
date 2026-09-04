@@ -6,44 +6,44 @@ import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'wishlist_form_result.dart';
 
-/// Add or edit a Wishlist entry — cards you're hoping to pull or pick up.
-/// This screen only ever deals with wishlist entries; Trade List cards are
-/// added via [TradeListAddCardScreen] and edited via [TradeEntryFormScreen].
-class WishlistFormScreen extends StatefulWidget {
-  final WishlistEntry? existingEntry;
+/// Edit an existing Trade List entry — cards ready to trade away. New trade
+/// entries are added by picking cards straight out of the collection via
+/// [TradeListAddCardScreen]; this screen only ever edits one already there.
+class TradeEntryFormScreen extends StatefulWidget {
+  final WishlistEntry existingEntry;
 
-  const WishlistFormScreen({
+  const TradeEntryFormScreen({
     super.key,
-    this.existingEntry,
+    required this.existingEntry,
   });
 
   @override
-  State<WishlistFormScreen> createState() => _WishlistFormScreenState();
+  State<TradeEntryFormScreen> createState() => _TradeEntryFormScreenState();
 }
 
-class _WishlistFormScreenState extends State<WishlistFormScreen> {
+class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
   late final _nameController =
-      TextEditingController(text: widget.existingEntry?.name ?? '');
+      TextEditingController(text: widget.existingEntry.name);
   late final _setController =
-      TextEditingController(text: widget.existingEntry?.setName ?? '');
+      TextEditingController(text: widget.existingEntry.setName);
   late final _cardNumberController =
-      TextEditingController(text: widget.existingEntry?.cardNumber ?? '');
-  late final _qtyController = TextEditingController(
-    text: '${widget.existingEntry?.quantity ?? 1}',
-  );
+      TextEditingController(text: widget.existingEntry.cardNumber);
+  late final _qtyController =
+      TextEditingController(text: '${widget.existingEntry.quantity}');
   late final _valueController = TextEditingController(
-    text: widget.existingEntry != null && widget.existingEntry!.estimatedValue > 0
-        ? widget.existingEntry!.estimatedValue.toStringAsFixed(0)
+    text: widget.existingEntry.estimatedValue > 0
+        ? widget.existingEntry.estimatedValue.toStringAsFixed(0)
         : '',
   );
+  late final _askingForController =
+      TextEditingController(text: widget.existingEntry.askingFor);
   late final _notesController =
-      TextEditingController(text: widget.existingEntry?.notes ?? '');
+      TextEditingController(text: widget.existingEntry.notes);
 
-  late WishlistPriority _priority =
-      widget.existingEntry?.priority ?? WishlistPriority.medium;
-  late String _rarity = widget.existingEntry?.rarity ?? kRarityOptions.first;
+  late WishlistPriority _priority = widget.existingEntry.priority;
+  late String _rarity = widget.existingEntry.rarity;
   late String _conditionCode = kConditionOptions.firstWhere(
-    (option) => option.$2 == widget.existingEntry?.condition,
+    (option) => option.$2 == widget.existingEntry.condition,
     orElse: () => kConditionOptions.first,
   ).$2;
 
@@ -52,8 +52,6 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
   String? _cardNumberError;
   String? _quantityError;
 
-  bool get _isEditing => widget.existingEntry != null;
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -61,6 +59,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
     _cardNumberController.dispose();
     _qtyController.dispose();
     _valueController.dispose();
+    _askingForController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -91,8 +90,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
     }
 
     final entry = WishlistEntry(
-      id: widget.existingEntry?.id ??
-          'wishlist-${DateTime.now().microsecondsSinceEpoch}',
+      id: widget.existingEntry.id,
       name: name,
       setName: setName,
       cardNumber: cardNumber,
@@ -100,23 +98,25 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
       condition: _conditionCode,
       quantity: qty,
       notes: _notesController.text.trim(),
-      kind: WishlistEntryKind.wishlist,
+      kind: WishlistEntryKind.trade,
       priority: _priority,
       estimatedValue: double.tryParse(_valueController.text.trim()) ?? 0,
-      dateAdded: widget.existingEntry?.dateAdded ?? DateTime.now(),
+      askingFor: _askingForController.text.trim(),
+      sourceCardId: widget.existingEntry.sourceCardId,
+      dateAdded: widget.existingEntry.dateAdded,
     );
 
     Navigator.of(context).pop(WishlistFormResult.saved(entry));
   }
 
   Future<void> _confirmDelete() async {
-    final entry = widget.existingEntry!;
+    final entry = widget.existingEntry;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Remove entry?'),
         content: Text(
-          'This removes "${entry.name}" from your wishlist. '
+          'This removes "${entry.name}" from your trade list. '
           "This can't be undone.",
         ),
         actions: [
@@ -165,13 +165,10 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
                 onTap: () => Navigator.of(context).maybePop(),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              Text(
-                _isEditing ? 'Edit Wishlist Entry' : 'Add to Wishlist',
-                style: PokeBinderText.heading,
-              ),
+              Text('Edit Trade Entry', style: PokeBinderText.heading),
               const SizedBox(height: 4),
               Text(
-                "Track a card you're hoping to pull or pick up.",
+                "List a card you're ready to trade away.",
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
@@ -306,7 +303,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
               ),
 
               LabeledFormField(
-                label: 'Priority',
+                label: 'Eagerness to trade',
                 child: PokeDropdownField<WishlistPriority>(
                   value: _priority,
                   icon: Icons.flag_rounded,
@@ -315,6 +312,17 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
                       PokeDropdownOption(p, p.label, icon: p.icon),
                   ],
                   onChanged: (p) => setState(() => _priority = p),
+                ),
+              ),
+
+              LabeledFormField(
+                label: 'Looking for in return (optional)',
+                child: TextField(
+                  controller: _askingForController,
+                  decoration: pokeInputDecoration(
+                    hint: 'e.g. Pikachu VMAX or store credit',
+                    icon: Icons.swap_horiz_rounded,
+                  ),
                 ),
               ),
 
@@ -344,55 +352,53 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: _isEditing ? 'Save Changes' : 'Add',
-                      icon: _isEditing ? Icons.check : Icons.add,
+                      label: 'Save Changes',
+                      icon: Icons.check,
                       onTap: _submit,
                     ),
                   ),
                 ],
               ),
 
-              if (_isEditing) ...[
-                const SizedBox(height: PokeBinderSpacing.sp4),
-                Center(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: _confirmDelete,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: PokeBinderSpacing.sp3,
-                          vertical: PokeBinderSpacing.sp2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: PokeBinderColors.danger.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.delete_outline,
-                              size: 14,
+              const SizedBox(height: PokeBinderSpacing.sp4),
+              Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: _confirmDelete,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: PokeBinderSpacing.sp3,
+                        vertical: PokeBinderSpacing.sp2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: PokeBinderColors.danger.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.delete_outline,
+                            size: 14,
+                            color: PokeBinderColors.danger,
+                          ),
+                          SizedBox(width: PokeBinderSpacing.sp2),
+                          Text(
+                            'Remove entry',
+                            style: TextStyle(
                               color: PokeBinderColors.danger,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
-                            SizedBox(width: PokeBinderSpacing.sp2),
-                            Text(
-                              'Remove entry',
-                              style: TextStyle(
-                                color: PokeBinderColors.danger,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
             ],
           ),
         ),

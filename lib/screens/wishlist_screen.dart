@@ -6,6 +6,9 @@ import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'wishlist_form_screen.dart';
+import 'trade_list_add_card_screen.dart';
+import 'trade_entry_form_screen.dart';
+import 'wishlist_form_result.dart';
 
 enum _WishlistSort { newest, oldest, nameAsc, priorityFirst, valueHigh }
 
@@ -117,9 +120,30 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   Future<void> _openAdd() async {
+    if (_kind == WishlistEntryKind.trade) {
+      final existingTradeEntries =
+          _entries.where((e) => e.kind == WishlistEntryKind.trade).toList();
+      final result = await Navigator.of(context).push<List<WishlistEntry>>(
+        MaterialPageRoute(
+          builder: (_) => TradeListAddCardScreen(
+            initialEntries: existingTradeEntries,
+          ),
+        ),
+      );
+      if (result == null) return;
+      setState(() {
+        // Only the card-linked trade entries are managed by the picker;
+        // anything typed in by hand elsewhere is left untouched.
+        _entries.removeWhere((e) =>
+            e.kind == WishlistEntryKind.trade && e.sourceCardId != null);
+        _entries.addAll(result);
+      });
+      return;
+    }
+
     final result = await Navigator.of(context).push<WishlistFormResult>(
       MaterialPageRoute(
-        builder: (_) => WishlistFormScreen(initialKind: _kind),
+        builder: (_) => const WishlistFormScreen(),
       ),
     );
     if (result == null || result.deleted) return;
@@ -129,7 +153,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Future<void> _openEdit(WishlistEntry entry) async {
     final result = await Navigator.of(context).push<WishlistFormResult>(
       MaterialPageRoute(
-        builder: (_) => WishlistFormScreen(existingEntry: entry),
+        builder: (_) => entry.kind == WishlistEntryKind.wishlist
+            ? WishlistFormScreen(existingEntry: entry)
+            : TradeEntryFormScreen(existingEntry: entry),
       ),
     );
     if (result == null) return;
@@ -230,7 +256,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 index: isWishlist ? 0 : 1,
                 labels: [
                   'Wishlist ($_wishlistCount)',
-                  'Trade list ($_tradeCount)',
+                  'Trade List ($_tradeCount)',
                 ],
                 onChanged: (i) => setState(() {
                   _kind = i == 0
@@ -622,8 +648,6 @@ class _WishlistRow extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _KindTag(isWishlist: isWishlist),
-                  const SizedBox(height: 5),
                   if (entry.estimatedValue > 0) ...[
                     Text(
                       _formatValue(entry.estimatedValue),
@@ -644,49 +668,6 @@ class _WishlistRow extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _KindTag extends StatelessWidget {
-  final bool isWishlist;
-
-  const _KindTag({required this.isWishlist});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: isWishlist
-            ? const Color(0xFFFBEBCB)
-            : PokeBinderColors.cream2,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isWishlist ? Icons.star_rounded : Icons.swap_horiz_rounded,
-            size: 10,
-            color: isWishlist
-                ? PokeBinderColors.goldDeep
-                : PokeBinderColors.inkSoft,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            isWishlist ? 'Wishlist' : 'Trade',
-            style: PokeBinderText.chakraPetch(TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.4,
-              color: isWishlist
-                  ? PokeBinderColors.goldDeep
-                  : PokeBinderColors.inkSoft,
-            )),
-          ),
-        ],
       ),
     );
   }

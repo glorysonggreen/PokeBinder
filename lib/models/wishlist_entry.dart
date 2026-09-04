@@ -48,6 +48,7 @@ class WishlistEntry {
   final String setName;
   final String cardNumber;
   final String rarity;
+  final String condition;
   final int quantity;
   final String notes;
   final WishlistEntryKind kind;
@@ -56,18 +57,26 @@ class WishlistEntry {
   final String askingFor;
   final DateTime dateAdded;
 
+  /// When this entry was added by picking a card straight out of the
+  /// collection (e.g. via the Trade List's "Add Cards" picker), this holds
+  /// that [PokemonCardData.id] so the picker can find and pre-fill it again.
+  /// Entries typed in by hand leave this null.
+  final String? sourceCardId;
+
   WishlistEntry({
     required this.id,
     required this.name,
     required this.setName,
     required this.cardNumber,
     required this.rarity,
+    this.condition = 'NM',
     this.quantity = 1,
     this.notes = '',
     required this.kind,
     this.priority = WishlistPriority.medium,
     this.estimatedValue = 0,
     this.askingFor = '',
+    this.sourceCardId,
     DateTime? dateAdded,
   }) : dateAdded = dateAdded ?? DateTime.now();
 
@@ -76,12 +85,14 @@ class WishlistEntry {
     String? setName,
     String? cardNumber,
     String? rarity,
+    String? condition,
     int? quantity,
     String? notes,
     WishlistEntryKind? kind,
     WishlistPriority? priority,
     double? estimatedValue,
     String? askingFor,
+    String? sourceCardId,
   }) {
     return WishlistEntry(
       id: id,
@@ -89,12 +100,14 @@ class WishlistEntry {
       setName: setName ?? this.setName,
       cardNumber: cardNumber ?? this.cardNumber,
       rarity: rarity ?? this.rarity,
+      condition: condition ?? this.condition,
       quantity: quantity ?? this.quantity,
       notes: notes ?? this.notes,
       kind: kind ?? this.kind,
       priority: priority ?? this.priority,
       estimatedValue: estimatedValue ?? this.estimatedValue,
       askingFor: askingFor ?? this.askingFor,
+      sourceCardId: sourceCardId ?? this.sourceCardId,
       dateAdded: dateAdded,
     );
   }
@@ -130,6 +143,7 @@ class WishlistEntry {
           setName: 'Base Set',
           cardNumber: '44/102',
           rarity: 'Common',
+          condition: 'LP',
           quantity: 2,
           notes: 'Duplicate copy, light edge wear',
           kind: WishlistEntryKind.trade,
