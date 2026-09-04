@@ -64,7 +64,7 @@ class CardThumbnail extends StatelessWidget {
               )
             : null,
       ),
-      child: path != null ? Image.asset(path, fit: BoxFit.cover) : null,
+      child: path != null ? Image.asset(path, fit: BoxFit.contain) : null,
     );
   }
 }
