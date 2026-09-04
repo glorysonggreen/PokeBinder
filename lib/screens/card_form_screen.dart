@@ -5,13 +5,6 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 
-const _kConditionOptions = [
-  ('Near Mint', 'NM'),
-  ('Lightly Played', 'LP'),
-  ('Moderately Played', 'MP'),
-  ('Damaged', 'DMG'),
-];
-
 class CardFormResult {
   final PokemonCardData? card;
   final String? binderId;
@@ -73,9 +66,9 @@ class _CardFormScreenState extends State<CardFormScreen> {
       TextEditingController(text: widget.existingCard?.notes ?? '');
 
   late String _rarity = widget.existingCard?.rarity ?? kRarityOptions.first;
-  late String _conditionCode = _kConditionOptions.firstWhere(
+  late String _conditionCode = kConditionOptions.firstWhere(
     (option) => option.$2 == widget.existingCard?.condition,
-    orElse: () => _kConditionOptions.first,
+    orElse: () => kConditionOptions.first,
   ).$2;
   late String _binderId = widget.existingCard == null
       ? widget.defaultBinderId
@@ -284,7 +277,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                     value: _conditionCode,
                     icon: Icons.health_and_safety_outlined,
                     options: [
-                      for (final c in _kConditionOptions)
+                      for (final c in kConditionOptions)
                         PokeDropdownOption(c.$2, c.$1,
                             icon: conditionIconFor(c.$2)),
                     ],
