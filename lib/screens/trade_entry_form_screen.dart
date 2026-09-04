@@ -319,9 +319,12 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                 label: 'Looking for in return (optional)',
                 child: TextField(
                   controller: _askingForController,
+                  minLines: 2,
+                  maxLines: 5,
+                  keyboardType: TextInputType.multiline,
+                  textAlignVertical: TextAlignVertical.top,
                   decoration: pokeInputDecoration(
                     hint: 'e.g. Pikachu VMAX or store credit',
-                    icon: Icons.swap_horiz_rounded,
                   ),
                 ),
               ),
