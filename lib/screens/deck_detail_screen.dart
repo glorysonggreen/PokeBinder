@@ -621,7 +621,7 @@ class _DeckCardListPanel extends StatelessWidget {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  indent: 62,
+                  indent: 114,
                   color: PokeBinderColors.ink.withValues(alpha: 0.06),
                 ),
               _DeckCardEntryRow(
@@ -657,12 +657,22 @@ class _DeckCardEntryRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CardThumbnail(
-                card: card,
-                width: 40,
-                height: 56,
-                borderRadius: 8,
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: PokeBinderColors.ink.withValues(alpha: 0.08),
+                  ),
+                  boxShadow: kCardElevation,
+                ),
+                child: CardThumbnail(
+                  card: card,
+                  width: 92,
+                  height: 127,
+                  borderRadius: 5,
+                ),
               ),
               const SizedBox(width: PokeBinderSpacing.sp3),
               Expanded(
