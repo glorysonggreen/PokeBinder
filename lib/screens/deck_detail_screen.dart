@@ -681,35 +681,120 @@ class _DeckCardEntryRow extends StatelessWidget {
                   children: [
                     Text(
                       card?.name ?? 'Unknown card',
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: PokeBinderText.chakraPetch(const TextStyle(
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: PokeBinderColors.ink,
-                      ),
+                      )),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
-                      card == null
-                          ? '—'
-                          : '${card!.setName} · #${card!.cardNumber} · '
-                              '${card!.rarity}',
+                      card == null ? '—' : '${card!.setName} · #${card!.cardNumber}',
                       style: PokeBinderText.listRowSubtitle,
                     ),
+                    if (card != null) ...[
+                      const SizedBox(height: 5),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _RarityTag(rarity: card!.rarity),
+                          _ConditionTag(code: card!.condition),
+                        ],
+                      ),
+                      if (card!.notes.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          card!.notes,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: PokeBinderText.listRowSubtitle.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
                   ],
                 ),
               ),
               const SizedBox(width: PokeBinderSpacing.sp2),
-              Text(
-                '×${entry.quantity}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: PokeBinderColors.redDeep,
-                ),
-              ),
+              _QuantityBadge(quantity: entry.quantity),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Small icon + label pairing for a card's rarity, reusing the app's
+/// shared [rarityIconFor] lookup so it stays in sync with the dropdown
+/// icons used elsewhere (card form, wishlist, trade entry).
+class _RarityTag extends StatelessWidget {
+  final String rarity;
+
+  const _RarityTag({required this.rarity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
+        const SizedBox(width: 4),
+        Text(rarity, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+/// Small icon + label pairing for a card's condition, reusing the app's
+/// shared [conditionIconFor] lookup and expanding the stored code (e.g.
+/// 'NM') to its full label via [kConditionOptions] — same source of
+/// truth as the condition dropdown in the card/wishlist/trade forms.
+class _ConditionTag extends StatelessWidget {
+  final String code;
+
+  const _ConditionTag({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = kConditionOptions
+        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
+        .$1;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
+        const SizedBox(width: 4),
+        Text(label, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+/// Pill-shaped quantity badge, styled the same way as [_FormatTag] above
+/// (tinted background + bold colored label) instead of bare red text.
+class _QuantityBadge extends StatelessWidget {
+  final int quantity;
+
+  const _QuantityBadge({required this.quantity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.redDeep.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '×$quantity',
+        style: PokeBinderText.chakraPetch(const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: PokeBinderColors.redDeep,
+        )),
       ),
     );
   }
