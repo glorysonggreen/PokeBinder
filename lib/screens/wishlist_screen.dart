@@ -606,6 +606,12 @@ class _WishlistCardListPanel extends StatelessWidget {
   }
 }
 
+/// Card row for a wishlist/trade entry, styled to match [_DeckCardEntryRow]
+/// on the Deck Details screen: same thumbnail size/frame, chakraPetch bold
+/// name, `set · #number` subtitle line, a [Wrap] of small icon+label tags
+/// (rarity, condition, priority), and a tinted pill quantity badge on the
+/// trailing edge. Wishlist-only fields (asking-for, notes, estimated value,
+/// date added) are appended below/beside that shared shape.
 class _WishlistRow extends StatelessWidget {
   final WishlistEntry entry;
   final VoidCallback onTap;
@@ -622,42 +628,24 @@ class _WishlistRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
+          padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: PokeBinderColors.ink.withValues(alpha: 0.08),
-                      ),
-                      boxShadow: kCardElevation,
-                    ),
-                    child: CardThumbnail(
-                      card: matchedCard,
-                      width: 92,
-                      height: 127,
-                      borderRadius: 5,
-                    ),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: PokeBinderColors.ink.withValues(alpha: 0.08),
                   ),
-                  Positioned(
-                    left: -6,
-                    top: -6,
-                    child: Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: entry.priority.color,
-                        border: Border.all(color: PokeBinderColors.cream, width: 1.5),
-                      ),
-                    ),
-                  ),
-                ],
+                  boxShadow: kCardElevation,
+                ),
+                child: CardThumbnail(
+                  card: matchedCard,
+                  width: 92,
+                  height: 127,
+                  borderRadius: 5,
+                ),
               ),
               const SizedBox(width: PokeBinderSpacing.sp3),
               Expanded(
@@ -667,27 +655,34 @@ class _WishlistRow extends StatelessWidget {
                     Text(
                       entry.name,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12.5,
+                      style: PokeBinderText.chakraPetch(const TextStyle(
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: PokeBinderColors.ink,
-                      ),
+                      )),
                     ),
-                    if (entry.setName.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        [
-                          entry.setName,
-                          if (entry.cardNumber.isNotEmpty)
-                            '#${entry.cardNumber}',
-                          if (entry.rarity.isNotEmpty) entry.rarity,
-                        ].join(' · '),
-                        overflow: TextOverflow.ellipsis,
-                        style: _metaStyle,
-                      ),
-                    ],
+                    const SizedBox(height: 4),
+                    Text(
+                      entry.setName.isEmpty
+                          ? '—'
+                          : entry.cardNumber.isEmpty
+                              ? entry.setName
+                              : '${entry.setName} · #${entry.cardNumber}',
+                      overflow: TextOverflow.ellipsis,
+                      style: PokeBinderText.listRowSubtitle,
+                    ),
                     const SizedBox(height: 5),
-                    _QuantityPill(isWishlist: isWishlist, quantity: entry.quantity),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        if (entry.rarity.isNotEmpty)
+                          _RarityTag(rarity: entry.rarity),
+                        if (!isWishlist && entry.condition.isNotEmpty)
+                          _ConditionTag(code: entry.condition),
+                        _PriorityTag(priority: entry.priority),
+                      ],
+                    ),
                     if (!isWishlist && entry.askingFor.isNotEmpty) ...[
                       const SizedBox(height: 5),
                       Row(
@@ -701,7 +696,7 @@ class _WishlistRow extends StatelessWidget {
                               'Wants: ${entry.askingFor}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: _metaStyle,
+                              style: PokeBinderText.listRowSubtitle,
                             ),
                           ),
                         ],
@@ -711,9 +706,11 @@ class _WishlistRow extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         entry.notes,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: _metaStyle.copyWith(fontStyle: FontStyle.italic),
+                        style: PokeBinderText.listRowSubtitle.copyWith(
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ],
                   ],
@@ -723,24 +720,15 @@ class _WishlistRow extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  _QuantityBadge(isWishlist: isWishlist, quantity: entry.quantity),
                   if (entry.estimatedValue > 0) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: PokeBinderColors.cream2.withValues(alpha: 0.7),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _formatValue(entry.estimatedValue),
-                        style: _metaStyle.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: PokeBinderColors.inkSoft,
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 5),
+                    Text(
+                      _formatValue(entry.estimatedValue),
+                      style: _metaStyle.copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ],
+                  const SizedBox(height: 5),
                   Text(
                     _relativeAdded(entry.dateAdded),
                     style: _metaStyle,
@@ -755,41 +743,101 @@ class _WishlistRow extends StatelessWidget {
   }
 }
 
-/// Small colored pill for the "wanted ×N" / "willing to trade ×N" line so
-/// the quantity reads as a scannable badge rather than plain text.
-class _QuantityPill extends StatelessWidget {
+/// Small icon + label pairing for a card's rarity, matching the tag used
+/// on the Deck Details card rows (same [rarityIconFor] lookup).
+class _RarityTag extends StatelessWidget {
+  final String rarity;
+
+  const _RarityTag({required this.rarity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
+        const SizedBox(width: 4),
+        Text(rarity, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+/// Small icon + label pairing for a card's condition, matching the tag
+/// used on the Deck Details card rows (same [conditionIconFor] lookup and
+/// [kConditionOptions] label expansion).
+class _ConditionTag extends StatelessWidget {
+  final String code;
+
+  const _ConditionTag({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = kConditionOptions
+        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
+        .$1;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
+        const SizedBox(width: 4),
+        Text(label, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+/// Small icon + label pairing for a wishlist/trade entry's priority,
+/// styled like [_RarityTag]/[_ConditionTag] above but colored per
+/// [WishlistPriority] so priority stays scannable in the tag row.
+class _PriorityTag extends StatelessWidget {
+  final WishlistPriority priority;
+
+  const _PriorityTag({required this.priority});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(priority.icon, size: 11, color: priority.color),
+        const SizedBox(width: 4),
+        Text(
+          '${priority.label} priority',
+          style: PokeBinderText.listRowSubtitle.copyWith(color: priority.color),
+        ),
+      ],
+    );
+  }
+}
+
+/// Pill-shaped quantity badge, styled the same way as the Deck Details
+/// quantity badge (tinted background + bold colored label) but keeping the
+/// wishlist/trade icon and color distinction, and the "wanted"/"for trade"
+/// wording, from the previous design.
+class _QuantityBadge extends StatelessWidget {
   final bool isWishlist;
   final int quantity;
 
-  const _QuantityPill({required this.isWishlist, required this.quantity});
+  const _QuantityBadge({required this.isWishlist, required this.quantity});
 
   @override
   Widget build(BuildContext context) {
     final color =
         isWishlist ? PokeBinderColors.goldDeep : PokeBinderColors.teal;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isWishlist ? Icons.star_rounded : Icons.swap_horiz_rounded,
-            size: 12,
-            color: color,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            isWishlist ? 'Wanted ×$quantity' : 'Willing to trade ×$quantity',
-            style: _metaStyle.copyWith(
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
+      child: Text(
+        '×$quantity',
+        style: PokeBinderText.chakraPetch(TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: color,
+        )),
       ),
     );
   }
