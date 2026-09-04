@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/wishlist_entry.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/pokemon_card_widget.dart';
 import 'wishlist_form_screen.dart';
 
-enum _WishlistSort { newest, oldest, nameAsc }
+enum _WishlistSort { newest, oldest, nameAsc, priorityFirst, valueHigh }
 
 extension on _WishlistSort {
   String get label {
@@ -16,6 +18,10 @@ extension on _WishlistSort {
         return 'Oldest';
       case _WishlistSort.nameAsc:
         return 'Name A–Z';
+      case _WishlistSort.priorityFirst:
+        return 'Priority';
+      case _WishlistSort.valueHigh:
+        return 'Value: High-Low';
     }
   }
 
@@ -27,8 +33,28 @@ extension on _WishlistSort {
         return Icons.history_rounded;
       case _WishlistSort.nameAsc:
         return Icons.sort_by_alpha_rounded;
+      case _WishlistSort.priorityFirst:
+        return Icons.flag_rounded;
+      case _WishlistSort.valueHigh:
+        return Icons.payments_rounded;
     }
   }
+}
+
+/// Finds the catalog entry for [name], if any, so wishlist/trade rows can
+/// show real card artwork instead of a generic placeholder.
+PokemonCardData? _libraryMatch(String name) {
+  final target = name.trim().toLowerCase();
+  if (target.isEmpty) return null;
+  for (final card in PokemonCardData.library) {
+    if (card.name.toLowerCase() == target) return card;
+  }
+  return null;
+}
+
+String _formatValue(double value) {
+  if (value >= 1000) return '₱${(value / 1000).toStringAsFixed(1)}k';
+  return '₱${value.toStringAsFixed(0)}';
 }
 
 class WishlistScreen extends StatefulWidget {
@@ -42,6 +68,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   final List<WishlistEntry> _entries = WishlistEntry.sampleEntries;
   WishlistEntryKind _kind = WishlistEntryKind.wishlist;
   _WishlistSort _sort = _WishlistSort.newest;
+  WishlistPriority? _priorityFilter;
   String _query = '';
 
   int get _wishlistCount =>
@@ -50,12 +77,22 @@ class _WishlistScreenState extends State<WishlistScreen> {
   int get _tradeCount =>
       _entries.where((e) => e.kind == WishlistEntryKind.trade).length;
 
+  List<WishlistEntry> get _kindEntries =>
+      _entries.where((e) => e.kind == _kind).toList();
+
+  double get _kindValue =>
+      _kindEntries.fold(0.0, (sum, e) => sum + e.estimatedValue * e.quantity);
+
+  bool get _filtersActive => _query.isNotEmpty || _priorityFilter != null;
+
   List<WishlistEntry> get _filtered {
     final q = _query.toLowerCase().trim();
     final list = _entries.where((e) {
       final matchesKind = e.kind == _kind;
       final matchesQuery = q.isEmpty || e.name.toLowerCase().contains(q);
-      return matchesKind && matchesQuery;
+      final matchesPriority =
+          _priorityFilter == null || e.priority == _priorityFilter;
+      return matchesKind && matchesQuery && matchesPriority;
     }).toList();
 
     switch (_sort) {
@@ -68,6 +105,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
       case _WishlistSort.nameAsc:
         list.sort(
             (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+      case _WishlistSort.priorityFirst:
+        list.sort((a, b) => a.priority.index.compareTo(b.priority.index));
+        break;
+      case _WishlistSort.valueHigh:
+        list.sort((a, b) => b.estimatedValue.compareTo(a.estimatedValue));
         break;
     }
     return list;
@@ -150,6 +193,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
       );
   }
 
+  void _clearFilters() {
+    setState(() {
+      _query = '';
+      _priorityFilter = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _filtered;
@@ -164,11 +214,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackLink(
-                label: '‹ More',
+                label: '‹ Back',
                 onTap: () => Navigator.of(context).maybePop(),
               ),
-              const SizedBox(height: PokeBinderSpacing.sp1),
-              Text('WISHLIST & TRADE LIST', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Cards You Want or Will Trade', style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
@@ -184,11 +232,31 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   'Wishlist ($_wishlistCount)',
                   'Trade list ($_tradeCount)',
                 ],
-                onChanged: (i) => setState(
-                  () => _kind = i == 0
+                onChanged: (i) => setState(() {
+                  _kind = i == 0
                       ? WishlistEntryKind.wishlist
-                      : WishlistEntryKind.trade,
-                ),
+                      : WishlistEntryKind.trade;
+                  _priorityFilter = null;
+                }),
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp3),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _WishlistStatBox(
+                      value: '${_kindEntries.length}',
+                      label: isWishlist ? 'WANTED' : 'FOR TRADE',
+                    ),
+                  ),
+                  const SizedBox(width: PokeBinderSpacing.sp2),
+                  Expanded(
+                    child: _WishlistStatBox(
+                      value: _formatValue(_kindValue),
+                      label: isWishlist ? 'EST. TO BUY' : 'EST. VALUE',
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
 
@@ -197,6 +265,35 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     ? 'Search cards to wishlist…'
                     : 'Search cards to trade…',
                 onChanged: (value) => setState(() => _query = value),
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp2),
+
+              SizedBox(
+                height: 32,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: CardFilterChip(
+                        label: 'All',
+                        icon: Icons.apps_rounded,
+                        active: _priorityFilter == null,
+                        onTap: () => setState(() => _priorityFilter = null),
+                      ),
+                    ),
+                    for (final priority in WishlistPriority.values)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: CardFilterChip(
+                          label: priority.label,
+                          icon: priority.icon,
+                          active: _priorityFilter == priority,
+                          onTap: () => setState(() => _priorityFilter = priority),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
 
@@ -218,7 +315,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
               Expanded(
                 child: filtered.isEmpty
-                    ? _EmptyWishlistState(isWishlist: isWishlist)
+                    ? _EmptyWishlistState(
+                        isWishlist: isWishlist,
+                        isFiltered: _filtersActive,
+                        onClearFilters: _clearFilters,
+                      )
                     : ListView.separated(
                         itemCount: filtered.length,
                         separatorBuilder: (_, __) => Divider(
@@ -244,13 +345,41 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
               PillButton(
-                label: isWishlist ? '+ Add to wishlist' : '+ Add to trade list',
+                label: isWishlist ? 'Add to Wishlist' : 'Add to Trade List',
                 icon: Icons.add,
                 onTap: _openAdd,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WishlistStatBox extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _WishlistStatBox({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        boxShadow: kCardElevation,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(value, style: PokeBinderText.statNumber.copyWith(fontSize: 16)),
+          const SizedBox(height: 2),
+          Text(label, style: PokeBinderText.statLabel),
+        ],
       ),
     );
   }
@@ -282,7 +411,7 @@ class _WishlistSortSelector extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         ),
-        constraints: const BoxConstraints(minWidth: 160),
+        constraints: const BoxConstraints(minWidth: 170),
         padding: const EdgeInsets.symmetric(vertical: 6),
         itemBuilder: (context) => [
           for (final option in _WishlistSort.values)
@@ -408,15 +537,10 @@ class _WishlistRow extends StatelessWidget {
 
   const _WishlistRow({required this.entry, required this.onTap});
 
-  List<Color> get _thumbColors {
-    final types = PokemonCardType.values;
-    final index = entry.name.hashCode.abs() % types.length;
-    return types[index].gradientColors;
-  }
-
   @override
   Widget build(BuildContext context) {
     final isWishlist = entry.kind == WishlistEntryKind.wishlist;
+    final matchedCard = _libraryMatch(entry.name);
 
     return Material(
       color: Colors.transparent,
@@ -427,24 +551,24 @@ class _WishlistRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 34,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: _thumbColors,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CardThumbnail(card: matchedCard, width: 36, height: 48),
+                  Positioned(
+                    left: -4,
+                    top: -4,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: entry.priority.color,
+                        border: Border.all(color: PokeBinderColors.cream, width: 1.5),
+                      ),
+                    ),
                   ),
-                  boxShadow: kCardElevation,
-                ),
-                child: Icon(
-                  isWishlist ? Icons.star_rounded : Icons.swap_horiz_rounded,
-                  size: 16,
-                  color: PokeBinderColors.white.withValues(alpha: 0.92),
-                ),
+                ],
               ),
               const SizedBox(width: PokeBinderSpacing.sp3),
               Expanded(
@@ -470,6 +594,15 @@ class _WishlistRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: PokeBinderText.listRowSubtitle,
                     ),
+                    if (!isWishlist && entry.askingFor.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Wants: ${entry.askingFor}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: PokeBinderText.cardMeta.copyWith(fontSize: 9),
+                      ),
+                    ],
                     if (entry.notes.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
@@ -491,6 +624,17 @@ class _WishlistRow extends StatelessWidget {
                 children: [
                   _KindTag(isWishlist: isWishlist),
                   const SizedBox(height: 5),
+                  if (entry.estimatedValue > 0) ...[
+                    Text(
+                      _formatValue(entry.estimatedValue),
+                      style: PokeBinderText.cardMeta.copyWith(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: PokeBinderColors.inkSoft,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                  ],
                   Text(
                     _relativeAdded(entry.dateAdded),
                     style: PokeBinderText.cardMeta.copyWith(fontSize: 7.5),
@@ -550,8 +694,14 @@ class _KindTag extends StatelessWidget {
 
 class _EmptyWishlistState extends StatelessWidget {
   final bool isWishlist;
+  final bool isFiltered;
+  final VoidCallback onClearFilters;
 
-  const _EmptyWishlistState({required this.isWishlist});
+  const _EmptyWishlistState({
+    required this.isWishlist,
+    required this.isFiltered,
+    required this.onClearFilters,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -567,16 +717,22 @@ class _EmptyWishlistState extends StatelessWidget {
               color: PokeBinderColors.cream2.withValues(alpha: 0.6),
             ),
             child: Icon(
-              isWishlist ? Icons.star_border_rounded : Icons.swap_horiz_rounded,
+              isFiltered
+                  ? Icons.filter_alt_off_rounded
+                  : (isWishlist
+                      ? Icons.star_border_rounded
+                      : Icons.swap_horiz_rounded),
               size: 24,
               color: PokeBinderColors.goldDeep.withValues(alpha: 0.75),
             ),
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
           Text(
-            isWishlist
-                ? 'No cards on your wishlist yet.'
-                : 'Nothing listed for trade yet.',
+            isFiltered
+                ? 'No cards match your filters.'
+                : (isWishlist
+                    ? 'No cards on your wishlist yet.'
+                    : 'Nothing listed for trade yet.'),
             style: PokeBinderText.subtitle.copyWith(
               fontWeight: FontWeight.w600,
               color: PokeBinderColors.ink,
@@ -584,12 +740,31 @@ class _EmptyWishlistState extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            isWishlist
-                ? "Add cards you're hoping to pull or pick up."
-                : "List dupes you're ready to trade away.",
+            isFiltered
+                ? 'Try a different search or priority.'
+                : (isWishlist
+                    ? "Add cards you're hoping to pull or pick up."
+                    : "List dupes you're ready to trade away."),
             textAlign: TextAlign.center,
             style: PokeBinderText.subtitle,
           ),
+          if (isFiltered) ...[
+            const SizedBox(height: PokeBinderSpacing.sp3),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: onClearFilters,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: PokeBinderSpacing.sp3,
+                    vertical: PokeBinderSpacing.sp1,
+                  ),
+                  child: Text('Clear filters', style: PokeBinderText.backLink),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

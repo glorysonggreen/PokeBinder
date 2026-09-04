@@ -5,18 +5,6 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 
-const _kRarityOptions = [
-  'Common',
-  'Uncommon',
-  'Rare',
-  'Double Rare',
-  'Illustration Rare',
-  'Special Illustration Rare',
-  'Hyper Rare',
-  'Promo',
-  'Other/Additional Rarities',
-];
-
 const _kConditionOptions = [
   ('Near Mint', 'NM'),
   ('Lightly Played', 'LP'),
@@ -84,7 +72,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
   late final _notesController =
       TextEditingController(text: widget.existingCard?.notes ?? '');
 
-  late String _rarity = widget.existingCard?.rarity ?? _kRarityOptions.first;
+  late String _rarity = widget.existingCard?.rarity ?? kRarityOptions.first;
   late String _conditionCode = _kConditionOptions.firstWhere(
     (option) => option.$2 == widget.existingCard?.condition,
     orElse: () => _kConditionOptions.first,
@@ -284,7 +272,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                     value: _rarity,
                     icon: Icons.diamond_rounded,
                     options: [
-                      for (final r in _kRarityOptions)
+                      for (final r in kRarityOptions)
                         PokeDropdownOption(r, r, icon: rarityIconFor(r)),
                     ],
                     onChanged: (value) => setState(() => _rarity = value),

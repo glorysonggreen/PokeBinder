@@ -17,6 +17,18 @@ enum PokemonCardType {
 
 enum CardSupertype { pokemon, trainer, energy }
 
+const kRarityOptions = [
+  'Common',
+  'Uncommon',
+  'Rare',
+  'Double Rare',
+  'Illustration Rare',
+  'Special Illustration Rare',
+  'Hyper Rare',
+  'Promo',
+  'Other/Additional Rarities',
+];
+
 IconData rarityIconFor(String rarity) {
   switch (rarity) {
     case 'Common':

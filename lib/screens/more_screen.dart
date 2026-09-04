@@ -109,7 +109,7 @@ class MoreScreen extends StatelessWidget {
               Text('Everything Else', style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
-                'Profile, stats, lists, and preferences',
+                'Profile, stats, lists, and preferences.',
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),

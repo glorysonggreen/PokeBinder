@@ -364,7 +364,11 @@ class _EmptyResults extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🔍', style: TextStyle(fontSize: 22)),
+          Icon(
+            Icons.search_off_rounded,
+            size: 26,
+            color: PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: PokeBinderSpacing.sp2),
           Text(
             'No cards match your search.',

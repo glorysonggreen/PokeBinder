@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
+import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -9,6 +10,7 @@ class TrainerCardScreen extends StatelessWidget {
   final String trainerName;
   final String trainerTitle;
   final String favoritePokemon;
+  final String? bio;
   final VoidCallback onBack;
   final ValueChanged<BinderData>? onOpenBinder;
 
@@ -17,6 +19,7 @@ class TrainerCardScreen extends StatelessWidget {
     this.trainerName = 'Ash',
     this.trainerTitle = 'Gym Leader',
     this.favoritePokemon = 'Pikachu',
+    this.bio,
     required this.onBack,
     this.onOpenBinder,
   });
@@ -44,6 +47,16 @@ class TrainerCardScreen extends StatelessWidget {
     return byRecency.first;
   }
 
+  DeckData? get _favoriteDeck {
+    final decks = DeckData.sampleDecks;
+    if (decks.isEmpty) return null;
+    final pinned = decks.where((d) => d.isPinned).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (pinned.isNotEmpty) return pinned.first;
+    final byRecency = [...decks]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return byRecency.first;
+  }
+
   void _editComingSoon(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Trainer card editing is coming soon')),
@@ -53,7 +66,10 @@ class TrainerCardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final binderCount = BinderData.sampleBinders.length;
+    final deckCount = DeckData.sampleDecks.length;
+    final favoriteCard = _favoriteCard;
     final favoriteBinder = _favoriteBinder;
+    final favoriteDeck = _favoriteDeck;
 
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
@@ -106,7 +122,7 @@ class TrainerCardScreen extends StatelessWidget {
               _TrainerHeaderPanel(
                 trainerName: trainerName,
                 trainerTitle: trainerTitle,
-                favoriteCard: _favoriteCard,
+                bio: bio,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
 
@@ -114,21 +130,36 @@ class TrainerCardScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _TrainerStatBox(
-                      icon: Icons.style_rounded,
                       value: '$_totalCardCount',
-                      label: 'Total cards',
+                      label: 'TOTAL CARDS',
                     ),
                   ),
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: _TrainerStatBox(
-                      icon: Icons.menu_book_rounded,
                       value: '$binderCount',
-                      label: 'Binders',
+                      label: 'BINDERS',
+                    ),
+                  ),
+                  const SizedBox(width: PokeBinderSpacing.sp2),
+                  Expanded(
+                    child: _TrainerStatBox(
+                      value: '$deckCount',
+                      label: 'DECKS',
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: PokeBinderSpacing.sp5),
+
+              Text('FAVORITE CARD', style: PokeBinderText.sectionLabel),
+              const SizedBox(height: PokeBinderSpacing.sp2),
+              favoriteCard != null
+                  ? _FavoriteCardPanel(card: favoriteCard)
+                  : const _DashedInfoPanel(
+                      icon: Icons.star_outline_rounded,
+                      message: 'Set a favorite card to feature it here.',
+                    ),
               const SizedBox(height: PokeBinderSpacing.sp5),
 
               Text('FAVORITE BINDER', style: PokeBinderText.sectionLabel),
@@ -143,6 +174,16 @@ class TrainerCardScreen extends StatelessWidget {
                   : const _DashedInfoPanel(
                       icon: Icons.push_pin_outlined,
                       message: 'Pin a binder to feature it here.',
+                    ),
+              const SizedBox(height: PokeBinderSpacing.sp5),
+
+              Text('FAVORITE DECK', style: PokeBinderText.sectionLabel),
+              const SizedBox(height: PokeBinderSpacing.sp2),
+              favoriteDeck != null
+                  ? _FavoriteDeckPanel(deck: favoriteDeck)
+                  : const _DashedInfoPanel(
+                      icon: Icons.push_pin_outlined,
+                      message: 'Pin a deck to feature it here.',
                     ),
               const SizedBox(height: PokeBinderSpacing.sp5),
 
@@ -206,12 +247,12 @@ class _SoftPill extends StatelessWidget {
 class _TrainerHeaderPanel extends StatelessWidget {
   final String trainerName;
   final String trainerTitle;
-  final PokemonCardData? favoriteCard;
+  final String? bio;
 
   const _TrainerHeaderPanel({
     required this.trainerName,
     required this.trainerTitle,
-    required this.favoriteCard,
+    required this.bio,
   });
 
   @override
@@ -230,6 +271,7 @@ class _TrainerHeaderPanel extends StatelessWidget {
         boxShadow: kCardElevation,
       ),
       child: Stack(
+        alignment: Alignment.center,
         children: [
           Positioned(
             right: -22,
@@ -319,16 +361,23 @@ class _TrainerHeaderPanel extends StatelessWidget {
                     )),
                   ),
                 ),
-                const SizedBox(height: PokeBinderSpacing.sp4),
-                Container(
-                  height: 1,
-                  width: 40,
-                  color: PokeBinderColors.ink.withValues(alpha: 0.08),
-                ),
-                const SizedBox(height: PokeBinderSpacing.sp4),
-                favoriteCard != null
-                    ? _FavoriteCardTag(card: favoriteCard!)
-                    : const SizedBox.shrink(),
+                if (bio != null && bio!.trim().isNotEmpty) ...[
+                  const SizedBox(height: PokeBinderSpacing.sp4),
+                  Container(
+                    height: 1,
+                    width: 40,
+                    color: PokeBinderColors.ink.withValues(alpha: 0.08),
+                  ),
+                  const SizedBox(height: PokeBinderSpacing.sp4),
+                  Text(
+                    bio!,
+                    textAlign: TextAlign.center,
+                    style: PokeBinderText.listRowSubtitle.copyWith(
+                      height: 1.4,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -338,26 +387,21 @@ class _TrainerHeaderPanel extends StatelessWidget {
   }
 }
 
-class _FavoriteCardTag extends StatelessWidget {
+class _FavoriteCardPanel extends StatelessWidget {
   final PokemonCardData card;
 
-  const _FavoriteCardTag({required this.card});
+  const _FavoriteCardPanel({required this.card});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
+        color: PokeBinderColors.white,
         borderRadius: BorderRadius.circular(14),
-        gradient: PokeBinderColors.redGradient,
-        boxShadow: [
-          BoxShadow(
-            color: PokeBinderColors.redDeep.withValues(alpha: 0.28),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        boxShadow: kCardElevation,
       ),
       child: Row(
         children: [
@@ -368,7 +412,7 @@ class _FavoriteCardTag extends StatelessWidget {
               child: PokemonCard(card: card),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: PokeBinderSpacing.sp3),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,30 +423,31 @@ class _FavoriteCardTag extends StatelessWidget {
                     const Icon(
                       Icons.star_rounded,
                       size: 12,
-                      color: PokeBinderColors.white,
+                      color: PokeBinderColors.goldDeep,
                     ),
                     const SizedBox(width: 5),
-                    Text('Favorite Card', style: PokeBinderText.chipLabelActive),
+                    Text(
+                      'Favorite Card',
+                      style: PokeBinderText.chipLabel.copyWith(
+                        color: PokeBinderColors.goldDeep,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 3),
                 Text(
                   card.name,
                   overflow: TextOverflow.ellipsis,
-                  style: PokeBinderText.chakraPetch(const TextStyle(
-                    fontSize: 12.5,
+                  style: PokeBinderText.listRowTitle.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: PokeBinderColors.white,
-                  )),
+                    fontSize: 13,
+                  ),
                 ),
                 Text(
-                  '${card.setName} • #${card.cardNumber}',
+                  '${card.setName} · #${card.cardNumber}',
                   overflow: TextOverflow.ellipsis,
-                  style: PokeBinderText.chakraPetch(TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                    color: PokeBinderColors.white.withValues(alpha: 0.85),
-                  )),
+                  style: PokeBinderText.listRowSubtitle,
                 ),
               ],
             ),
@@ -414,12 +459,10 @@ class _FavoriteCardTag extends StatelessWidget {
 }
 
 class _TrainerStatBox extends StatelessWidget {
-  final IconData icon;
   final String value;
   final String label;
 
   const _TrainerStatBox({
-    required this.icon,
     required this.value,
     required this.label,
   });
@@ -441,8 +484,6 @@ class _TrainerStatBox extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: PokeBinderColors.goldDeep),
-          const SizedBox(height: 6),
           Text(value, style: PokeBinderText.statNumber),
           const SizedBox(height: 3),
           Text(
@@ -541,6 +582,81 @@ class _FavoriteBinderPanel extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FavoriteDeckPanel extends StatelessWidget {
+  final DeckData deck;
+
+  const _FavoriteDeckPanel({required this.deck});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        boxShadow: kCardElevation,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(11),
+                gradient: PokeBinderColors.redGradient,
+              ),
+              child: const Icon(
+                Icons.style_rounded,
+                size: 18,
+                color: PokeBinderColors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: PokeBinderSpacing.sp3),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        deck.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: PokeBinderText.listRowTitle.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    if (deck.isPinned) ...[
+                      const SizedBox(width: 5),
+                      const Icon(
+                        Icons.push_pin_rounded,
+                        size: 11,
+                        color: PokeBinderColors.redDeep,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${deck.cardCount}/${deck.targetSize} cards · ${deck.format.label}',
+                  style: PokeBinderText.listRowSubtitle,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
