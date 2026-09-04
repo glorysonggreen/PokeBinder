@@ -583,7 +583,7 @@ class _WishlistCardListPanel extends StatelessWidget {
           separatorBuilder: (_, __) => Divider(
             height: 1,
             thickness: 1,
-            indent: 97,
+            indent: 114,
             color: PokeBinderColors.ink.withValues(alpha: 0.06),
           ),
           itemBuilder: (context, index) {
@@ -631,7 +631,7 @@ class _WishlistRow extends StatelessWidget {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: PokeBinderColors.ink.withValues(alpha: 0.08),
                       ),
@@ -641,7 +641,7 @@ class _WishlistRow extends StatelessWidget {
                       card: matchedCard,
                       width: 92,
                       height: 127,
-                      borderRadius: 9,
+                      borderRadius: 5,
                     ),
                   ),
                   Positioned(
