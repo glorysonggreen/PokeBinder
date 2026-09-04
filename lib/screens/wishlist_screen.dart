@@ -631,7 +631,7 @@ class _WishlistRow extends StatelessWidget {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: PokeBinderColors.ink.withValues(alpha: 0.08),
                       ),
@@ -639,17 +639,17 @@ class _WishlistRow extends StatelessWidget {
                     ),
                     child: CardThumbnail(
                       card: matchedCard,
-                      width: 75,
-                      height: 105,
-                      borderRadius: 8,
+                      width: 92,
+                      height: 127,
+                      borderRadius: 9,
                     ),
                   ),
                   Positioned(
-                    left: -5,
-                    top: -5,
+                    left: -6,
+                    top: -6,
                     child: Container(
-                      width: 12,
-                      height: 12,
+                      width: 14,
+                      height: 14,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: entry.priority.color,
