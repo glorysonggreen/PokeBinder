@@ -162,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: PokeBinderSpacing.sp1),
                           Text(
-                            'Your collection at a glance',
+                            'Your collection at a glance.',
                             style: PokeBinderText.subtitle,
                           ),
                         ],

@@ -5,6 +5,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
+import 'binder_detail_screen.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
@@ -59,15 +60,6 @@ class _BindersScreenState extends State<BindersScreen> {
 
   late int _tabIndex = widget.initialTabIndex;
 
-  late BinderData _selectedBinder = widget.initialBinderId != null
-      ? _binders.firstWhere(
-          (b) => b.id == widget.initialBinderId,
-          orElse: () => _binders.first,
-        )
-      : _binders.first;
-  int _pageIndex = 0;
-  bool _showingUnassigned = false;
-
   String _binderSearch = '';
   BinderSortOption _binderSort = BinderSortOption.name;
   bool _viewingAllBinders = false;
@@ -86,8 +78,27 @@ class _BindersScreenState extends State<BindersScreen> {
         ..._unassignedCards,
       ];
 
-  void _openCard(PokemonCardData card) {
-    Navigator.of(context).push(
+  @override
+  void initState() {
+    super.initState();
+    // Deep-linked here from Home/More with a specific binder in mind —
+    // skip the picker and jump straight to that binder's detail view.
+    final initialId = widget.initialBinderId;
+    if (initialId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (initialId == kUnassignedBinderId) {
+          _openUnassignedDetail();
+          return;
+        }
+        final matches = _binders.where((b) => b.id == initialId);
+        if (matches.isNotEmpty) _openBinderDetail(matches.first);
+      });
+    }
+  }
+
+  Future<void> _openCard(PokemonCardData card) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CardDetailsScreen(
           card: card,
@@ -98,22 +109,6 @@ class _BindersScreenState extends State<BindersScreen> {
     );
   }
 
-  void _selectBinder(BinderData binder) {
-    setState(() {
-      _selectedBinder = binder;
-      _pageIndex = 0;
-      _showingUnassigned = false;
-      _viewingAllBinders = false;
-    });
-  }
-
-  void _selectUnassigned() {
-    setState(() {
-      _showingUnassigned = true;
-      _viewingAllBinders = false;
-    });
-  }
-
   void _toggleViewAllBinders() {
     setState(() => _viewingAllBinders = !_viewingAllBinders);
   }
@@ -122,9 +117,7 @@ class _BindersScreenState extends State<BindersScreen> {
     setState(() {
       final index = _binders.indexWhere((b) => b.id == binder.id);
       if (index == -1) return;
-      final updated = _binders[index].copyWith(isPinned: !_binders[index].isPinned);
-      _binders[index] = updated;
-      if (_selectedBinder.id == binder.id) _selectedBinder = updated;
+      _binders[index] = _binders[index].copyWith(isPinned: !_binders[index].isPinned);
     });
   }
 
@@ -134,62 +127,77 @@ class _BindersScreenState extends State<BindersScreen> {
     );
     if (result?.binder == null) return;
 
-    setState(() {
-      _binders.add(result!.binder!);
-      _selectedBinder = result.binder!;
-      _pageIndex = 0;
-      _showingUnassigned = false;
-    });
+    setState(() => _binders.add(result!.binder!));
+    if (!mounted) return;
+    await _openBinderDetail(result!.binder!);
   }
 
-  Future<void> _openEditBinder() async {
-    final result = await Navigator.of(context).push<BinderFormResult>(
+  /// Opens the full-screen detail view for [binder]. The detail screen
+  /// shares the same live `_binders`/`_unassignedCards` list objects, so
+  /// any edits it makes (directly, or via the callbacks below) are
+  /// visible here immediately — no snapshot to keep in sync.
+  Future<void> _openBinderDetail(BinderData binder) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BinderFormScreen(existingBinder: _selectedBinder),
+        builder: (_) => BinderDetailScreen(
+          binderId: binder.id,
+          binders: _binders,
+          unassignedCards: _unassignedCards,
+          onCardTap: _openCard,
+          onAddCard: _openAddCardFor,
+          onBinderChanged: _applyBinderChange,
+          onBinderDeleted: _applyBinderDeletion,
+        ),
       ),
     );
-    if (result == null) return;
+    setState(() {}); // pinned/name/count changes may affect the overview list
+  }
 
-    if (result.deleted) {
-      if (_binders.length <= 1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("You need at least one binder.")),
-        );
-        return;
-      }
-      setState(() {
-        final deleted = _binders.firstWhere((b) => b.id == _selectedBinder.id);
-        for (final page in deleted.pages) {
-          for (final card in page) {
-            _unassignedCards.add(card.copyWith(binderName: 'Unassigned', page: 0));
-          }
-        }
-        _binders.removeWhere((b) => b.id == _selectedBinder.id);
-        _selectedBinder = _binders.first;
-        _pageIndex = 0;
-      });
-      return;
-    }
+  Future<void> _openUnassignedDetail() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BinderDetailScreen(
+          binderId: null,
+          binders: _binders,
+          unassignedCards: _unassignedCards,
+          onCardTap: _openCard,
+          onAddCard: _openAddCardFor,
+          onBinderChanged: _applyBinderChange,
+          onBinderDeleted: _applyBinderDeletion,
+        ),
+      ),
+    );
+    setState(() {});
+  }
 
-    final updated = result.binder!;
+  void _applyBinderChange(BinderData updated) {
     setState(() {
       final index = _binders.indexWhere((b) => b.id == updated.id);
       if (index != -1) _binders[index] = updated;
-      _selectedBinder = updated;
-      if (_pageIndex >= updated.pageCount) {
-        _pageIndex = updated.pageCount - 1;
-      }
     });
   }
 
-  Future<void> _openAddCard() async {
+  void _applyBinderDeletion(BinderData deleted) {
+    setState(() {
+      for (final page in deleted.pages) {
+        for (final card in page) {
+          _unassignedCards.add(card.copyWith(binderName: 'Unassigned', page: 0));
+        }
+      }
+      _binders.removeWhere((b) => b.id == deleted.id);
+    });
+  }
+
+  Future<void> _openAddCardFor({
+    required String? binderId,
+    required int pageIndex,
+  }) async {
     final result = await Navigator.of(context).push<CardFormResult>(
       MaterialPageRoute(
         builder: (_) => CardFormScreen(
           binders: _binders,
-          defaultBinderId:
-              _showingUnassigned ? kUnassignedBinderId : _selectedBinder.id,
-          defaultPageNumber: _showingUnassigned ? 1 : _pageIndex + 1,
+          defaultBinderId: binderId ?? kUnassignedBinderId,
+          defaultPageNumber: pageIndex + 1,
         ),
       ),
     );
@@ -244,11 +252,7 @@ class _BindersScreenState extends State<BindersScreen> {
     ];
     newPages[pageIndex].add(card);
 
-    final updated = binder.copyWith(pages: newPages);
-    _binders[index] = updated;
-    if (_selectedBinder.id == binderId) {
-      _selectedBinder = updated;
-    }
+    _binders[index] = binder.copyWith(pages: newPages);
   }
 
   @override
@@ -282,10 +286,7 @@ class _BindersScreenState extends State<BindersScreen> {
                 child: _tabIndex == 0
                     ? _BindersTab(
                         binders: filteredBinders,
-                        selectedBinder: _selectedBinder,
-                        pageIndex: _pageIndex,
-                        unassignedCards: _unassignedCards,
-                        showingUnassigned: _showingUnassigned,
+                        unassignedCount: _unassignedCards.length,
                         binderSort: _binderSort,
                         viewingAllBinders: _viewingAllBinders,
                         onSearchChanged: (v) =>
@@ -293,20 +294,10 @@ class _BindersScreenState extends State<BindersScreen> {
                         onBinderSortChanged: (option) =>
                             setState(() => _binderSort = option),
                         onToggleViewAllBinders: _toggleViewAllBinders,
-                        onSelectBinder: _selectBinder,
-                        onSelectUnassigned: _selectUnassigned,
+                        onSelectBinder: _openBinderDetail,
+                        onSelectUnassigned: _openUnassignedDetail,
                         onTogglePin: _toggleBinderPin,
-                        onPrevPage: _pageIndex > 0
-                            ? () => setState(() => _pageIndex--)
-                            : null,
-                        onNextPage:
-                            _pageIndex < _selectedBinder.pageCount - 1
-                                ? () => setState(() => _pageIndex++)
-                                : null,
-                        onCardTap: _openCard,
                         onNewBinder: _openNewBinder,
-                        onEditBinder: _openEditBinder,
-                        onAddCard: _openAddCard,
                       )
                     : _AllCardsTab(
                         cards: _allCards,
@@ -409,10 +400,7 @@ class _TopTabBar extends StatelessWidget {
 
 class _BindersTab extends StatelessWidget {
   final List<BinderData> binders;
-  final BinderData selectedBinder;
-  final int pageIndex;
-  final List<PokemonCardData> unassignedCards;
-  final bool showingUnassigned;
+  final int unassignedCount;
   final BinderSortOption binderSort;
   final bool viewingAllBinders;
   final ValueChanged<String> onSearchChanged;
@@ -421,19 +409,11 @@ class _BindersTab extends StatelessWidget {
   final ValueChanged<BinderData> onSelectBinder;
   final VoidCallback onSelectUnassigned;
   final ValueChanged<BinderData> onTogglePin;
-  final VoidCallback? onPrevPage;
-  final VoidCallback? onNextPage;
-  final ValueChanged<PokemonCardData> onCardTap;
   final VoidCallback onNewBinder;
-  final VoidCallback onEditBinder;
-  final VoidCallback onAddCard;
 
   const _BindersTab({
     required this.binders,
-    required this.selectedBinder,
-    required this.pageIndex,
-    required this.unassignedCards,
-    required this.showingUnassigned,
+    required this.unassignedCount,
     required this.binderSort,
     required this.viewingAllBinders,
     required this.onSearchChanged,
@@ -442,22 +422,11 @@ class _BindersTab extends StatelessWidget {
     required this.onSelectBinder,
     required this.onSelectUnassigned,
     required this.onTogglePin,
-    required this.onPrevPage,
-    required this.onNextPage,
-    required this.onCardTap,
     required this.onNewBinder,
-    required this.onEditBinder,
-    required this.onAddCard,
   });
 
   @override
   Widget build(BuildContext context) {
-    final currentPageCards = showingUnassigned
-        ? unassignedCards
-        : (selectedBinder.pages.isEmpty
-            ? const <PokemonCardData>[]
-            : selectedBinder.pages[pageIndex]);
-
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp6),
       child: Column(
@@ -483,9 +452,7 @@ class _BindersTab extends StatelessWidget {
           ],
           _BinderListPanel(
             binders: binders,
-            selectedBinder: selectedBinder,
-            showingUnassigned: showingUnassigned,
-            unassignedCount: unassignedCards.length,
+            unassignedCount: unassignedCount,
             sortOption: binderSort,
             viewingAllBinders: viewingAllBinders,
             onToggleViewAllBinders: onToggleViewAllBinders,
@@ -493,126 +460,6 @@ class _BindersTab extends StatelessWidget {
             onSelectUnassigned: onSelectUnassigned,
             onTogglePin: onTogglePin,
           ),
-          if (!viewingAllBinders) ...[
-            const SizedBox(height: PokeBinderSpacing.sp3),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  showingUnassigned
-                      ? 'UNASSIGNED CARDS'
-                      : '${selectedBinder.name} — Page ${pageIndex + 1}'
-                          .toUpperCase(),
-                  style: PokeBinderText.sectionLabel,
-                ),
-                if (!showingUnassigned)
-                  InkWell(
-                    onTap: onEditBinder,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.edit_outlined,
-                          size: 12,
-                          color: PokeBinderText.backLink.color,
-                        ),
-                        const SizedBox(width: 4),
-                        Text('Edit', style: PokeBinderText.backLink),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: PokeBinderSpacing.sp2),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                const crossAxisCount = 3;
-                const crossAxisSpacing = PokeBinderSpacing.sp2;
-                final cardWidth = (constraints.maxWidth -
-                        crossAxisSpacing * (crossAxisCount - 1)) /
-                    crossAxisCount;
-                final cardHeight = cardWidth / kPokemonCardImageAspectRatio;
-
-                return GridView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    mainAxisSpacing: PokeBinderSpacing.sp2,
-                    crossAxisSpacing: crossAxisSpacing,
-                    mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
-                  ),
-                  children: [
-                    for (final card in currentPageCards)
-                      Column(
-                        children: [
-                          SizedBox(
-                            height: cardHeight,
-                            child: BinderCardTile(
-                              card: card,
-                              onTap: () => onCardTap(card),
-                            ),
-                          ),
-                          const SizedBox(height: PokeBinderSpacing.sp1),
-                          Text(
-                            card.name,
-                            style: PokeBinderText.cardName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${card.setName} · #${card.cardNumber}',
-                            style: PokeBinderText.cardMeta,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    Column(
-                      children: [
-                        SizedBox(
-                          height: cardHeight,
-                          child: AddCardTile(onTap: onAddCard),
-                        ),
-                        const SizedBox(height: PokeBinderSpacing.sp1),
-                        Text(
-                          'Add Card Manually',
-                          style: PokeBinderText.cardName,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: PokeBinderSpacing.sp3),
-            if (!showingUnassigned)
-              Row(
-                children: [
-                  Expanded(
-                    child: PillButton(
-                      label: '‹ Prev',
-                      ghost: true,
-                      enabled: onPrevPage != null,
-                      onTap: onPrevPage ?? () {},
-                    ),
-                  ),
-                  const SizedBox(width: PokeBinderSpacing.sp2),
-                  Expanded(
-                    child: PillButton(
-                      label: 'Next ›',
-                      ghost: true,
-                      enabled: onNextPage != null,
-                      onTap: onNextPage ?? () {},
-                    ),
-                  ),
-                ],
-              ),
-          ],
         ],
       ),
     );
@@ -787,8 +634,6 @@ class _BinderSection {
 
 class _BinderListPanel extends StatelessWidget {
   final List<BinderData> binders;
-  final BinderData selectedBinder;
-  final bool showingUnassigned;
   final int unassignedCount;
   final BinderSortOption sortOption;
   final bool viewingAllBinders;
@@ -799,8 +644,6 @@ class _BinderListPanel extends StatelessWidget {
 
   const _BinderListPanel({
     required this.binders,
-    required this.selectedBinder,
-    required this.showingUnassigned,
     required this.unassignedCount,
     required this.sortOption,
     required this.viewingAllBinders,
@@ -874,9 +717,6 @@ class _BinderListPanel extends StatelessWidget {
                       width: tileWidth,
                       child: _BinderGridTile(
                         binder: binder,
-                        selected: !viewingAllBinders &&
-                            !showingUnassigned &&
-                            binder.id == selectedBinder.id,
                         onTap: () => onSelect(binder),
                         onTogglePin: () => onTogglePin(binder),
                       ),
@@ -886,7 +726,6 @@ class _BinderListPanel extends StatelessWidget {
                       width: tileWidth,
                       child: _BinderGridTile.unassigned(
                         count: unassignedCount,
-                        selected: !viewingAllBinders && showingUnassigned,
                         onTap: onSelectUnassigned,
                       ),
                     ),
@@ -945,7 +784,6 @@ class _SectionHeader extends StatelessWidget {
 
 class _BinderGridTile extends StatelessWidget {
   final BinderData? binder;
-  final bool selected;
   final bool muted;
   final String? overrideTitle;
   final String? overrideSubtitle;
@@ -955,7 +793,6 @@ class _BinderGridTile extends StatelessWidget {
 
   const _BinderGridTile({
     required this.binder,
-    required this.selected,
     this.muted = false,
     this.overrideTitle,
     this.overrideSubtitle,
@@ -966,11 +803,9 @@ class _BinderGridTile extends StatelessWidget {
 
   const _BinderGridTile.unassigned({
     required int count,
-    required bool selected,
     required VoidCallback onTap,
   }) : this(
           binder: null,
-          selected: selected,
           muted: true,
           overrideTitle: 'Unassigned Cards',
           overrideSubtitle: '$count ${count == 1 ? 'card' : 'cards'} · no binder',
@@ -996,10 +831,7 @@ class _BinderGridTile extends StatelessWidget {
           color: PokeBinderColors.white,
           borderRadius: BorderRadius.circular(13),
           border: Border.all(
-            color: selected
-                ? PokeBinderColors.red.withValues(alpha: 0.5)
-                : PokeBinderColors.ink.withValues(alpha: 0.08),
-            width: selected ? 1.5 : 1,
+            color: PokeBinderColors.ink.withValues(alpha: 0.08),
           ),
           boxShadow: [
             BoxShadow(
@@ -1055,8 +887,8 @@ class _BinderGridTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: PokeBinderText.listRowTitle.copyWith(
-                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                color: selected ? PokeBinderColors.redDeep : PokeBinderColors.ink,
+                fontWeight: FontWeight.w600,
+                color: PokeBinderColors.ink,
               ),
             ),
             const SizedBox(height: 2),
@@ -1212,13 +1044,17 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 26),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 26),
       child: Center(
         child: Column(
           children: [
-            Text('🔍', style: TextStyle(fontSize: 22)),
-            SizedBox(height: PokeBinderSpacing.sp2),
+            Icon(
+              Icons.search_off_rounded,
+              size: 26,
+              color: PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+            ),
+            const SizedBox(height: PokeBinderSpacing.sp2),
             Text(
               'No cards match your search.',
               style: PokeBinderText.subtitle,
