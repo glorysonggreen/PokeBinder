@@ -60,6 +60,14 @@ String _formatValue(double value) {
   return '₱${value.toStringAsFixed(0)}';
 }
 
+/// Shared size for every secondary line on a wishlist/trade card (set info,
+/// quantity, wants, notes, value, date added) so they all read at one
+/// consistent, legible size instead of the previous mix of tiny sizes.
+final TextStyle _metaStyle = PokeBinderText.cardMeta.copyWith(
+  fontSize: 10.5,
+  color: PokeBinderColors.inkSoft,
+);
+
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
 
@@ -234,7 +242,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(PokeBinderSpacing.sp4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,36 +347,18 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
 
-              Expanded(
-                child: filtered.isEmpty
-                    ? _EmptyWishlistState(
-                        isWishlist: isWishlist,
-                        isFiltered: _filtersActive,
-                        onClearFilters: _clearFilters,
-                      )
-                    : ListView.separated(
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: PokeBinderColors.ink.withValues(alpha: 0.06),
-                        ),
-                        itemBuilder: (context, index) {
-                          final entry = filtered[index];
-                          return Dismissible(
-                            key: ValueKey(entry.id),
-                            direction: DismissDirection.endToStart,
-                            confirmDismiss: (_) => _confirmRemove(entry),
-                            onDismissed: (_) => _removeEntry(entry),
-                            background: const _DismissBackground(),
-                            child: _WishlistRow(
-                              entry: entry,
-                              onTap: () => _openEdit(entry),
-                            ),
-                          );
-                        },
-                      ),
-              ),
+              filtered.isEmpty
+                  ? _EmptyWishlistState(
+                      isWishlist: isWishlist,
+                      isFiltered: _filtersActive,
+                      onClearFilters: _clearFilters,
+                    )
+                  : _WishlistCardListPanel(
+                      entries: filtered,
+                      onTapEntry: _openEdit,
+                      onConfirmRemove: _confirmRemove,
+                      onRemoved: _removeEntry,
+                    ),
               const SizedBox(height: PokeBinderSpacing.sp3),
               PillButton(
                 label: isWishlist ? 'Add to Wishlist' : 'Add to Trade List',
@@ -557,6 +547,65 @@ String _relativeAdded(DateTime date) {
   return 'Just now';
 }
 
+/// Wraps the filtered wishlist/trade entries in the same white, rounded,
+/// bordered-and-shadowed card panel used for the card list on the Deck
+/// Details screen, so entries here read as the same "card row" pattern
+/// as the rest of the app instead of a bare divided list.
+class _WishlistCardListPanel extends StatelessWidget {
+  final List<WishlistEntry> entries;
+  final ValueChanged<WishlistEntry> onTapEntry;
+  final Future<bool> Function(WishlistEntry entry) onConfirmRemove;
+  final ValueChanged<WishlistEntry> onRemoved;
+
+  const _WishlistCardListPanel({
+    required this.entries,
+    required this.onTapEntry,
+    required this.onConfirmRemove,
+    required this.onRemoved,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        boxShadow: kCardElevation,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          itemCount: entries.length,
+          separatorBuilder: (_, __) => Divider(
+            height: 1,
+            thickness: 1,
+            indent: 97,
+            color: PokeBinderColors.ink.withValues(alpha: 0.06),
+          ),
+          itemBuilder: (context, index) {
+            final entry = entries[index];
+            return Dismissible(
+              key: ValueKey(entry.id),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (_) => onConfirmRemove(entry),
+              onDismissed: (_) => onRemoved(entry),
+              background: const _DismissBackground(),
+              child: _WishlistRow(
+                entry: entry,
+                onTap: () => onTapEntry(entry),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class _WishlistRow extends StatelessWidget {
   final WishlistEntry entry;
   final VoidCallback onTap;
@@ -573,20 +622,34 @@ class _WishlistRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
+          padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CardThumbnail(card: matchedCard, width: 36, height: 48),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(
+                        color: PokeBinderColors.ink.withValues(alpha: 0.08),
+                      ),
+                      boxShadow: kCardElevation,
+                    ),
+                    child: CardThumbnail(
+                      card: matchedCard,
+                      width: 75,
+                      height: 105,
+                      borderRadius: 8,
+                    ),
+                  ),
                   Positioned(
-                    left: -4,
-                    top: -4,
+                    left: -5,
+                    top: -5,
                     child: Container(
-                      width: 10,
-                      height: 10,
+                      width: 12,
+                      height: 12,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: entry.priority.color,
@@ -604,41 +667,53 @@ class _WishlistRow extends StatelessWidget {
                     Text(
                       entry.name,
                       overflow: TextOverflow.ellipsis,
-                      style: PokeBinderText.listRowTitle.copyWith(
+                      style: const TextStyle(
+                        fontSize: 12.5,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        color: PokeBinderColors.ink,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      [
-                        if (entry.setName.isNotEmpty) entry.setName,
-                        isWishlist
-                            ? 'wanted ×${entry.quantity}'
-                            : 'willing to trade ×${entry.quantity}',
-                      ].join(' · '),
-                      overflow: TextOverflow.ellipsis,
-                      style: PokeBinderText.listRowSubtitle,
-                    ),
-                    if (!isWishlist && entry.askingFor.isNotEmpty) ...[
+                    if (entry.setName.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        'Wants: ${entry.askingFor}',
-                        maxLines: 1,
+                        [
+                          entry.setName,
+                          if (entry.cardNumber.isNotEmpty)
+                            '#${entry.cardNumber}',
+                          if (entry.rarity.isNotEmpty) entry.rarity,
+                        ].join(' · '),
                         overflow: TextOverflow.ellipsis,
-                        style: PokeBinderText.cardMeta.copyWith(fontSize: 9),
+                        style: _metaStyle,
+                      ),
+                    ],
+                    const SizedBox(height: 5),
+                    _QuantityPill(isWishlist: isWishlist, quantity: entry.quantity),
+                    if (!isWishlist && entry.askingFor.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.compare_arrows_rounded,
+                              size: 12, color: PokeBinderColors.inkSoft),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              'Wants: ${entry.askingFor}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: _metaStyle,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                     if (entry.notes.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         entry.notes,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: PokeBinderText.cardMeta.copyWith(
-                          fontStyle: FontStyle.italic,
-                          fontSize: 9,
-                        ),
+                        style: _metaStyle.copyWith(fontStyle: FontStyle.italic),
                       ),
                     ],
                   ],
@@ -649,25 +724,72 @@ class _WishlistRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   if (entry.estimatedValue > 0) ...[
-                    Text(
-                      _formatValue(entry.estimatedValue),
-                      style: PokeBinderText.cardMeta.copyWith(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: PokeBinderColors.inkSoft,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: PokeBinderColors.cream2.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _formatValue(entry.estimatedValue),
+                        style: _metaStyle.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: PokeBinderColors.inkSoft,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 5),
                   ],
                   Text(
                     _relativeAdded(entry.dateAdded),
-                    style: PokeBinderText.cardMeta.copyWith(fontSize: 7.5),
+                    style: _metaStyle,
                   ),
                 ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Small colored pill for the "wanted ×N" / "willing to trade ×N" line so
+/// the quantity reads as a scannable badge rather than plain text.
+class _QuantityPill extends StatelessWidget {
+  final bool isWishlist;
+  final int quantity;
+
+  const _QuantityPill({required this.isWishlist, required this.quantity});
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        isWishlist ? PokeBinderColors.goldDeep : PokeBinderColors.teal;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isWishlist ? Icons.star_rounded : Icons.swap_horiz_rounded,
+            size: 12,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            isWishlist ? 'Wanted ×$quantity' : 'Willing to trade ×$quantity',
+            style: _metaStyle.copyWith(
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -686,7 +808,17 @@ class _EmptyWishlistState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        vertical: PokeBinderSpacing.sp6,
+        horizontal: PokeBinderSpacing.sp4,
+      ),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
