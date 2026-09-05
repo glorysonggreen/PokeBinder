@@ -29,6 +29,7 @@ class CardFormResult {
 
 class CardFormScreen extends StatefulWidget {
   final PokemonCardData? existingCard;
+  final PokemonCardData? scannedCard;
   final List<BinderData> binders;
   final String defaultBinderId;
   final int defaultPageNumber;
@@ -36,6 +37,7 @@ class CardFormScreen extends StatefulWidget {
   const CardFormScreen({
     super.key,
     this.existingCard,
+    this.scannedCard,
     required this.binders,
     required this.defaultBinderId,
     this.defaultPageNumber = 1,
@@ -46,18 +48,22 @@ class CardFormScreen extends StatefulWidget {
 }
 
 class _CardFormScreenState extends State<CardFormScreen> {
+  /// The card to prefill the form from: the card actually being edited
+  /// takes priority, otherwise the card detected by the scanner (if any).
+  PokemonCardData? get _prefillCard => widget.existingCard ?? widget.scannedCard;
+
   late final _nameController =
-      TextEditingController(text: widget.existingCard?.name ?? '');
+      TextEditingController(text: _prefillCard?.name ?? '');
   late final _setController =
-      TextEditingController(text: widget.existingCard?.setName ?? '');
+      TextEditingController(text: _prefillCard?.setName ?? '');
   late final _cardNumberController =
-      TextEditingController(text: widget.existingCard?.cardNumber ?? '');
+      TextEditingController(text: _prefillCard?.cardNumber ?? '');
   late final _quantityController = TextEditingController(
     text: '${widget.existingCard?.quantityOwned ?? 1}',
   );
   late final _valueController = TextEditingController(
-    text: widget.existingCard != null
-        ? widget.existingCard!.estimatedValue.toStringAsFixed(0)
+    text: _prefillCard != null
+        ? _prefillCard!.estimatedValue.toStringAsFixed(0)
         : '',
   );
   late final _pageController =
@@ -65,9 +71,9 @@ class _CardFormScreenState extends State<CardFormScreen> {
   late final _notesController =
       TextEditingController(text: widget.existingCard?.notes ?? '');
 
-  late String _rarity = widget.existingCard?.rarity ?? kRarityOptions.first;
+  late String _rarity = _prefillCard?.rarity ?? kRarityOptions.first;
   late String _conditionCode = kConditionOptions.firstWhere(
-    (option) => option.$2 == widget.existingCard?.condition,
+    (option) => option.$2 == _prefillCard?.condition,
     orElse: () => kConditionOptions.first,
   ).$2;
   late String _binderId = widget.existingCard == null
@@ -87,6 +93,11 @@ class _CardFormScreenState extends State<CardFormScreen> {
   String? _quantityError;
 
   bool get _isEditing => widget.existingCard != null;
+
+  /// True when this screen is confirming a freshly scanned card rather
+  /// than adding one from scratch or editing one already in the
+  /// collection — same form, different heading/copy/button label.
+  bool get _isReviewingScan => !_isEditing && widget.scannedCard != null;
 
   @override
   void dispose() {
@@ -128,14 +139,14 @@ class _CardFormScreenState extends State<CardFormScreen> {
       setName: _setController.text.trim(),
       cardNumber: _cardNumberController.text.trim(),
       rarity: _rarity,
-      type: widget.existingCard?.type ?? PokemonCardType.colorless,
+      type: _prefillCard?.type ?? PokemonCardType.colorless,
       quantityOwned: quantity,
       condition: _conditionCode,
       binderName: binder?.name ?? 'Unassigned',
       page: pageNumber,
       estimatedValue: value < 0 ? 0 : value,
       notes: _notesController.text.trim(),
-      imageAssetPath: widget.existingCard?.imageAssetPath,
+      imageAssetPath: _prefillCard?.imageAssetPath,
       dateAdded: widget.existingCard?.dateAdded ?? DateTime.now(),
     );
 
@@ -204,14 +215,21 @@ class _CardFormScreenState extends State<CardFormScreen> {
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text(
-                _isEditing ? 'Edit Card' : 'Add a Card',
+                _isEditing
+                    ? 'Edit Card'
+                    : _isReviewingScan
+                        ? 'Review Scanned Card'
+                        : 'Add a Card',
                 style: PokeBinderText.heading,
               ),
               const SizedBox(height: 4),
               Text(
                 _isEditing
                     ? 'Update the details below.'
-                    : 'No scanner handy? Enter the details yourself.',
+                    : _isReviewingScan
+                        ? "Here's what we found — confirm the details "
+                            'before adding it to your collection.'
+                        : 'No scanner handy? Enter the details yourself.',
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
@@ -381,8 +399,14 @@ class _CardFormScreenState extends State<CardFormScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: _isEditing ? 'Save Changes' : 'Add to Binder',
-                      icon: _isEditing ? Icons.check : Icons.add,
+                      label: _isEditing
+                          ? 'Save Changes'
+                          : _isReviewingScan
+                              ? 'Confirm & Add'
+                              : 'Add to Binder',
+                      icon: _isEditing || _isReviewingScan
+                          ? Icons.check
+                          : Icons.add,
                       onTap: _submit,
                     ),
                   ),

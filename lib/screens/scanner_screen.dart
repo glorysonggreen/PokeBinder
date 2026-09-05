@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/pokemon_card_widget.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 
@@ -71,19 +72,32 @@ class _ScannerScreenState extends State<ScannerScreen>
     await Future.delayed(const Duration(milliseconds: 950));
     if (!mounted) return;
 
-    final result = _demoPool[_demoIndex % _demoPool.length];
+    final detected = _demoPool[_demoIndex % _demoPool.length];
     _demoIndex++;
 
+    setState(() => _scanning = false);
+
+    final result = await Navigator.of(context).push<CardFormResult>(
+      MaterialPageRoute(
+        builder: (_) => CardFormScreen(
+          scannedCard: detected,
+          binders: _binders,
+          defaultBinderId: _binders.first.id,
+        ),
+      ),
+    );
+    if (!mounted || result == null || result.deleted) return;
+
+    final confirmed = result.card!;
     setState(() {
-      _scanning = false;
-      _recentScans.insert(0, _ScanEntry(card: result, scannedAt: DateTime.now()));
+      _recentScans.insert(0, _ScanEntry(card: confirmed, scannedAt: DateTime.now()));
       if (_recentScans.length > _kMaxRecentScans) {
         _recentScans.removeRange(_kMaxRecentScans, _recentScans.length);
       }
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Found ${result.name} — review it below.')),
+      SnackBar(content: Text('Added ${confirmed.name} to your collection.')),
     );
   }
 
@@ -589,36 +603,39 @@ class _RecentScansPanel extends StatelessWidget {
         color: PokeBinderColors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: PokeBinderColors.ink.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: kCardElevation,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (var i = 0; i < scans.length; i++) ...[
-            if (i > 0)
-              Divider(
-                height: 1,
-                indent: 62,
-                color: PokeBinderColors.ink.withValues(alpha: 0.06),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: Column(
+          children: [
+            for (var i = 0; i < scans.length; i++) ...[
+              if (i != 0)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 114,
+                  color: PokeBinderColors.ink.withValues(alpha: 0.06),
+                ),
+              _ScanRow(
+                entry: scans[i],
+                isNewest: i == 0,
+                onTap: () => onTapScan(scans[i].card),
               ),
-            _ScanRow(
-              entry: scans[i],
-              isNewest: i == 0,
-              onTap: () => onTapScan(scans[i].card),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
+/// Card row for a recent scan, styled to match [_DeckCardEntryRow] on the
+/// Deck Details screen: same thumbnail size/frame, chakraPetch bold name,
+/// `set · #number` subtitle line, and a [Wrap] of small icon+label tags
+/// (rarity, condition). The newest-scan dot and the relative-time badge
+/// replace the deck row's quantity badge, since scans don't carry a
+/// quantity of their own.
 class _ScanRow extends StatelessWidget {
   final _ScanEntry entry;
   final bool isNewest;
@@ -642,100 +659,185 @@ class _ScanRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final card = entry.card;
 
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-        child: Row(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(
-                    width: 40,
-                    height: 56,
-                    child: card.imageAssetPath != null
-                        ? Image.asset(card.imageAssetPath!, fit: BoxFit.cover)
-                        : DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: card.type.gradientColors,
-                              ),
-                            ),
-                          ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: PokeBinderColors.ink.withValues(alpha: 0.08),
+                      ),
+                      boxShadow: kCardElevation,
+                    ),
+                    child: CardThumbnail(
+                      card: card,
+                      width: 92,
+                      height: 127,
+                      borderRadius: 5,
+                    ),
                   ),
-                ),
-                if (isNewest)
-                  Positioned(
-                    top: -4,
-                    left: -4,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: PokeBinderColors.gold,
-                        border: Border.all(color: PokeBinderColors.white, width: 1.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: PokeBinderColors.gold.withValues(alpha: 0.7),
-                            blurRadius: 4,
-                          ),
-                        ],
+                  if (isNewest)
+                    Positioned(
+                      top: -4,
+                      left: -4,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: PokeBinderColors.gold,
+                          border: Border.all(color: PokeBinderColors.white, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: PokeBinderColors.gold.withValues(alpha: 0.7),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: PokeBinderSpacing.sp3),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    card.name,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: PokeBinderColors.ink,
+                ],
+              ),
+              const SizedBox(width: PokeBinderSpacing.sp3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      card.name,
+                      style: PokeBinderText.chakraPetch(const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: PokeBinderColors.ink,
+                      )),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${card.setName} · #${card.cardNumber} · ${card.rarity}',
-                    style: PokeBinderText.listRowSubtitle,
+                    const SizedBox(height: 4),
+                    Text(
+                      '${card.setName} · #${card.cardNumber}',
+                      style: PokeBinderText.listRowSubtitle,
+                    ),
+                    const SizedBox(height: 5),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        _RarityTag(rarity: card.rarity),
+                        _ConditionTag(code: card.condition),
+                      ],
+                    ),
+                    if (card.notes.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        card.notes,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: PokeBinderText.listRowSubtitle.copyWith(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: PokeBinderSpacing.sp2),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ScanTimeBadge(label: _relativeTime),
+                  const SizedBox(height: 6),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 16,
+                    color: PokeBinderColors.inkSoft,
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: PokeBinderSpacing.sp2),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _relativeTime,
-                  style: PokeBinderText.chakraPetch(TextStyle(
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.3,
-                    color: PokeBinderColors.inkSoft.withValues(alpha: 0.8),
-                  )),
-                ),
-                const SizedBox(height: 3),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 16,
-                  color: PokeBinderColors.inkSoft,
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+/// Small icon + label pairing for a card's rarity, matching the tag used
+/// on the Deck Details card rows (same [rarityIconFor] lookup).
+class _RarityTag extends StatelessWidget {
+  final String rarity;
+
+  const _RarityTag({required this.rarity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
+        const SizedBox(width: 4),
+        Text(rarity, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+/// Small icon + label pairing for a card's condition, matching the tag
+/// used on the Deck Details card rows (same [conditionIconFor] lookup and
+/// [kConditionOptions] label expansion).
+class _ConditionTag extends StatelessWidget {
+  final String code;
+
+  const _ConditionTag({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = kConditionOptions
+        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
+        .$1;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
+        const SizedBox(width: 4),
+        Text(label, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+/// Pill-shaped time badge, styled the same way as the Deck Details
+/// quantity badge (tinted background + bold colored label) but showing
+/// how long ago the card was scanned instead of a quantity.
+class _ScanTimeBadge extends StatelessWidget {
+  final String label;
+
+  const _ScanTimeBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.inkSoft.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: PokeBinderText.chakraPetch(const TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.bold,
+          color: PokeBinderColors.inkSoft,
+        )),
       ),
     );
   }
