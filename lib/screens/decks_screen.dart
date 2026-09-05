@@ -23,6 +23,36 @@ extension _DeckFormatAccent on DeckFormat {
   }
 }
 
+enum DeckSortOption { name, newest, oldest, cardCount }
+
+extension DeckSortOptionLabel on DeckSortOption {
+  String get label {
+    switch (this) {
+      case DeckSortOption.name:
+        return 'Alphabetical';
+      case DeckSortOption.newest:
+        return 'Newest';
+      case DeckSortOption.oldest:
+        return 'Oldest';
+      case DeckSortOption.cardCount:
+        return 'Most Cards';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case DeckSortOption.name:
+        return Icons.sort_by_alpha_rounded;
+      case DeckSortOption.newest:
+        return Icons.schedule_rounded;
+      case DeckSortOption.oldest:
+        return Icons.history_rounded;
+      case DeckSortOption.cardCount:
+        return Icons.style_rounded;
+    }
+  }
+}
+
 class DecksScreen extends StatefulWidget {
   const DecksScreen({super.key});
 
@@ -36,6 +66,7 @@ class _DecksScreenState extends State<DecksScreen> {
   DeckFormat? _formatFilter;
   bool _incompleteOnly = false;
   bool _viewingAllDecks = false;
+  DeckSortOption _deckSort = DeckSortOption.name;
 
   List<DeckData> get _visibleDecks {
     return _decks.where((deck) {
@@ -77,6 +108,14 @@ class _DecksScreenState extends State<DecksScreen> {
       final index = _decks.indexWhere((d) => d.id == deck.id);
       if (index == -1) return;
       _decks[index] = _decks[index].copyWith(isPinned: !_decks[index].isPinned);
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _deckSearch = '';
+      _formatFilter = null;
+      _incompleteOnly = false;
     });
   }
 
@@ -203,12 +242,23 @@ class _DecksScreenState extends State<DecksScreen> {
                   message: 'No decks yet — create one to get started.',
                 )
               else if (visibleDecks.isEmpty)
-                const _EmptyPanel(
-                  message: 'No decks match your search or filters.',
+                EmptyFilterState(
+                  title: 'No decks match your filters.',
+                  subtitle: 'Try a different search or filter.',
+                  onClearFilters: _clearFilters,
                 )
-              else
+              else ...[
+                if (visibleDecks.length > 1) ...[
+                  _DeckToolbar(
+                    sortOption: _deckSort,
+                    onSortChanged: (option) =>
+                        setState(() => _deckSort = option),
+                  ),
+                  const SizedBox(height: PokeBinderSpacing.sp3),
+                ],
                 _DeckListPanel(
                   decks: visibleDecks,
+                  sortOption: _deckSort,
                   readyCountOf: _readyCount,
                   isCompleteOf: _isComplete,
                   viewingAllDecks: _viewingAllDecks,
@@ -216,6 +266,7 @@ class _DecksScreenState extends State<DecksScreen> {
                   onSelect: _openDeckDetail,
                   onTogglePin: _toggleDeckPin,
                 ),
+              ],
             ],
           ),
         ),
@@ -347,6 +398,7 @@ class _DeckSection {
 
 class _DeckListPanel extends StatelessWidget {
   final List<DeckData> decks;
+  final DeckSortOption sortOption;
   final int Function(DeckData) readyCountOf;
   final bool Function(DeckData) isCompleteOf;
   final bool viewingAllDecks;
@@ -356,6 +408,7 @@ class _DeckListPanel extends StatelessWidget {
 
   const _DeckListPanel({
     required this.decks,
+    required this.sortOption,
     required this.readyCountOf,
     required this.isCompleteOf,
     required this.viewingAllDecks,
@@ -364,9 +417,22 @@ class _DeckListPanel extends StatelessWidget {
     required this.onTogglePin,
   });
 
+  int _compare(DeckData a, DeckData b) {
+    switch (sortOption) {
+      case DeckSortOption.name:
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      case DeckSortOption.newest:
+        return b.createdAt.compareTo(a.createdAt);
+      case DeckSortOption.oldest:
+        return a.createdAt.compareTo(b.createdAt);
+      case DeckSortOption.cardCount:
+        return b.cardCount.compareTo(a.cardCount);
+    }
+  }
+
   List<_DeckSection> _buildSections() {
-    final pinned = decks.where((d) => d.isPinned).toList();
-    final rest = decks.where((d) => !d.isPinned).toList();
+    final pinned = decks.where((d) => d.isPinned).toList()..sort(_compare);
+    final rest = decks.where((d) => !d.isPinned).toList()..sort(_compare);
 
     final sections = <_DeckSection>[];
 
@@ -475,6 +541,140 @@ class _DeckListPanel extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _DeckToolbar extends StatelessWidget {
+  final DeckSortOption sortOption;
+  final ValueChanged<DeckSortOption> onSortChanged;
+
+  const _DeckToolbar({
+    required this.sortOption,
+    required this.onSortChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _DeckSortSelector(selected: sortOption, onChanged: onSortChanged),
+      ],
+    );
+  }
+}
+
+class _DeckSortSelector extends StatelessWidget {
+  final DeckSortOption selected;
+  final ValueChanged<DeckSortOption> onChanged;
+
+  const _DeckSortSelector({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        highlightColor: PokeBinderColors.red.withValues(alpha: 0.06),
+        splashColor: PokeBinderColors.red.withValues(alpha: 0.06),
+        hoverColor: PokeBinderColors.red.withValues(alpha: 0.05),
+      ),
+      child: PopupMenuButton<DeckSortOption>(
+        initialValue: selected,
+        onSelected: onChanged,
+        offset: const Offset(0, 32),
+        color: PokeBinderColors.white,
+        elevation: 8,
+        shadowColor: PokeBinderColors.ink.withValues(alpha: 0.2),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        ),
+        constraints: const BoxConstraints(minWidth: 175),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        itemBuilder: (context) => [
+          for (final option in DeckSortOption.values)
+            PopupMenuItem(
+              value: option,
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: _DeckSortMenuRow(option: option, selected: option == selected),
+            ),
+        ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: PokeBinderColors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('SORT: ${selected.label.toUpperCase()}',
+                  style: PokeBinderText.resultCount),
+              const SizedBox(width: 1),
+              const Icon(
+                Icons.expand_more_rounded,
+                size: 15,
+                color: PokeBinderColors.inkSoft,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeckSortMenuRow extends StatelessWidget {
+  final DeckSortOption option;
+  final bool selected;
+
+  const _DeckSortMenuRow({required this.option, required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: PokeBinderSpacing.sp2,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: selected ? PokeBinderColors.red.withValues(alpha: 0.08) : null,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            option.icon,
+            size: 16,
+            color: selected ? PokeBinderColors.red : PokeBinderColors.inkSoft,
+          ),
+          const SizedBox(width: PokeBinderSpacing.sp2),
+          Expanded(
+            child: Text(
+              option.label,
+              style: PokeBinderText.chakraPetch(TextStyle(
+                fontSize: 12.5,
+                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+                color: selected
+                    ? PokeBinderColors.redDeep
+                    : PokeBinderColors.ink,
+              )),
+            ),
+          ),
+          if (selected)
+            const Padding(
+              padding: EdgeInsets.only(left: PokeBinderSpacing.sp1),
+              child: Icon(
+                Icons.check_rounded,
+                size: 15,
+                color: PokeBinderColors.red,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
