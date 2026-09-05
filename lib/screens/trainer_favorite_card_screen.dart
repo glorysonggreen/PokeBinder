@@ -5,26 +5,22 @@ import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 
-/// Lets the user pick a single card straight out of their collection to
-/// feature on their trainer card, the same way [DeckAddCardScreen] and
-/// [TradeListAddCardScreen] let them pick cards for a deck or trade list:
-/// search/filter/sort the collection, then confirm once at the bottom. The
-/// only difference is the selection itself — one card at a time via a radio
-/// button instead of per-row quantity steppers.
-class ChooseFavoriteCardScreen extends StatefulWidget {
+/// Lets the user pick a single card from their collection to feature as
+/// their trainer card's favorite — the same search/filter/sort experience
+/// as [DeckAddCardScreen], [TradeListAddCardScreen], and the wishlist's add
+/// screen, but a single selection instead of per-card quantities.
+class TrainerFavoriteCardScreen extends StatefulWidget {
   final String? initialCardId;
 
-  const ChooseFavoriteCardScreen({
-    super.key,
-    this.initialCardId,
-  });
+  const TrainerFavoriteCardScreen({super.key, this.initialCardId});
 
   @override
-  State<ChooseFavoriteCardScreen> createState() =>
-      _ChooseFavoriteCardScreenState();
+  State<TrainerFavoriteCardScreen> createState() =>
+      _TrainerFavoriteCardScreenState();
 }
 
-class _ChooseFavoriteCardScreenState extends State<ChooseFavoriteCardScreen> {
+class _TrainerFavoriteCardScreenState
+    extends State<TrainerFavoriteCardScreen> {
   late String? _selectedCardId = widget.initialCardId;
 
   String _query = '';
@@ -47,21 +43,13 @@ class _ChooseFavoriteCardScreenState extends State<ChooseFavoriteCardScreen> {
     _conditionFilter = null;
   }
 
-  void _select(String cardId) {
+  void _select(PokemonCardData card) {
     setState(() {
-      _selectedCardId = _selectedCardId == cardId ? null : cardId;
+      _selectedCardId = _selectedCardId == card.id ? null : card.id;
     });
   }
 
-  void _done() {
-    PokemonCardData? selected;
-    if (_selectedCardId != null) {
-      final matches =
-          PokemonCardData.library.where((c) => c.id == _selectedCardId);
-      selected = matches.isNotEmpty ? matches.first : null;
-    }
-    Navigator.of(context).pop(selected);
-  }
+  void _done() => Navigator.of(context).pop(_selectedCardId);
 
   @override
   Widget build(BuildContext context) {
@@ -93,8 +81,26 @@ class _ChooseFavoriteCardScreenState extends State<ChooseFavoriteCardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BackLink(
-                onTap: () => Navigator.of(context).maybePop(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  BackLink(onTap: () => Navigator.of(context).maybePop()),
+                  if (_selectedCardId != null)
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => setState(() => _selectedCardId = null),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          child: Text('Clear', style: PokeBinderText.backLink),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Choose Favorite Card', style: PokeBinderText.heading),
@@ -163,7 +169,7 @@ class _ChooseFavoriteCardScreenState extends State<ChooseFavoriteCardScreen> {
                               return _FavoriteCardPickerRow(
                                 card: card,
                                 selected: card.id == _selectedCardId,
-                                onTap: () => _select(card.id),
+                                onTap: () => _select(card),
                               );
                             },
                           ),
@@ -212,8 +218,7 @@ class _FavoriteCardPickerRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: kCardElevation,
                 ),
-                child:
-                    CardThumbnail(card: card, width: 40, height: 56, borderRadius: 8),
+                child: CardThumbnail(card: card, width: 40, height: 56, borderRadius: 8),
               ),
               const SizedBox(width: PokeBinderSpacing.sp3),
               Expanded(
@@ -248,43 +253,19 @@ class _FavoriteCardPickerRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: PokeBinderSpacing.sp2),
-              _FavoriteRadio(selected: selected),
+              Icon(
+                selected
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                size: 22,
+                color: selected
+                    ? PokeBinderColors.redDeep
+                    : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _FavoriteRadio extends StatelessWidget {
-  final bool selected;
-
-  const _FavoriteRadio({required this.selected});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: selected ? PokeBinderColors.redDeep : Colors.transparent,
-        border: Border.all(
-          color: selected
-              ? PokeBinderColors.redDeep
-              : PokeBinderColors.inkSoft.withValues(alpha: 0.35),
-          width: 1.6,
-        ),
-      ),
-      child: selected
-          ? const Icon(
-              Icons.check_rounded,
-              size: 13,
-              color: PokeBinderColors.white,
-            )
-          : null,
     );
   }
 }
