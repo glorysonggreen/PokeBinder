@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -11,7 +12,8 @@ import 'stats_screen.dart';
 import 'trainer_card_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String trainerName;
+  final TrainerProfileData profile;
+  final ValueChanged<TrainerProfileData>? onProfileChanged;
   final VoidCallback onOpenAllCards;
   final VoidCallback onOpenBinders;
   final ValueChanged<BinderData> onOpenBinder;
@@ -20,7 +22,8 @@ class HomeScreen extends StatefulWidget {
 
   const HomeScreen({
     super.key,
-    this.trainerName = 'Ash',
+    required this.profile,
+    this.onProfileChanged,
     required this.onOpenAllCards,
     required this.onOpenBinders,
     required this.onOpenBinder,
@@ -80,7 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => TrainerCardScreen(
-          trainerName: widget.trainerName,
+          profile: widget.profile,
+          onProfileChanged: widget.onProfileChanged,
           onBack: () => Navigator.of(context).maybePop(),
           onOpenBinder: (binder) {
             Navigator.of(context).pop();
@@ -157,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Welcome back, ${widget.trainerName}',
+                            'Welcome back, ${widget.profile.name}',
                             style: PokeBinderText.heading,
                           ),
                           const SizedBox(height: PokeBinderSpacing.sp1),

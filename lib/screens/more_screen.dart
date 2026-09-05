@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
+import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
 import 'settings_screen.dart';
 import 'stats_screen.dart';
@@ -7,7 +8,8 @@ import 'trainer_card_screen.dart';
 import 'wishlist_screen.dart';
 
 class MoreScreen extends StatelessWidget {
-  final String trainerName;
+  final TrainerProfileData profile;
+  final ValueChanged<TrainerProfileData>? onProfileChanged;
   final VoidCallback? onOpenStats;
   final VoidCallback? onOpenWishlist;
   final VoidCallback? onOpenSettings;
@@ -15,7 +17,8 @@ class MoreScreen extends StatelessWidget {
 
   const MoreScreen({
     super.key,
-    this.trainerName = 'Ash',
+    required this.profile,
+    this.onProfileChanged,
     this.onOpenStats,
     this.onOpenWishlist,
     this.onOpenSettings,
@@ -26,7 +29,8 @@ class MoreScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => TrainerCardScreen(
-          trainerName: trainerName,
+          profile: profile,
+          onProfileChanged: onProfileChanged,
           onBack: () => Navigator.of(context).maybePop(),
           onOpenBinder: onOpenBinder == null
               ? null

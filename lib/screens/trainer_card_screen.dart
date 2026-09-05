@@ -2,69 +2,73 @@ import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
+import 'trainer_card_edit_screen.dart';
 
-class TrainerCardScreen extends StatelessWidget {
-  final String trainerName;
-  final String trainerTitle;
-  final String favoritePokemon;
-  final String? bio;
+class TrainerCardScreen extends StatefulWidget {
+  final TrainerProfileData profile;
   final VoidCallback onBack;
   final ValueChanged<BinderData>? onOpenBinder;
+  final ValueChanged<TrainerProfileData>? onProfileChanged;
 
   const TrainerCardScreen({
     super.key,
-    this.trainerName = 'Ash',
-    this.trainerTitle = 'Gym Leader',
-    this.favoritePokemon = 'Pikachu',
-    this.bio,
+    required this.profile,
     required this.onBack,
     this.onOpenBinder,
+    this.onProfileChanged,
   });
+
+  @override
+  State<TrainerCardScreen> createState() => _TrainerCardScreenState();
+}
+
+class _TrainerCardScreenState extends State<TrainerCardScreen> {
+  late TrainerProfileData _profile = widget.profile;
 
   int get _totalCardCount =>
       PokemonCardData.library.fold(0, (sum, c) => sum + c.quantityOwned);
 
   PokemonCardData? get _favoriteCard {
-    final library = PokemonCardData.library;
-    if (library.isEmpty) return null;
-    final byName = library.where(
-      (c) => c.name.toLowerCase() == favoritePokemon.toLowerCase(),
-    );
-    return byName.isNotEmpty ? byName.first : library.first;
+    final id = _profile.favoriteCardId;
+    if (id == null) return null;
+    final matches = PokemonCardData.library.where((c) => c.id == id);
+    return matches.isNotEmpty ? matches.first : null;
   }
 
   BinderData? get _favoriteBinder {
-    final binders = BinderData.sampleBinders;
-    if (binders.isEmpty) return null;
-    final pinned = binders.where((b) => b.isPinned).toList()
-      ..sort((a, b) => b.createdAtOrEpoch.compareTo(a.createdAtOrEpoch));
-    if (pinned.isNotEmpty) return pinned.first;
-    final byRecency = [...binders]
-      ..sort((a, b) => b.createdAtOrEpoch.compareTo(a.createdAtOrEpoch));
-    return byRecency.first;
+    final id = _profile.favoriteBinderId;
+    if (id == null) return null;
+    final matches = BinderData.sampleBinders.where((b) => b.id == id);
+    return matches.isNotEmpty ? matches.first : null;
   }
 
   DeckData? get _favoriteDeck {
-    final decks = DeckData.sampleDecks;
-    if (decks.isEmpty) return null;
-    final pinned = decks.where((d) => d.isPinned).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    if (pinned.isNotEmpty) return pinned.first;
-    final byRecency = [...decks]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return byRecency.first;
+    final id = _profile.favoriteDeckId;
+    if (id == null) return null;
+    final matches = DeckData.sampleDecks.where((d) => d.id == id);
+    return matches.isNotEmpty ? matches.first : null;
   }
 
-  void _editComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Trainer card editing is coming soon')),
+  Future<void> _openEdit(BuildContext context) async {
+    final result = await Navigator.of(context).push<TrainerProfileData>(
+      MaterialPageRoute(
+        builder: (_) => TrainerCardEditScreen(profile: _profile),
+      ),
     );
+    if (result == null) return;
+    setState(() => _profile = result);
+    widget.onProfileChanged?.call(result);
   }
 
   @override
   Widget build(BuildContext context) {
+    final trainerName = _profile.name;
+    final trainerTitle = _profile.title;
+    final bio = _profile.bio;
     final binderCount = BinderData.sampleBinders.length;
     final deckCount = DeckData.sampleDecks.length;
     final favoriteCard = _favoriteCard;
@@ -87,12 +91,12 @@ class TrainerCardScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BackLink(onTap: onBack),
+                  BackLink(onTap: widget.onBack),
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
-                      onTap: () => _editComingSoon(context),
+                      onTap: () => _openEdit(context),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
@@ -167,13 +171,13 @@ class TrainerCardScreen extends StatelessWidget {
               favoriteBinder != null
                   ? _FavoriteBinderPanel(
                       binder: favoriteBinder,
-                      onTap: onOpenBinder == null
+                      onTap: widget.onOpenBinder == null
                           ? null
-                          : () => onOpenBinder!(favoriteBinder),
+                          : () => widget.onOpenBinder!(favoriteBinder),
                     )
                   : const _DashedInfoPanel(
                       icon: Icons.push_pin_outlined,
-                      message: 'Pin a binder to feature it here.',
+                      message: 'Set a favorite binder to feature it here.',
                     ),
               const SizedBox(height: PokeBinderSpacing.sp5),
 
@@ -183,7 +187,7 @@ class TrainerCardScreen extends StatelessWidget {
                   ? _FavoriteDeckPanel(deck: favoriteDeck)
                   : const _DashedInfoPanel(
                       icon: Icons.push_pin_outlined,
-                      message: 'Pin a deck to feature it here.',
+                      message: 'Set a favorite deck to feature it here.',
                     ),
               const SizedBox(height: PokeBinderSpacing.sp5),
 
