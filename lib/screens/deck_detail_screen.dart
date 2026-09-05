@@ -59,7 +59,20 @@ class DeckDetailScreen extends StatefulWidget {
 }
 
 class _DeckDetailScreenState extends State<DeckDetailScreen> {
+  static const _kCardsPerPage = 5;
+
   late DeckData _deck = widget.deck;
+  int _pageIndex = 0;
+
+  int get _pageCount =>
+      _deck.cards.isEmpty ? 1 : (_deck.cards.length / _kCardsPerPage).ceil();
+
+  List<DeckCardEntry> get _currentPageCards {
+    if (_deck.cards.isEmpty) return const [];
+    final start = _pageIndex * _kCardsPerPage;
+    final end = (start + _kCardsPerPage).clamp(0, _deck.cards.length);
+    return _deck.cards.sublist(start, end);
+  }
 
   int _readyCount(DeckData deck) {
     var ready = 0;
@@ -71,7 +84,12 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
   }
 
   void _updateDeck(DeckData updated) {
-    setState(() => _deck = updated);
+    setState(() {
+      _deck = updated;
+      final maxPageIndex =
+          updated.cards.isEmpty ? 0 : (updated.cards.length / _kCardsPerPage).ceil() - 1;
+      if (_pageIndex > maxPageIndex) _pageIndex = maxPageIndex;
+    });
     widget.onDeckChanged(updated);
   }
 
@@ -192,12 +210,41 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
                 const _EmptyPanel(
                   message: 'No cards in this deck yet — add some below.',
                 )
-              else
+              else ...[
                 _DeckCardListPanel(
-                  deck: _deck,
+                  cards: _currentPageCards,
                   cardOf: widget.cardOf,
                   onTapEntry: _editCardEntry,
                 ),
+                if (_deck.cards.length > _kCardsPerPage) ...[
+                  const SizedBox(height: PokeBinderSpacing.sp3),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PillButton(
+                          label: '‹ Prev',
+                          ghost: true,
+                          enabled: _pageIndex > 0,
+                          onTap: _pageIndex > 0
+                              ? () => setState(() => _pageIndex--)
+                              : () {},
+                        ),
+                      ),
+                      const SizedBox(width: PokeBinderSpacing.sp2),
+                      Expanded(
+                        child: PillButton(
+                          label: 'Next ›',
+                          ghost: true,
+                          enabled: _pageIndex < _pageCount - 1,
+                          onTap: _pageIndex < _pageCount - 1
+                              ? () => setState(() => _pageIndex++)
+                              : () {},
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
 
               const SizedBox(height: PokeBinderSpacing.sp4),
               PillButton(
@@ -593,12 +640,12 @@ class _DeckTypeBalanceBar extends StatelessWidget {
 }
 
 class _DeckCardListPanel extends StatelessWidget {
-  final DeckData deck;
+  final List<DeckCardEntry> cards;
   final PokemonCardData? Function(String cardId) cardOf;
   final ValueChanged<DeckCardEntry> onTapEntry;
 
   const _DeckCardListPanel({
-    required this.deck,
+    required this.cards,
     required this.cardOf,
     required this.onTapEntry,
   });
@@ -616,7 +663,7 @@ class _DeckCardListPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(13),
         child: Column(
           children: [
-            for (var i = 0; i < deck.cards.length; i++) ...[
+            for (var i = 0; i < cards.length; i++) ...[
               if (i != 0)
                 Divider(
                   height: 1,
@@ -625,9 +672,9 @@ class _DeckCardListPanel extends StatelessWidget {
                   color: PokeBinderColors.ink.withValues(alpha: 0.06),
                 ),
               _DeckCardEntryRow(
-                entry: deck.cards[i],
-                card: cardOf(deck.cards[i].cardId),
-                onTap: () => onTapEntry(deck.cards[i]),
+                entry: cards[i],
+                card: cardOf(cards[i].cardId),
+                onTap: () => onTapEntry(cards[i]),
               ),
             ],
           ],

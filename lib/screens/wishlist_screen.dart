@@ -76,11 +76,14 @@ class WishlistScreen extends StatefulWidget {
 }
 
 class _WishlistScreenState extends State<WishlistScreen> {
+  static const _kEntriesPerPage = 5;
+
   final List<WishlistEntry> _entries = WishlistEntry.sampleEntries;
   WishlistEntryKind _kind = WishlistEntryKind.wishlist;
   _WishlistSort _sort = _WishlistSort.newest;
   WishlistPriority? _priorityFilter;
   String _query = '';
+  int _pageIndex = 0;
 
   int get _wishlistCount =>
       _entries.where((e) => e.kind == WishlistEntryKind.wishlist).length;
@@ -231,6 +234,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     setState(() {
       _query = '';
       _priorityFilter = null;
+      _pageIndex = 0;
     });
   }
 
@@ -238,6 +242,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Widget build(BuildContext context) {
     final filtered = _filtered;
     final isWishlist = _kind == WishlistEntryKind.wishlist;
+
+    final pageCount = filtered.isEmpty
+        ? 1
+        : (filtered.length / _kEntriesPerPage).ceil();
+    final pageIndex = _pageIndex.clamp(0, pageCount - 1);
+    final pageStart = pageIndex * _kEntriesPerPage;
+    final pageEnd = (pageStart + _kEntriesPerPage).clamp(0, filtered.length);
+    final pageEntries =
+        filtered.isEmpty ? const <WishlistEntry>[] : filtered.sublist(pageStart, pageEnd);
 
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
@@ -271,6 +284,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       ? WishlistEntryKind.wishlist
                       : WishlistEntryKind.trade;
                   _priorityFilter = null;
+                  _pageIndex = 0;
                 }),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
@@ -298,7 +312,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 hint: isWishlist
                     ? 'Search cards to wishlist…'
                     : 'Search cards to trade…',
-                onChanged: (value) => setState(() => _query = value),
+                onChanged: (value) => setState(() {
+                  _query = value;
+                  _pageIndex = 0;
+                }),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
 
@@ -313,7 +330,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
                         label: 'All',
                         icon: Icons.apps_rounded,
                         active: _priorityFilter == null,
-                        onTap: () => setState(() => _priorityFilter = null),
+                        onTap: () => setState(() {
+                          _priorityFilter = null;
+                          _pageIndex = 0;
+                        }),
                       ),
                     ),
                     for (final priority in WishlistPriority.values)
@@ -323,7 +343,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
                           label: priority.label,
                           icon: priority.icon,
                           active: _priorityFilter == priority,
-                          onTap: () => setState(() => _priorityFilter = priority),
+                          onTap: () => setState(() {
+                            _priorityFilter = priority;
+                            _pageIndex = 0;
+                          }),
                         ),
                       ),
                   ],
@@ -341,7 +364,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   ),
                   _WishlistSortSelector(
                     selected: _sort,
-                    onChanged: (s) => setState(() => _sort = s),
+                    onChanged: (s) => setState(() {
+                      _sort = s;
+                      _pageIndex = 0;
+                    }),
                   ),
                 ],
               ),
@@ -354,11 +380,39 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       onClearFilters: _clearFilters,
                     )
                   : _WishlistCardListPanel(
-                      entries: filtered,
+                      entries: pageEntries,
                       onTapEntry: _openEdit,
                       onConfirmRemove: _confirmRemove,
                       onRemoved: _removeEntry,
                     ),
+              if (filtered.length > _kEntriesPerPage) ...[
+                const SizedBox(height: PokeBinderSpacing.sp3),
+                Row(
+                  children: [
+                    Expanded(
+                      child: PillButton(
+                        label: '‹ Prev',
+                        ghost: true,
+                        enabled: pageIndex > 0,
+                        onTap: pageIndex > 0
+                            ? () => setState(() => _pageIndex = pageIndex - 1)
+                            : () {},
+                      ),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    Expanded(
+                      child: PillButton(
+                        label: 'Next ›',
+                        ghost: true,
+                        enabled: pageIndex < pageCount - 1,
+                        onTap: pageIndex < pageCount - 1
+                            ? () => setState(() => _pageIndex = pageIndex + 1)
+                            : () {},
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: PokeBinderSpacing.sp3),
               PillButton(
                 label: isWishlist ? 'Add to Wishlist' : 'Add to Trade List',
