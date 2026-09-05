@@ -96,36 +96,36 @@ class DeckData {
     );
   }
 
-  static List<DeckData> get sampleDecks => [
-        DeckData(
-          id: 'deck-fire-starter-rush',
-          name: 'Fire Starter Rush',
-          format: DeckFormat.standard,
-          targetSize: 15,
-          description: 'Aggressive fire deck built around Charizard.',
-          createdAt: DateTime.now().subtract(const Duration(days: 12)),
-          isPinned: true,
-          cards: const [
-            DeckCardEntry(cardId: 'sample-charizard', quantity: 2),
-            DeckCardEntry(cardId: 'sample-fire-energy', quantity: 8),
-            DeckCardEntry(cardId: 'sample-potion', quantity: 3),
-            DeckCardEntry(cardId: 'sample-double-colorless-energy', quantity: 2),
-          ],
-        ),
-        DeckData(
-          id: 'deck-water-control',
-          name: 'Water Control',
-          format: DeckFormat.standard,
-          targetSize: 20,
-          description: 'Stall the game out with Blastoise and healing.',
-          createdAt: DateTime.now().subtract(const Duration(days: 4)),
-          cards: const [
-            DeckCardEntry(cardId: 'sample-squirtle', quantity: 3),
-            DeckCardEntry(cardId: 'sample-blastoise', quantity: 2),
-            DeckCardEntry(cardId: 'sample-potion', quantity: 4),
-            DeckCardEntry(cardId: 'sample-gyarados', quantity: 2),
-            DeckCardEntry(cardId: 'sample-vaporeon', quantity: 2),
-          ],
-        ),
-      ];
+  static final List<DeckData> library = [
+    DeckData(
+      id: 'deck-fire-starter-rush',
+      name: 'Fire Starter Rush',
+      format: DeckFormat.standard,
+      targetSize: 15,
+      description: 'Aggressive fire deck built around Charizard.',
+      createdAt: DateTime.now().subtract(const Duration(days: 12)),
+      isPinned: true,
+      cards: const [
+        DeckCardEntry(cardId: 'sample-charizard', quantity: 2),
+        DeckCardEntry(cardId: 'sample-fire-energy', quantity: 8),
+        DeckCardEntry(cardId: 'sample-potion', quantity: 3),
+        DeckCardEntry(cardId: 'sample-double-colorless-energy', quantity: 2),
+      ],
+    ),
+    DeckData(
+      id: 'deck-water-control',
+      name: 'Water Control',
+      format: DeckFormat.standard,
+      targetSize: 20,
+      description: 'Stall the game out with Blastoise and healing.',
+      createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      cards: const [
+        DeckCardEntry(cardId: 'sample-squirtle', quantity: 3),
+        DeckCardEntry(cardId: 'sample-blastoise', quantity: 2),
+        DeckCardEntry(cardId: 'sample-potion', quantity: 4),
+        DeckCardEntry(cardId: 'sample-gyarados', quantity: 2),
+        DeckCardEntry(cardId: 'sample-vaporeon', quantity: 2),
+      ],
+    ),
+  ];
 }

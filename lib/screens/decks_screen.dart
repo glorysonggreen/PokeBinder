@@ -61,7 +61,7 @@ class DecksScreen extends StatefulWidget {
 }
 
 class _DecksScreenState extends State<DecksScreen> {
-  final List<DeckData> _decks = DeckData.sampleDecks;
+  final List<DeckData> _decks = DeckData.library;
   String _deckSearch = '';
   DeckFormat? _formatFilter;
   bool _incompleteOnly = false;
