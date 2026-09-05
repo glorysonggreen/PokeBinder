@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
+import 'card_details_screen.dart';
+import 'card_form_screen.dart';
 
 /// Lets the user pick a single card from their collection to feature as
-/// their trainer card's favorite — the same search/filter/sort experience
-/// as [DeckAddCardScreen], [TradeListAddCardScreen], and the wishlist's add
-/// screen, but a single selection instead of per-card quantities.
+/// their trainer card's favorite — the same search/filter/sort experience,
+/// row layout, and tap-to-view-details behavior as [DeckAddCardScreen],
+/// [TradeListAddCardScreen], and the wishlist's add screen, but a single
+/// selection instead of per-card quantities.
 class TrainerFavoriteCardScreen extends StatefulWidget {
   final String? initialCardId;
 
@@ -22,6 +26,8 @@ class TrainerFavoriteCardScreen extends StatefulWidget {
 class _TrainerFavoriteCardScreenState
     extends State<TrainerFavoriteCardScreen> {
   late String? _selectedCardId = widget.initialCardId;
+
+  final List<BinderData> _binders = BinderData.sampleBinders;
 
   String _query = '';
   CardSortOption _sortOption = CardSortOption.alphabetical;
@@ -46,6 +52,35 @@ class _TrainerFavoriteCardScreenState
   void _select(PokemonCardData card) {
     setState(() {
       _selectedCardId = _selectedCardId == card.id ? null : card.id;
+    });
+  }
+
+  Future<void> _openCardDetails(PokemonCardData card) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CardDetailsScreen(
+          card: card,
+          binders: _binders,
+          onSave: _handleCardSaved,
+        ),
+      ),
+    );
+  }
+
+  void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
+    setState(() {
+      final index =
+          PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
+      if (index == -1) return;
+      if (result.deleted) {
+        PokemonCardData.library.removeAt(index);
+        if (_selectedCardId == oldCard.id) _selectedCardId = null;
+      } else {
+        PokemonCardData.library[index] = result.card!;
+        if (_selectedCardId == oldCard.id && result.card!.quantityOwned <= 0) {
+          _selectedCardId = null;
+        }
+      }
     });
   }
 
@@ -161,7 +196,7 @@ class _TrainerFavoriteCardScreenState
                             separatorBuilder: (_, __) => Divider(
                               height: 1,
                               thickness: 1,
-                              indent: 62,
+                              indent: 82,
                               color: PokeBinderColors.ink.withValues(alpha: 0.06),
                             ),
                             itemBuilder: (context, index) {
@@ -169,7 +204,8 @@ class _TrainerFavoriteCardScreenState
                               return _FavoriteCardPickerRow(
                                 card: card,
                                 selected: card.id == _selectedCardId,
-                                onTap: () => _select(card),
+                                onSelect: () => _select(card),
+                                onTapCard: () => _openCardDetails(card),
                               );
                             },
                           ),
@@ -193,79 +229,175 @@ class _TrainerFavoriteCardScreenState
 class _FavoriteCardPickerRow extends StatelessWidget {
   final PokemonCardData card;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback onSelect;
+  final VoidCallback onTapCard;
 
   const _FavoriteCardPickerRow({
     required this.card,
     required this.selected,
-    required this.onTap,
+    required this.onSelect,
+    required this.onTapCard,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return Container(
       color: selected
           ? PokeBinderColors.red.withValues(alpha: 0.045)
           : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
-          child: Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: kCardElevation,
-                ),
-                child: CardThumbnail(card: card, width: 40, height: 56, borderRadius: 8),
-              ),
-              const SizedBox(width: PokeBinderSpacing.sp3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTapCard,
+                borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      card.name,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: PokeBinderColors.ink,
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        boxShadow: kCardElevation,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      child: CardThumbnail(
+                          card: card, width: 56, height: 78, borderRadius: 5),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${card.setName} · #${card.cardNumber} · ${card.rarity}',
-                      style: PokeBinderText.listRowSubtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      'Own ${card.quantityOwned}',
-                      style: PokeBinderText.listRowSubtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: PokeBinderSpacing.sp3),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            card.name,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: PokeBinderColors.ink,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${card.setName} · #${card.cardNumber} · ${card.rarity}',
+                            style: PokeBinderText.listRowSubtitle
+                                .copyWith(fontSize: 10),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Own ${card.quantityOwned}',
+                            style: PokeBinderText.listRowSubtitle.copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: PokeBinderColors.ink,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          _CardMetaRow(card: card),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: PokeBinderSpacing.sp2),
-              Icon(
-                selected
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                size: 22,
-                color: selected
-                    ? PokeBinderColors.redDeep
-                    : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+            ),
+          ),
+          const SizedBox(width: PokeBinderSpacing.sp2),
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onSelect,
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 22,
+                  color: selected
+                      ? PokeBinderColors.redDeep
+                      : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Second line of extra card info shown under the "Own …" line: condition,
+/// binder location, and estimated value, matching the icon+label tags used
+/// on the Deck Details, Wishlist, and Trade List card rows so the same
+/// fields read the same way everywhere in the app.
+class _CardMetaRow extends StatelessWidget {
+  final PokemonCardData card;
+
+  const _CardMetaRow({required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    final metaStyle = PokeBinderText.listRowSubtitle.copyWith(fontSize: 9);
+    return Wrap(
+      spacing: 7,
+      runSpacing: 2,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (card.condition.isNotEmpty)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(conditionIconFor(card.condition),
+                  size: 11, color: PokeBinderColors.teal),
+              const SizedBox(width: 3),
+              Text(
+                kConditionOptions
+                    .firstWhere((c) => c.$2 == card.condition,
+                        orElse: () => (card.condition, card.condition))
+                    .$1,
+                style: metaStyle.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: PokeBinderColors.teal,
+                ),
               ),
             ],
           ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.folder_outlined, size: 11, color: PokeBinderColors.inkSoft),
+            const SizedBox(width: 3),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 90),
+              child: Text(
+                card.binderName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: metaStyle,
+              ),
+            ),
+          ],
         ),
-      ),
+        if (card.estimatedValue > 0)
+          Text(
+            '\$${card.estimatedValue.toStringAsFixed(0)}',
+            style: metaStyle.copyWith(
+              fontWeight: FontWeight.bold,
+              color: PokeBinderColors.goldDeep,
+            ),
+          ),
+      ],
     );
   }
 }

@@ -87,7 +87,7 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
   @override
   Widget build(BuildContext context) {
     final binders = BinderData.sampleBinders;
-    final decks = DeckData.sampleDecks;
+    final decks = DeckData.library;
 
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,

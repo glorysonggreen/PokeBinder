@@ -6,6 +6,7 @@ import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
+import 'card_details_screen.dart';
 import 'trainer_card_edit_screen.dart';
 
 class TrainerCardScreen extends StatefulWidget {
@@ -49,7 +50,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
   DeckData? get _favoriteDeck {
     final id = _profile.favoriteDeckId;
     if (id == null) return null;
-    final matches = DeckData.sampleDecks.where((d) => d.id == id);
+    final matches = DeckData.library.where((d) => d.id == id);
     return matches.isNotEmpty ? matches.first : null;
   }
 
@@ -64,13 +65,39 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
     widget.onProfileChanged?.call(result);
   }
 
+  Future<void> _openFavoriteCardDetails(PokemonCardData card) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CardDetailsScreen(
+          card: card,
+          binders: BinderData.sampleBinders,
+          onSave: (oldCard, result) {
+            setState(() {
+              final index =
+                  PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
+              if (index == -1) return;
+              if (result.deleted) {
+                PokemonCardData.library.removeAt(index);
+                if (_profile.favoriteCardId == oldCard.id) {
+                  _profile = _profile.copyWith(favoriteCardId: null);
+                }
+              } else {
+                PokemonCardData.library[index] = result.card!;
+              }
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final trainerName = _profile.name;
     final trainerTitle = _profile.title;
     final bio = _profile.bio;
     final binderCount = BinderData.sampleBinders.length;
-    final deckCount = DeckData.sampleDecks.length;
+    final deckCount = DeckData.library.length;
     final favoriteCard = _favoriteCard;
     final favoriteBinder = _favoriteBinder;
     final favoriteDeck = _favoriteDeck;
@@ -159,7 +186,10 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
               Text('FAVORITE CARD', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
               favoriteCard != null
-                  ? _FavoriteCardPanel(card: favoriteCard)
+                  ? _FavoriteCardPanel(
+                      card: favoriteCard,
+                      onTap: () => _openFavoriteCardDetails(favoriteCard),
+                    )
                   : const _DashedInfoPanel(
                       icon: Icons.star_outline_rounded,
                       message: 'Set a favorite card to feature it here.',
@@ -391,76 +421,168 @@ class _TrainerHeaderPanel extends StatelessWidget {
   }
 }
 
+/// Displays the trainer's favorite card the same way a card entry reads on
+/// the Deck Details list: thumbnail, name, set/number, an "Own N" line,
+/// rarity + condition tags, and an italic notes line. Tapping the panel
+/// opens the card's details, signposted by a trailing chevron.
 class _FavoriteCardPanel extends StatelessWidget {
   final PokemonCardData card;
+  final VoidCallback onTap;
 
-  const _FavoriteCardPanel({required this.card});
+  const _FavoriteCardPanel({required this.card, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         boxShadow: kCardElevation,
       ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 38,
-            child: AspectRatio(
-              aspectRatio: kPokemonCardAspectRatio,
-              child: PokemonCard(card: card),
-            ),
-          ),
-          const SizedBox(width: PokeBinderSpacing.sp3),
-          Expanded(
-            child: Column(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 12,
-                      color: PokeBinderColors.goldDeep,
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: PokeBinderColors.ink.withValues(alpha: 0.08),
                     ),
-                    const SizedBox(width: 5),
-                    Text(
-                      'Favorite Card',
-                      style: PokeBinderText.chipLabel.copyWith(
-                        color: PokeBinderColors.goldDeep,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  card.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: PokeBinderText.listRowTitle.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    boxShadow: kCardElevation,
+                  ),
+                  child: CardThumbnail(
+                    card: card,
+                    width: 92,
+                    height: 127,
+                    borderRadius: 5,
                   ),
                 ),
-                Text(
-                  '${card.setName} · #${card.cardNumber}',
-                  overflow: TextOverflow.ellipsis,
-                  style: PokeBinderText.listRowSubtitle,
+                const SizedBox(width: PokeBinderSpacing.sp3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        card.name,
+                        style: PokeBinderText.chakraPetch(const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: PokeBinderColors.ink,
+                        )),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${card.setName} · #${card.cardNumber}',
+                        style: PokeBinderText.listRowSubtitle,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Own ${card.quantityOwned}',
+                        style: PokeBinderText.listRowSubtitle.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: PokeBinderColors.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _RarityTag(rarity: card.rarity),
+                          _ConditionTag(code: card.condition),
+                        ],
+                      ),
+                      if (card.notes.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          card.notes,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: PokeBinderText.listRowSubtitle.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: PokeBinderSpacing.sp1),
+                SizedBox(
+                  height: 127,
+                  child: Center(
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: PokeBinderColors.inkSoft,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
+
+/// Small icon + label pairing for a card's rarity, reusing the app's
+/// shared [rarityIconFor] lookup so it stays in sync with the dropdown
+/// icons used elsewhere (card form, wishlist, trade entry).
+class _RarityTag extends StatelessWidget {
+  final String rarity;
+
+  const _RarityTag({required this.rarity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
+        const SizedBox(width: 4),
+        Text(rarity, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+/// Small icon + label pairing for a card's condition, reusing the app's
+/// shared [conditionIconFor] lookup and expanding the stored code (e.g.
+/// 'NM') to its full label via [kConditionOptions] — same source of
+/// truth as the condition dropdown in the card/wishlist/trade forms.
+class _ConditionTag extends StatelessWidget {
+  final String code;
+
+  const _ConditionTag({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = kConditionOptions
+        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
+        .$1;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
+        const SizedBox(width: 4),
+        Text(label, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+
 
 class _TrainerStatBox extends StatelessWidget {
   final String value;

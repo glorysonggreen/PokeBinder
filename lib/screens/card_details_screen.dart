@@ -1,12 +1,14 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
+import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/interactive_3d_card.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'card_form_screen.dart';
+import 'deck_form_screen.dart';
 
 class CardDetailsScreen extends StatefulWidget {
   final PokemonCardData card;
@@ -59,6 +61,63 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
         SnackBar(content: Text('Saved changes to ${result.card!.name}')),
       );
     }
+  }
+
+  Future<void> _addToDeck() async {
+    if (_card.quantityOwned <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("You don't own any copies of ${_card.name} to add."),
+        ),
+      );
+      return;
+    }
+
+    final result = await showModalBottomSheet<_AddToDeckSheetResult>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _AddToDeckSheet(card: _card),
+    );
+    if (result == null || !mounted) return;
+
+    if (result.createNew) {
+      final formResult = await Navigator.of(context).push<DeckFormResult>(
+        MaterialPageRoute(builder: (_) => const DeckFormScreen()),
+      );
+      if (formResult == null || formResult.deck == null || !mounted) return;
+      final newDeck = formResult.deck!;
+      DeckData.library.add(newDeck);
+      _applyCardToDeck(newDeck, 1);
+      return;
+    }
+
+    if (result.deck != null) {
+      _applyCardToDeck(result.deck!, result.quantity);
+    }
+  }
+
+  void _applyCardToDeck(DeckData deck, int quantity) {
+    final index = DeckData.library.indexWhere((d) => d.id == deck.id);
+    if (index == -1) return;
+
+    final cards = [...DeckData.library[index].cards];
+    final entryIndex = cards.indexWhere((c) => c.cardId == _card.id);
+    if (entryIndex == -1) {
+      cards.add(DeckCardEntry(cardId: _card.id, quantity: quantity));
+    } else {
+      cards[entryIndex] = cards[entryIndex].copyWith(quantity: quantity);
+    }
+    DeckData.library[index] = DeckData.library[index].copyWith(cards: cards);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${_card.name} · $quantity in "${deck.name}"',
+        ),
+      ),
+    );
   }
 
   @override
@@ -189,11 +248,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                     child: PillButton(
                       label: 'Add to Deck',
                       icon: Icons.add,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Added ${card.name} to deck')),
-                        );
-                      },
+                      onTap: _addToDeck,
                     ),
                   ),
                 ],
@@ -379,6 +434,309 @@ class _StatBox extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Result of the [_AddToDeckSheet]: either an existing deck plus the
+/// quantity of this card it should now hold, or a request to create a
+/// brand-new deck first (handled by the caller, which then adds the card
+/// once the new deck exists).
+class _AddToDeckSheetResult {
+  final DeckData? deck;
+  final int quantity;
+  final bool createNew;
+
+  const _AddToDeckSheetResult.pick(this.deck, this.quantity)
+      : createNew = false;
+
+  const _AddToDeckSheetResult.createNew()
+      : deck = null,
+        quantity = 0,
+        createNew = true;
+}
+
+/// Bottom sheet for the "Add to Deck" quick action on the Card Details
+/// screen: pick which deck should hold this card, and how many copies
+/// (capped at how many the trainer actually owns), or jump into creating
+/// a brand-new deck if none of the existing ones fit.
+class _AddToDeckSheet extends StatefulWidget {
+  final PokemonCardData card;
+
+  const _AddToDeckSheet({required this.card});
+
+  @override
+  State<_AddToDeckSheet> createState() => _AddToDeckSheetState();
+}
+
+class _AddToDeckSheetState extends State<_AddToDeckSheet> {
+  DeckData? _selectedDeck;
+  late int _quantity = math.min(1, widget.card.quantityOwned);
+
+  int _currentQuantityIn(DeckData deck) {
+    final match = deck.cards.where((c) => c.cardId == widget.card.id);
+    return match.isEmpty ? 0 : match.first.quantity;
+  }
+
+  void _selectDeck(DeckData deck) {
+    setState(() {
+      _selectedDeck = deck;
+      final existing = _currentQuantityIn(deck);
+      _quantity = existing > 0
+          ? existing
+          : math.min(1, widget.card.quantityOwned);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final decks = DeckData.library;
+    final maxQuantity = widget.card.quantityOwned;
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.all(PokeBinderSpacing.sp3),
+        padding: const EdgeInsets.fromLTRB(
+          PokeBinderSpacing.sp4,
+          PokeBinderSpacing.sp3,
+          PokeBinderSpacing.sp4,
+          PokeBinderSpacing.sp4,
+        ),
+        decoration: BoxDecoration(
+          color: PokeBinderColors.cream,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: kCardElevation,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: PokeBinderColors.ink.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: PokeBinderSpacing.sp3),
+            Text('Add to Deck', style: PokeBinderText.heading),
+            const SizedBox(height: PokeBinderSpacing.sp1),
+            Text(
+              'Choose which deck should feature ${widget.card.name}.',
+              style: PokeBinderText.subtitle,
+            ),
+            const SizedBox(height: PokeBinderSpacing.sp3),
+
+            if (decks.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: PokeBinderSpacing.sp3),
+                child: Text(
+                  "You don't have any decks yet.",
+                  style: PokeBinderText.subtitle,
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 240),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: PokeBinderColors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(13),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: decks.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: PokeBinderColors.ink.withValues(alpha: 0.06),
+                      ),
+                      itemBuilder: (context, index) {
+                        final deck = decks[index];
+                        final inDeck = _currentQuantityIn(deck);
+                        final selected = _selectedDeck?.id == deck.id;
+                        return Material(
+                          color: selected
+                              ? PokeBinderColors.red.withValues(alpha: 0.045)
+                              : Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _selectDeck(deck),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              child: Row(
+                                children: [
+                                  Icon(deck.format.icon,
+                                      size: 16,
+                                      color: PokeBinderColors.inkSoft),
+                                  const SizedBox(width: PokeBinderSpacing.sp2),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          deck.name,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: PokeBinderColors.ink,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          inDeck > 0
+                                              ? '${deck.format.label} · $inDeck in deck'
+                                              : deck.format.label,
+                                          style:
+                                              PokeBinderText.listRowSubtitle,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    selected
+                                        ? Icons.radio_button_checked_rounded
+                                        : Icons.radio_button_unchecked_rounded,
+                                    size: 20,
+                                    color: selected
+                                        ? PokeBinderColors.redDeep
+                                        : PokeBinderColors.inkSoft
+                                            .withValues(alpha: 0.4),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: PokeBinderSpacing.sp2),
+
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => Navigator.of(context)
+                    .pop(const _AddToDeckSheetResult.createNew()),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_circle_outline_rounded,
+                          size: 16, color: PokeBinderColors.redDeep),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Create a new deck',
+                        style: PokeBinderText.backLink,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            if (_selectedDeck != null) ...[
+              const SizedBox(height: PokeBinderSpacing.sp2),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Copies in "${_selectedDeck!.name}"',
+                    style: PokeBinderText.fieldLabel
+                        .copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _StepperButton(
+                        icon: Icons.remove_rounded,
+                        onTap: _quantity > 1
+                            ? () => setState(() => _quantity--)
+                            : null,
+                      ),
+                      SizedBox(
+                        width: 28,
+                        child: Text(
+                          '$_quantity',
+                          textAlign: TextAlign.center,
+                          style: PokeBinderText.chakraPetch(const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: PokeBinderColors.redDeep,
+                          )),
+                        ),
+                      ),
+                      _StepperButton(
+                        icon: Icons.add_rounded,
+                        onTap: _quantity < maxQuantity
+                            ? () => setState(() => _quantity++)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: PokeBinderSpacing.sp3),
+
+            PillButton(
+              label: 'Add',
+              icon: Icons.check,
+              enabled: _selectedDeck != null && maxQuantity > 0,
+              onTap: () => Navigator.of(context).pop(
+                _AddToDeckSheetResult.pick(_selectedDeck, _quantity),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  const _StepperButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: PokeBinderColors.cream2,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(
+            icon,
+            size: 16,
+            color: onTap != null
+                ? PokeBinderColors.redDeep
+                : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+          ),
+        ),
       ),
     );
   }
