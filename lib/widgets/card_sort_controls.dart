@@ -6,8 +6,8 @@ import '../theme/pokebinder_theme.dart';
 /// All Cards screen and the deck-builder's Add Cards screen so both offer
 /// an identical sorting experience.
 enum CardSortOption {
-  time,
   alphabetical,
+  time,
   pokemon,
   trainer,
   energy,
@@ -21,10 +21,10 @@ enum CardSortOption {
 extension CardSortOptionLabel on CardSortOption {
   String get label {
     switch (this) {
-      case CardSortOption.time:
-        return 'Time';
       case CardSortOption.alphabetical:
         return 'Alphabetical';
+      case CardSortOption.time:
+        return 'Time';
       case CardSortOption.pokemon:
         return 'Pokémon';
       case CardSortOption.trainer:
@@ -46,10 +46,10 @@ extension CardSortOptionLabel on CardSortOption {
 
   IconData get icon {
     switch (this) {
-      case CardSortOption.time:
-        return Icons.schedule_rounded;
       case CardSortOption.alphabetical:
         return Icons.sort_by_alpha_rounded;
+      case CardSortOption.time:
+        return Icons.schedule_rounded;
       case CardSortOption.pokemon:
         return Icons.catching_pokemon;
       case CardSortOption.trainer:

@@ -12,15 +12,17 @@ import 'card_form_screen.dart';
 
 export '../widgets/card_sort_controls.dart' show CardSortOption, TimeSortDirection;
 
-enum BinderSortOption { name, recent, cardCount }
+enum BinderSortOption { name, newest, oldest, cardCount }
 
 extension BinderSortOptionLabel on BinderSortOption {
   String get label {
     switch (this) {
       case BinderSortOption.name:
-        return 'Alphabetically';
-      case BinderSortOption.recent:
-        return 'Recently Added';
+        return 'Alphabetical';
+      case BinderSortOption.newest:
+        return 'Newest';
+      case BinderSortOption.oldest:
+        return 'Oldest';
       case BinderSortOption.cardCount:
         return 'Most Cards';
     }
@@ -30,8 +32,10 @@ extension BinderSortOptionLabel on BinderSortOption {
     switch (this) {
       case BinderSortOption.name:
         return Icons.sort_by_alpha_rounded;
-      case BinderSortOption.recent:
+      case BinderSortOption.newest:
         return Icons.schedule_rounded;
+      case BinderSortOption.oldest:
+        return Icons.history_rounded;
       case BinderSortOption.cardCount:
         return Icons.style_rounded;
     }
@@ -286,6 +290,7 @@ class _BindersScreenState extends State<BindersScreen> {
                 child: _tabIndex == 0
                     ? _BindersTab(
                         binders: filteredBinders,
+                        search: _binderSearch,
                         unassignedCount: _unassignedCards.length,
                         binderSort: _binderSort,
                         viewingAllBinders: _viewingAllBinders,
@@ -298,6 +303,8 @@ class _BindersScreenState extends State<BindersScreen> {
                         onSelectUnassigned: _openUnassignedDetail,
                         onTogglePin: _toggleBinderPin,
                         onNewBinder: _openNewBinder,
+                        onClearFilters: () =>
+                            setState(() => _binderSearch = ''),
                       )
                     : _AllCardsTab(
                         cards: _allCards,
@@ -333,6 +340,14 @@ class _BindersScreenState extends State<BindersScreen> {
                         onTimeDirectionChanged: (d) =>
                             setState(() => _timeDirection = d),
                         onCardTap: _openCard,
+                        onClearFilters: () => setState(() {
+                          _cardSearch = '';
+                          _typeFilter = null;
+                          _subtypeFilter = null;
+                          _setFilter = null;
+                          _rarityFilter = null;
+                          _conditionFilter = null;
+                        }),
                       ),
               ),
             ],
@@ -400,6 +415,7 @@ class _TopTabBar extends StatelessWidget {
 
 class _BindersTab extends StatelessWidget {
   final List<BinderData> binders;
+  final String search;
   final int unassignedCount;
   final BinderSortOption binderSort;
   final bool viewingAllBinders;
@@ -410,9 +426,11 @@ class _BindersTab extends StatelessWidget {
   final VoidCallback onSelectUnassigned;
   final ValueChanged<BinderData> onTogglePin;
   final VoidCallback onNewBinder;
+  final VoidCallback onClearFilters;
 
   const _BindersTab({
     required this.binders,
+    required this.search,
     required this.unassignedCount,
     required this.binderSort,
     required this.viewingAllBinders,
@@ -423,10 +441,13 @@ class _BindersTab extends StatelessWidget {
     required this.onSelectUnassigned,
     required this.onTogglePin,
     required this.onNewBinder,
+    required this.onClearFilters,
   });
 
   @override
   Widget build(BuildContext context) {
+    final showEmptyState = binders.isEmpty && search.isNotEmpty;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp6),
       child: Column(
@@ -443,23 +464,31 @@ class _BindersTab extends StatelessWidget {
             onTap: onNewBinder,
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
-          if (binders.length > 1) ...[
-            _BinderToolbar(
+          if (showEmptyState)
+            EmptyFilterState(
+              title: 'No binders match your search.',
+              subtitle: 'Try a different search term.',
+              onClearFilters: onClearFilters,
+            )
+          else ...[
+            if (binders.length > 1) ...[
+              _BinderToolbar(
+                sortOption: binderSort,
+                onSortChanged: onBinderSortChanged,
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp3),
+            ],
+            _BinderListPanel(
+              binders: binders,
+              unassignedCount: unassignedCount,
               sortOption: binderSort,
-              onSortChanged: onBinderSortChanged,
+              viewingAllBinders: viewingAllBinders,
+              onToggleViewAllBinders: onToggleViewAllBinders,
+              onSelect: onSelectBinder,
+              onSelectUnassigned: onSelectUnassigned,
+              onTogglePin: onTogglePin,
             ),
-            const SizedBox(height: PokeBinderSpacing.sp3),
           ],
-          _BinderListPanel(
-            binders: binders,
-            unassignedCount: unassignedCount,
-            sortOption: binderSort,
-            viewingAllBinders: viewingAllBinders,
-            onToggleViewAllBinders: onToggleViewAllBinders,
-            onSelect: onSelectBinder,
-            onSelectUnassigned: onSelectUnassigned,
-            onTogglePin: onTogglePin,
-          ),
         ],
       ),
     );
@@ -485,6 +514,7 @@ class _AllCardsTab extends StatelessWidget {
   final ValueChanged<String?> onConditionFilterChanged;
   final ValueChanged<TimeSortDirection> onTimeDirectionChanged;
   final ValueChanged<PokemonCardData> onCardTap;
+  final VoidCallback onClearFilters;
 
   const _AllCardsTab({
     required this.cards,
@@ -505,6 +535,7 @@ class _AllCardsTab extends StatelessWidget {
     required this.onConditionFilterChanged,
     required this.onTimeDirectionChanged,
     required this.onCardTap,
+    required this.onClearFilters,
   });
 
   @override
@@ -555,7 +586,11 @@ class _AllCardsTab extends StatelessWidget {
           ),
           const SizedBox(height: PokeBinderSpacing.sp2),
           if (filtered.isEmpty)
-            const _EmptyState()
+            EmptyFilterState(
+              title: 'No cards match your filters.',
+              subtitle: 'Try a different search or filter.',
+              onClearFilters: onClearFilters,
+            )
           else
             LayoutBuilder(
               builder: (context, constraints) {
@@ -657,8 +692,10 @@ class _BinderListPanel extends StatelessWidget {
     switch (sortOption) {
       case BinderSortOption.name:
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      case BinderSortOption.recent:
+      case BinderSortOption.newest:
         return b.createdAtOrEpoch.compareTo(a.createdAtOrEpoch);
+      case BinderSortOption.oldest:
+        return a.createdAtOrEpoch.compareTo(b.createdAtOrEpoch);
       case BinderSortOption.cardCount:
         return b.cardCount.compareTo(a.cardCount);
     }
@@ -1034,33 +1071,6 @@ class _BinderSortMenuRow extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 26),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.search_off_rounded,
-              size: 26,
-              color: PokeBinderColors.inkSoft.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: PokeBinderSpacing.sp2),
-            Text(
-              'No cards match your search.',
-              style: PokeBinderText.subtitle,
-            ),
-          ],
-        ),
       ),
     );
   }

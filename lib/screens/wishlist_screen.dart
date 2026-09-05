@@ -10,17 +10,17 @@ import 'trade_list_add_card_screen.dart';
 import 'trade_entry_form_screen.dart';
 import 'wishlist_form_result.dart';
 
-enum _WishlistSort { newest, oldest, nameAsc, priorityFirst, valueHigh }
+enum _WishlistSort { nameAsc, newest, oldest, priorityFirst, valueHigh }
 
 extension on _WishlistSort {
   String get label {
     switch (this) {
+      case _WishlistSort.nameAsc:
+        return 'Alphabetical';
       case _WishlistSort.newest:
         return 'Newest';
       case _WishlistSort.oldest:
         return 'Oldest';
-      case _WishlistSort.nameAsc:
-        return 'Name A–Z';
       case _WishlistSort.priorityFirst:
         return 'Priority';
       case _WishlistSort.valueHigh:
@@ -30,12 +30,12 @@ extension on _WishlistSort {
 
   IconData get icon {
     switch (this) {
+      case _WishlistSort.nameAsc:
+        return Icons.sort_by_alpha_rounded;
       case _WishlistSort.newest:
         return Icons.schedule_rounded;
       case _WishlistSort.oldest:
         return Icons.history_rounded;
-      case _WishlistSort.nameAsc:
-        return Icons.sort_by_alpha_rounded;
       case _WishlistSort.priorityFirst:
         return Icons.flag_rounded;
       case _WishlistSort.valueHigh:

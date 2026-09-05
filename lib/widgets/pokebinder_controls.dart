@@ -277,6 +277,89 @@ class ChoiceChipPill extends StatelessWidget {
   }
 }
 
+class EmptyFilterState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onClearFilters;
+  final String clearFiltersLabel;
+
+  const EmptyFilterState({
+    super.key,
+    this.icon = Icons.filter_alt_off_rounded,
+    required this.title,
+    required this.subtitle,
+    this.onClearFilters,
+    this.clearFiltersLabel = 'Clear filters',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        vertical: PokeBinderSpacing.sp6,
+        horizontal: PokeBinderSpacing.sp4,
+      ),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: PokeBinderColors.cream2.withValues(alpha: 0.6),
+            ),
+            child: Icon(
+              icon,
+              size: 24,
+              color: PokeBinderColors.goldDeep.withValues(alpha: 0.75),
+            ),
+          ),
+          const SizedBox(height: PokeBinderSpacing.sp3),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: PokeBinderText.subtitle.copyWith(
+              fontWeight: FontWeight.w600,
+              color: PokeBinderColors.ink,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: PokeBinderText.subtitle,
+          ),
+          if (onClearFilters != null) ...[
+            const SizedBox(height: PokeBinderSpacing.sp3),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: onClearFilters,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: PokeBinderSpacing.sp3,
+                    vertical: PokeBinderSpacing.sp1,
+                  ),
+                  child: Text(clearFiltersLabel, style: PokeBinderText.backLink),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class PillButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
