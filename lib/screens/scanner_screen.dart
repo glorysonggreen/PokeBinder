@@ -755,12 +755,6 @@ class _ScanRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _ScanTimeBadge(label: _relativeTime),
-                  const SizedBox(height: 6),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    size: 16,
-                    color: PokeBinderColors.inkSoft,
-                  ),
                 ],
               ),
             ],
