@@ -221,17 +221,9 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                     ),
               const SizedBox(height: PokeBinderSpacing.sp5),
 
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'ACHIEVEMENT BADGES',
-                      style: PokeBinderText.sectionLabel,
-                    ),
-                  ),
-                  const _SoftPill(label: 'COMING SOON'),
-                ],
+              Text(
+                'ACHIEVEMENT BADGES',
+                style: PokeBinderText.sectionLabel,
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
               const Row(
@@ -246,33 +238,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SoftPill extends StatelessWidget {
-  final String label;
-
-  const _SoftPill({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: PokeBinderColors.cream2.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: PokeBinderColors.gold.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        label,
-        style: PokeBinderText.chakraPetch(const TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.0,
-          color: PokeBinderColors.goldDeep,
-        )),
       ),
     );
   }

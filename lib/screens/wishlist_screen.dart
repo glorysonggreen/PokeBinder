@@ -438,7 +438,11 @@ class _WishlistStatBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
-        color: PokeBinderColors.white,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [PokeBinderColors.white, Color(0xFFFBF7EC)],
+        ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         boxShadow: kCardElevation,
