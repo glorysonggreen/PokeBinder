@@ -125,7 +125,7 @@ class _NavItem extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(active ? tab.activeIcon : tab.icon, size: 22, color: color),
-              const SizedBox(height: 3),
+              const SizedBox(height: 4),
               Text(
                 tab.label,
                 style: PokeBinderText.chipLabel.copyWith(

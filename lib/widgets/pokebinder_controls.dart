@@ -109,7 +109,7 @@ class SegmentedTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: PokeBinderColors.cream2,
         borderRadius: BorderRadius.circular(11),
@@ -254,7 +254,7 @@ class ChoiceChipPill extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: selected ? null : PokeBinderColors.white,
             gradient: selected ? PokeBinderColors.redGradient : null,
@@ -331,7 +331,7 @@ class EmptyFilterState extends StatelessWidget {
               color: PokeBinderColors.ink,
             ),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
             subtitle,
             textAlign: TextAlign.center,
@@ -389,7 +389,7 @@ class PillButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: enabled ? onTap : null,
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 11),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),

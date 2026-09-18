@@ -387,7 +387,7 @@ class _TopTabBar extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => onChanged(i),
                 child: Container(
-                  padding: const EdgeInsets.only(bottom: 7),
+                  padding: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
@@ -863,7 +863,7 @@ class _BinderGridTile extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.all(11),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: PokeBinderColors.white,
           borderRadius: BorderRadius.circular(13),
@@ -1010,7 +1010,7 @@ class _BinderSortSelector extends StatelessWidget {
             children: [
               Text('SORT: ${selected.label.toUpperCase()}',
                   style: PokeBinderText.resultCount),
-              const SizedBox(width: 1),
+              const SizedBox(width: 2),
               const Icon(
                 Icons.expand_more_rounded,
                 size: 15,
@@ -1053,7 +1053,7 @@ class _BinderSortMenuRow extends StatelessWidget {
             child: Text(
               option.label,
               style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: selected ? FontWeight.bold : FontWeight.w600,
                 color: selected
                     ? PokeBinderColors.redDeep

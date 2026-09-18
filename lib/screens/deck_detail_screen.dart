@@ -118,7 +118,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
             card?.name ?? 'Card',
-            style: PokeBinderText.heading.copyWith(fontSize: 15),
+            style: PokeBinderText.heading.copyWith(fontSize: 16),
           ),
           content: Row(
             mainAxisSize: MainAxisSize.min,
@@ -269,7 +269,7 @@ class _FormatTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = format.accentColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
@@ -583,7 +583,7 @@ class _DeckTypeBalanceBar extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: SizedBox(
@@ -702,7 +702,7 @@ class _DeckCardEntryRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
+          padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -740,7 +740,7 @@ class _DeckCardEntryRow extends StatelessWidget {
                       style: PokeBinderText.listRowSubtitle,
                     ),
                     if (card != null) ...[
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 6),
                       Wrap(
                         spacing: 8,
                         runSpacing: 4,
@@ -830,7 +830,7 @@ class _QuantityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: PokeBinderColors.redDeep.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),

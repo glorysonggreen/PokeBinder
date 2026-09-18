@@ -321,7 +321,7 @@ class _FieldTile extends StatelessWidget {
                   children: [
                     if (icon != null) ...[
                       Icon(icon, size: 13, color: PokeBinderColors.redDeep),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 6),
                     ],
                     Text(
                       label.toUpperCase(),

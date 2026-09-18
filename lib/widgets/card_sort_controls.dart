@@ -138,7 +138,7 @@ class CardSortSelector extends StatelessWidget {
             children: [
               Text('SORT: ${selected.label.toUpperCase()}',
                   style: PokeBinderText.resultCount),
-              const SizedBox(width: 1),
+              const SizedBox(width: 2),
               const Icon(
                 Icons.expand_more_rounded,
                 size: 15,
@@ -181,7 +181,7 @@ class CardSortMenuRow extends StatelessWidget {
             child: Text(
               option.label,
               style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: selected ? FontWeight.bold : FontWeight.w600,
                 color: selected
                     ? PokeBinderColors.redDeep
@@ -227,7 +227,7 @@ class CardFilterChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: active ? null : PokeBinderColors.cream2,
@@ -253,7 +253,7 @@ class CardFilterChip extends StatelessWidget {
               size: 13,
               color: active ? PokeBinderColors.white : PokeBinderColors.inkSoft,
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 6),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 150),
               style: active ? PokeBinderText.chipLabelActive : PokeBinderText.chipLabel,

@@ -217,7 +217,7 @@ class _StatBox extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(value, style: PokeBinderText.statNumber.copyWith(fontSize: 17)),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
             label.toUpperCase(),
             style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
@@ -279,7 +279,7 @@ class _ValueByRarityPanel extends StatelessWidget {
                             ? '${(stats[i].value / 1000).toStringAsFixed(1)}k'
                             : stats[i].value.toStringAsFixed(0),
                         textAlign: TextAlign.center,
-                        style: PokeBinderText.cardMeta.copyWith(fontSize: 8),
+                        style: PokeBinderText.cardMeta.copyWith(fontSize: 8.5),
                       ),
                       const SizedBox(height: 4),
                       Container(
@@ -359,7 +359,7 @@ class _CardsBySetPanel extends StatelessWidget {
                 for (var i = 0; i < stats.length; i++)
                   Padding(
                     padding: EdgeInsets.only(
-                      bottom: i == stats.length - 1 ? 0 : 6,
+                      bottom: i == stats.length - 2 ? 0 : 6,
                     ),
                     child: Row(
                       children: [
@@ -501,7 +501,7 @@ class _TopValueRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
+          padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -571,7 +571,7 @@ class _TopValueRow extends StatelessWidget {
                       '${card.setName} · #${card.cardNumber}',
                       style: PokeBinderText.listRowSubtitle,
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
                       runSpacing: 4,
