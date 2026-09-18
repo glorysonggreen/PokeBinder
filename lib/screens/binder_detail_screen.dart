@@ -140,21 +140,10 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  GestureDetector(
+                  BackLink(
                     onTap: () => Navigator.of(context).pop(),
-                    behavior: HitTestBehavior.opaque,
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: 4, top: 2, bottom: 2),
-                      child: Icon(Icons.arrow_back_rounded,
-                          size: 22, color: PokeBinderColors.ink),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      _isUnassigned ? 'UNASSIGNED' : 'BINDER',
-                      style: PokeBinderText.eyebrow,
-                    ),
                   ),
                   if (!_isUnassigned)
                     InkWell(

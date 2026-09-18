@@ -409,7 +409,7 @@ class _StatBox extends StatelessWidget {
               Text(value, style: PokeBinderText.statNumber),
               const SizedBox(height: 3),
               Text(
-                label,
+                label.toUpperCase(),
                 style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
               ),
             ],
