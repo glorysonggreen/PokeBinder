@@ -220,7 +220,7 @@ class _AuthBanner extends StatelessWidget {
             child: Text(
               'PB',
               style: PokeBinderText.chakraPetch(const TextStyle(
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: PokeBinderColors.white,
               )),

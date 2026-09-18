@@ -359,7 +359,7 @@ class _CardCountBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: PokeBinderColors.cream2,
         borderRadius: BorderRadius.circular(5),
@@ -407,7 +407,7 @@ class _StatBox extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(value, style: PokeBinderText.statNumber),
-              const SizedBox(height: 3),
+              const SizedBox(height: 4),
               Text(
                 label.toUpperCase(),
                 style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
@@ -451,7 +451,7 @@ class _ContinueBinderPanel extends StatelessWidget {
                 children: [
                   Text('CONTINUE A BINDER', style: PokeBinderText.sectionLabel),
                   if (binder.isPinned) ...[
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 6),
                     const Icon(
                       Icons.push_pin_rounded,
                       size: 11,

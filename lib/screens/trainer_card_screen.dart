@@ -413,7 +413,7 @@ class _FavoriteCardPanel extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -458,7 +458,7 @@ class _FavoriteCardPanel extends StatelessWidget {
                           color: PokeBinderColors.ink,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 6),
                       Wrap(
                         spacing: 8,
                         runSpacing: 4,
@@ -576,7 +576,7 @@ class _TrainerStatBox extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(value, style: PokeBinderText.statNumber),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
             label,
             style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
@@ -646,7 +646,7 @@ class _FavoriteBinderPanel extends StatelessWidget {
                           ),
                         ),
                         if (binder.isPinned) ...[
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 6),
                           const Icon(
                             Icons.push_pin_rounded,
                             size: 11,
@@ -730,7 +730,7 @@ class _FavoriteDeckPanel extends StatelessWidget {
                       ),
                     ),
                     if (deck.isPinned) ...[
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 6),
                       const Icon(
                         Icons.push_pin_rounded,
                         size: 11,
@@ -810,7 +810,7 @@ class _LockedBadgeSlot extends StatelessWidget {
                 Text(
                   'LOCKED',
                   style: PokeBinderText.chakraPetch(TextStyle(
-                    fontSize: 7,
+                    fontSize: 7.5,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.6,
                     color: PokeBinderColors.inkSoft.withValues(alpha: 0.45),

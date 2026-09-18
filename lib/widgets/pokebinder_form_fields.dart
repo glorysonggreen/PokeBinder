@@ -25,7 +25,7 @@ InputDecoration pokeInputDecoration({
     suffixIcon: suffixIcon,
     suffixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 0),
     contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
     border: border,
     enabledBorder: border,
     focusedBorder: OutlineInputBorder(
@@ -162,7 +162,7 @@ class PokeDropdownField<T> extends StatelessWidget {
             ],
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               decoration: BoxDecoration(
                 color: PokeBinderColors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -234,7 +234,7 @@ class _PokeDropdownMenuRow extends StatelessWidget {
             child: Text(
               label,
               style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: selected ? FontWeight.bold : FontWeight.w600,
                 color: selected ? PokeBinderColors.redDeep : PokeBinderColors.ink,
               )),

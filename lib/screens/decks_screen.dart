@@ -306,7 +306,7 @@ class _DeckFilterChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: active ? null : PokeBinderColors.cream2,
@@ -339,7 +339,7 @@ class _DeckFilterChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 13, color: iconColor),
-            const SizedBox(width: 5),
+            const SizedBox(width: 6),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 150),
               style: labelStyle,
@@ -361,7 +361,7 @@ class _FormatTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = format.accentColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
@@ -613,7 +613,7 @@ class _DeckSortSelector extends StatelessWidget {
             children: [
               Text('SORT: ${selected.label.toUpperCase()}',
                   style: PokeBinderText.resultCount),
-              const SizedBox(width: 1),
+              const SizedBox(width: 2),
               const Icon(
                 Icons.expand_more_rounded,
                 size: 15,
@@ -656,7 +656,7 @@ class _DeckSortMenuRow extends StatelessWidget {
             child: Text(
               option.label,
               style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: selected ? FontWeight.bold : FontWeight.w600,
                 color: selected
                     ? PokeBinderColors.redDeep
@@ -785,7 +785,7 @@ class _StatusTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: ok ? _kTagOkBg : _kTagWarnBg,
         borderRadius: BorderRadius.circular(20),
@@ -793,7 +793,7 @@ class _StatusTag extends StatelessWidget {
       child: Text(
         label,
         style: PokeBinderText.chakraPetch(TextStyle(
-          fontSize: 9,
+          fontSize: 9.5,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.3,
           color: ok ? _kTagOkFg : PokeBinderColors.danger,

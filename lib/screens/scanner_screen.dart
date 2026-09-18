@@ -564,7 +564,7 @@ class _GhostLinkButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: PokeBinderColors.red.withValues(alpha: 0.22)),
@@ -577,7 +577,7 @@ class _GhostLinkButton extends StatelessWidget {
               Text(
                 label,
                 style: PokeBinderText.chakraPetch(const TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 10,
                   fontWeight: FontWeight.bold,
                   color: PokeBinderColors.redDeep,
                 )),
@@ -664,7 +664,7 @@ class _ScanRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
+          padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -726,7 +726,7 @@ class _ScanRow extends StatelessWidget {
                       '${card.setName} · #${card.cardNumber}',
                       style: PokeBinderText.listRowSubtitle,
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
                       runSpacing: 4,
@@ -820,7 +820,7 @@ class _ScanTimeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: PokeBinderColors.inkSoft.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
@@ -828,7 +828,7 @@ class _ScanTimeBadge extends StatelessWidget {
       child: Text(
         label,
         style: PokeBinderText.chakraPetch(const TextStyle(
-          fontSize: 10.5,
+          fontSize: 10,
           fontWeight: FontWeight.bold,
           color: PokeBinderColors.inkSoft,
         )),

@@ -302,7 +302,7 @@ class _DeckCardPickerRow extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 4),
                           Text(
                             '${card.setName} · #${card.cardNumber} · ${card.rarity}',
                             style: PokeBinderText.listRowSubtitle
@@ -356,7 +356,7 @@ class _CardMetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final metaStyle = PokeBinderText.listRowSubtitle.copyWith(fontSize: 9);
+    final metaStyle = PokeBinderText.listRowSubtitle.copyWith(fontSize: 9.5);
     return Wrap(
       spacing: 7,
       runSpacing: 2,
@@ -368,7 +368,7 @@ class _CardMetaRow extends StatelessWidget {
             children: [
               Icon(conditionIconFor(card.condition),
                   size: 11, color: PokeBinderColors.teal),
-              const SizedBox(width: 3),
+              const SizedBox(width: 4),
               Text(
                 kConditionOptions
                     .firstWhere((c) => c.$2 == card.condition,
@@ -385,7 +385,7 @@ class _CardMetaRow extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.folder_outlined, size: 11, color: PokeBinderColors.inkSoft),
-            const SizedBox(width: 3),
+            const SizedBox(width: 4),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 90),
               child: Text(
