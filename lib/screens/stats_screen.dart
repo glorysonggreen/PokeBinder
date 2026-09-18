@@ -1,9 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
+import 'card_details_screen.dart';
+import 'card_form_screen.dart';
 
 const _kDonutColors = [
   PokeBinderColors.red,
@@ -28,8 +31,15 @@ class _SetStat {
   const _SetStat(this.setName, this.count);
 }
 
-class StatsScreen extends StatelessWidget {
+class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
+
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  final List<BinderData> _binders = BinderData.sampleBinders;
 
   List<PokemonCardData> get _library => PokemonCardData.library;
 
@@ -80,6 +90,30 @@ class StatsScreen extends StatelessWidget {
       return '₱${(value / 1000).toStringAsFixed(1)}k';
     }
     return '₱${value.toStringAsFixed(0)}';
+  }
+
+  Future<void> _openCardDetails(PokemonCardData card) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CardDetailsScreen(
+          card: card,
+          binders: _binders,
+          onSave: _handleCardSaved,
+        ),
+      ),
+    );
+  }
+
+  void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
+    setState(() {
+      final index = PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
+      if (index == -1) return;
+      if (result.deleted) {
+        PokemonCardData.library.removeAt(index);
+      } else {
+        PokemonCardData.library[index] = result.card!;
+      }
+    });
   }
 
   @override
@@ -150,7 +184,7 @@ class StatsScreen extends StatelessWidget {
 
               Text('TOP VALUE CARDS', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              _TopValuePanel(cards: _topValueCards),
+              _TopValuePanel(cards: _topValueCards, onTapCard: _openCardDetails),
             ],
           ),
         ),
@@ -402,8 +436,9 @@ class _DonutPainter extends CustomPainter {
 
 class _TopValuePanel extends StatelessWidget {
   final List<PokemonCardData> cards;
+  final ValueChanged<PokemonCardData> onTapCard;
 
-  const _TopValuePanel({required this.cards});
+  const _TopValuePanel({required this.cards, required this.onTapCard});
 
   @override
   Widget build(BuildContext context) {
@@ -430,7 +465,11 @@ class _TopValuePanel extends StatelessWidget {
                   indent: 114,
                   color: PokeBinderColors.ink.withValues(alpha: 0.06),
                 ),
-              _TopValueRow(card: cards[i], rank: i + 1),
+              _TopValueRow(
+                card: cards[i],
+                rank: i + 1,
+                onTap: () => onTapCard(cards[i]),
+              ),
             ],
           ],
         ),
@@ -444,107 +483,129 @@ class _TopValuePanel extends StatelessWidget {
 /// `set · #number` subtitle line, and a [Wrap] of small icon+label tags
 /// (rarity, condition). The rank badge overlays the thumbnail corner in
 /// place of the scan row's "newest" dot, and the estimated value replaces
-/// the relative-time badge.
+/// the relative-time badge. Tapping the row opens [CardDetailsScreen] for
+/// the card, and any saved notes are shown below the tags as an italic
+/// description line, matching the notes line on the Wishlist screen's
+/// card rows.
 class _TopValueRow extends StatelessWidget {
   final PokemonCardData card;
   final int rank;
+  final VoidCallback onTap;
 
-  const _TopValueRow({required this.card, required this.rank});
+  const _TopValueRow({required this.card, required this.rank, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: PokeBinderColors.ink.withValues(alpha: 0.08),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: PokeBinderColors.ink.withValues(alpha: 0.08),
+                      ),
+                      boxShadow: kCardElevation,
+                    ),
+                    child: CardThumbnail(
+                      card: card,
+                      width: 92,
+                      height: 127,
+                      borderRadius: 5,
+                    ),
                   ),
-                  boxShadow: kCardElevation,
-                ),
-                child: CardThumbnail(
-                  card: card,
-                  width: 92,
-                  height: 127,
-                  borderRadius: 5,
+                  Positioned(
+                    top: -6,
+                    left: -6,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: card.type.gradientColors,
+                        ),
+                        border:
+                            Border.all(color: PokeBinderColors.white, width: 1.5),
+                        boxShadow: kCardElevation,
+                      ),
+                      child: Text(
+                        '$rank',
+                        style: PokeBinderText.chakraPetch(const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: PokeBinderColors.white,
+                        )),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: PokeBinderSpacing.sp3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      card.name,
+                      style: PokeBinderText.chakraPetch(const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: PokeBinderColors.ink,
+                      )),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${card.setName} · #${card.cardNumber}',
+                      style: PokeBinderText.listRowSubtitle,
+                    ),
+                    const SizedBox(height: 5),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        _RarityTag(rarity: card.rarity),
+                        _ConditionTag(code: card.condition),
+                      ],
+                    ),
+                    if (card.notes.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        card.notes,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: PokeBinderText.listRowSubtitle.copyWith(
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              Positioned(
-                top: -6,
-                left: -6,
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: card.type.gradientColors,
-                    ),
-                    border: Border.all(color: PokeBinderColors.white, width: 1.5),
-                    boxShadow: kCardElevation,
-                  ),
-                  child: Text(
-                    '$rank',
-                    style: PokeBinderText.chakraPetch(const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: PokeBinderColors.white,
-                    )),
-                  ),
-                ),
+              const SizedBox(width: PokeBinderSpacing.sp2),
+              Text(
+                '₱${(card.estimatedValue * card.quantityOwned).toStringAsFixed(0)}',
+                style: PokeBinderText.chakraPetch(const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: PokeBinderColors.redDeep,
+                )),
               ),
             ],
           ),
-          const SizedBox(width: PokeBinderSpacing.sp3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  card.name,
-                  style: PokeBinderText.chakraPetch(const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: PokeBinderColors.ink,
-                  )),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${card.setName} · #${card.cardNumber}',
-                  style: PokeBinderText.listRowSubtitle,
-                ),
-                const SizedBox(height: 5),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    _RarityTag(rarity: card.rarity),
-                    _ConditionTag(code: card.condition),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: PokeBinderSpacing.sp2),
-          Text(
-            '₱${(card.estimatedValue * card.quantityOwned).toStringAsFixed(0)}',
-            style: PokeBinderText.chakraPetch(const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: PokeBinderColors.redDeep,
-            )),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -238,6 +238,7 @@ class PokemonCardData {
       binderName: 'Kanto Starters',
       page: 1,
       estimatedValue: 3400,
+      notes: 'Centering is slightly off, otherwise crisp.',
       imageAssetPath: '../assets/blastoise_base_set.jpg',
     ),
     PokemonCardData(
@@ -253,6 +254,7 @@ class PokemonCardData {
       binderName: 'Kanto Starters',
       page: 1,
       estimatedValue: 2900,
+      notes: 'Minor whitening along the left edge.',
       imageAssetPath: '../assets/venusaur_base_set.jpg',
     ),
     PokemonCardData(
@@ -343,6 +345,7 @@ class PokemonCardData {
       binderName: 'Rare Holos',
       page: 1,
       estimatedValue: 3100,
+      notes: 'Sharp corners, bought sealed from a booster box.',
       imageAssetPath: '../assets/mewtwo_base_set.jpg',
     ),
     PokemonCardData(
