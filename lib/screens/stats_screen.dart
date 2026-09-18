@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/pokemon_card_widget.dart';
 
 const _kDonutColors = [
   PokeBinderColors.red,
@@ -71,7 +72,7 @@ class StatsScreen extends StatelessWidget {
     final sorted = [..._library]
       ..sort((a, b) => (b.estimatedValue * b.quantityOwned)
           .compareTo(a.estimatedValue * a.quantityOwned));
-    return sorted.take(4).toList();
+    return sorted.take(3).toList();
   }
 
   String _formatCurrency(double value) {
@@ -100,11 +101,8 @@ class StatsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackLink(
-                label: '‹ More',
                 onTap: () => Navigator.of(context).maybePop(),
               ),
-              const SizedBox(height: PokeBinderSpacing.sp1),
-              Text('COLLECTION STATISTICS', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Your Collection', style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
@@ -126,7 +124,7 @@ class StatsScreen extends StatelessWidget {
                   Expanded(
                     child: _StatBox(
                       value: _formatCurrency(_totalValue),
-                      label: 'Total value',
+                      label: 'Value',
                     ),
                   ),
                   const SizedBox(width: PokeBinderSpacing.sp2),
@@ -187,7 +185,7 @@ class _StatBox extends StatelessWidget {
           Text(value, style: PokeBinderText.statNumber.copyWith(fontSize: 17)),
           const SizedBox(height: 3),
           Text(
-            label,
+            label.toUpperCase(),
             style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
           ),
         ],
@@ -200,6 +198,13 @@ class _ValueByRarityPanel extends StatelessWidget {
   final List<_RarityStat> stats;
 
   const _ValueByRarityPanel({required this.stats});
+
+  static const _barGradients = [
+    PokeBinderColors.goldGradient,
+    PokeBinderColors.redGradient,
+    PokeBinderColors.tealGradient,
+    PokeBinderColors.slateGradient,
+  ];
 
   double _barFraction(double value, double maxValue) {
     if (maxValue <= 0) return 0.06;
@@ -227,7 +232,7 @@ class _ValueByRarityPanel extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            for (final stat in stats)
+            for (var i = 0; i < stats.length; i++)
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -236,24 +241,17 @@ class _ValueByRarityPanel extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        stat.value >= 1000
-                            ? '${(stat.value / 1000).toStringAsFixed(1)}k'
-                            : stat.value.toStringAsFixed(0),
+                        stats[i].value >= 1000
+                            ? '${(stats[i].value / 1000).toStringAsFixed(1)}k'
+                            : stats[i].value.toStringAsFixed(0),
                         textAlign: TextAlign.center,
                         style: PokeBinderText.cardMeta.copyWith(fontSize: 8),
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        height: 78 * _barFraction(stat.value, maxValue),
+                        height: 78 * _barFraction(stats[i].value, maxValue),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              PokeBinderColors.gold,
-                              PokeBinderColors.goldDeep,
-                            ],
-                          ),
+                          gradient: _barGradients[i % _barGradients.length],
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(5),
                             topRight: Radius.circular(5),
@@ -262,7 +260,7 @@ class _ValueByRarityPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        stat.rarity,
+                        stats[i].rarity,
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -420,25 +418,33 @@ class _TopValuePanel extends StatelessWidget {
         border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         boxShadow: kCardElevation,
       ),
-      child: Column(
-        children: [
-          for (var i = 0; i < cards.length; i++) ...[
-            if (i != 0)
-              Divider(
-                height: 1,
-                thickness: 1,
-                indent: PokeBinderSpacing.sp3 + 34 + PokeBinderSpacing.sp3,
-                endIndent: PokeBinderSpacing.sp3,
-                color: PokeBinderColors.ink.withValues(alpha: 0.06),
-              ),
-            _TopValueRow(card: cards[i], rank: i + 1),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: Column(
+          children: [
+            for (var i = 0; i < cards.length; i++) ...[
+              if (i != 0)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  indent: 114,
+                  color: PokeBinderColors.ink.withValues(alpha: 0.06),
+                ),
+              _TopValueRow(card: cards[i], rank: i + 1),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
+/// Card row for a top-value card, styled to match [_ScanRow] on the
+/// Scanner screen: same thumbnail size/frame, chakraPetch bold name,
+/// `set · #number` subtitle line, and a [Wrap] of small icon+label tags
+/// (rarity, condition). The rank badge overlays the thumbnail corner in
+/// place of the scan row's "newest" dot, and the estimated value replaces
+/// the relative-time badge.
 class _TopValueRow extends StatelessWidget {
   final PokemonCardData card;
   final int rank;
@@ -448,32 +454,56 @@ class _TopValueRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: PokeBinderSpacing.sp3,
-        vertical: PokeBinderSpacing.sp2 + 2,
-      ),
+      padding: const EdgeInsets.fromLTRB(10, 9, 14, 9),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(9),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: card.type.gradientColors,
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: PokeBinderColors.ink.withValues(alpha: 0.08),
+                  ),
+                  boxShadow: kCardElevation,
+                ),
+                child: CardThumbnail(
+                  card: card,
+                  width: 92,
+                  height: 127,
+                  borderRadius: 5,
+                ),
               ),
-            ),
-            child: Text(
-              '#$rank',
-              style: PokeBinderText.chakraPetch(const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: PokeBinderColors.white,
-              )),
-            ),
+              Positioned(
+                top: -6,
+                left: -6,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: card.type.gradientColors,
+                    ),
+                    border: Border.all(color: PokeBinderColors.white, width: 1.5),
+                    boxShadow: kCardElevation,
+                  ),
+                  child: Text(
+                    '$rank',
+                    style: PokeBinderText.chakraPetch(const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: PokeBinderColors.white,
+                    )),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: PokeBinderSpacing.sp3),
           Expanded(
@@ -482,19 +512,30 @@ class _TopValueRow extends StatelessWidget {
               children: [
                 Text(
                   card.name,
-                  style: PokeBinderText.listRowTitle.copyWith(
-                    fontWeight: FontWeight.bold,
+                  style: PokeBinderText.chakraPetch(const TextStyle(
                     fontSize: 13,
-                  ),
+                    fontWeight: FontWeight.bold,
+                    color: PokeBinderColors.ink,
+                  )),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  '${card.setName} · ×${card.quantityOwned}',
+                  '${card.setName} · #${card.cardNumber}',
                   style: PokeBinderText.listRowSubtitle,
+                ),
+                const SizedBox(height: 5),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    _RarityTag(rarity: card.rarity),
+                    _ConditionTag(code: card.condition),
+                  ],
                 ),
               ],
             ),
           ),
+          const SizedBox(width: PokeBinderSpacing.sp2),
           Text(
             '₱${(card.estimatedValue * card.quantityOwned).toStringAsFixed(0)}',
             style: PokeBinderText.chakraPetch(const TextStyle(
@@ -505,6 +546,49 @@ class _TopValueRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Small icon + label pairing for a card's rarity, matching the tag used
+/// on the Scanner screen's recent-scan rows.
+class _RarityTag extends StatelessWidget {
+  final String rarity;
+
+  const _RarityTag({required this.rarity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
+        const SizedBox(width: 4),
+        Text(rarity, style: PokeBinderText.listRowSubtitle),
+      ],
+    );
+  }
+}
+
+/// Small icon + label pairing for a card's condition, matching the tag
+/// used on the Scanner screen's recent-scan rows.
+class _ConditionTag extends StatelessWidget {
+  final String code;
+
+  const _ConditionTag({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = kConditionOptions
+        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
+        .$1;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
+        const SizedBox(width: 4),
+        Text(label, style: PokeBinderText.listRowSubtitle),
+      ],
     );
   }
 }
