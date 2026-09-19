@@ -5,6 +5,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
 import '../widgets/card_caption.dart';
 import '../widgets/card_sort_controls.dart';
+import '../widgets/min_tap_target.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_detail_screen.dart';
 import 'binder_form_screen.dart';
@@ -760,30 +761,26 @@ class _BinderListPanel extends StatelessWidget {
               const SizedBox(height: PokeBinderSpacing.sp3),
             ],
             if (hiddenCount > 0 || viewingAllBinders)
-              GestureDetector(
+              MinTapTarget(
                 onTap: onToggleViewAllBinders,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp1),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        viewingAllBinders
-                            ? 'Show Less'
-                            : 'View All Binders (+$hiddenCount)',
-                        style: PokeBinderText.backLink,
-                      ),
-                      const SizedBox(width: PokeBinderSpacing.sp1),
-                      Icon(
-                        viewingAllBinders
-                            ? Icons.expand_less_rounded
-                            : Icons.expand_more_rounded,
-                        size: 14,
-                        color: PokeBinderText.backLink.color,
-                      ),
-                    ],
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      viewingAllBinders
+                          ? 'Show Less'
+                          : 'View All Binders (+$hiddenCount)',
+                      style: PokeBinderText.backLink,
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp1),
+                    Icon(
+                      viewingAllBinders
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      size: 14,
+                      color: PokeBinderText.backLink.color,
+                    ),
+                  ],
                 ),
               ),
           ],
@@ -891,18 +888,15 @@ class _BinderGridTile extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (onTogglePin != null)
-                  GestureDetector(
+                  MinTapTarget(
                     onTap: onTogglePin,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.all(PokeBinderSpacing.sp1),
-                      child: Icon(
-                        isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-                        size: 14,
-                        color: isPinned
-                            ? PokeBinderColors.red
-                            : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
-                      ),
+                    semanticLabel: isPinned ? 'Unpin binder' : 'Pin binder',
+                    child: Icon(
+                      isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                      size: 14,
+                      color: isPinned
+                          ? PokeBinderColors.red
+                          : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
                     ),
                   ),
               ],
@@ -989,25 +983,33 @@ class _BinderSortSelector extends StatelessWidget {
               child: _BinderSortMenuRow(option: option, selected: option == selected),
             ),
         ],
-        child: Container(
-          padding: PokeBinderSpacing.chip,
-          decoration: BoxDecoration(
-            color: PokeBinderColors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('SORT: ${selected.label.toUpperCase()}',
-                  style: PokeBinderText.resultCount),
-              const SizedBox(width: PokeBinderSpacing.sp0),
-              const Icon(
-                Icons.expand_more_rounded,
-                size: 15,
-                color: PokeBinderColors.inkSoft,
+        // ConstrainedBox+Center grows the tappable area PopupMenuButton
+        // hit-tests against to kMinTapTarget (44) without growing the pill
+        // itself, which stays sized by PokeBinderSpacing.chip as before.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kMinTapTarget),
+          child: Center(
+            child: Container(
+              padding: PokeBinderSpacing.chip,
+              decoration: BoxDecoration(
+                color: PokeBinderColors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('SORT: ${selected.label.toUpperCase()}',
+                      style: PokeBinderText.resultCount),
+                  const SizedBox(width: PokeBinderSpacing.sp0),
+                  const Icon(
+                    Icons.expand_more_rounded,
+                    size: 15,
+                    color: PokeBinderColors.inkSoft,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
