@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
+import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
@@ -10,6 +11,7 @@ import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
+import 'deck_form_screen.dart';
 import 'stats_screen.dart';
 import 'trainer_card_screen.dart';
 
@@ -20,7 +22,7 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onOpenBinders;
   final ValueChanged<BinderData> onOpenBinder;
   final VoidCallback onOpenScan;
-  final VoidCallback onOpenDecks;
+  final ValueChanged<DeckData> onOpenDeck;
 
   const HomeScreen({
     super.key,
@@ -30,7 +32,7 @@ class HomeScreen extends StatefulWidget {
     required this.onOpenBinders,
     required this.onOpenBinder,
     required this.onOpenScan,
-    required this.onOpenDecks,
+    required this.onOpenDeck,
   });
 
   @override
@@ -116,6 +118,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final created = result?.binder;
     if (created == null) return;
     setState(() => _binders.add(created));
+  }
+
+  /// Quick action: go straight to the Create a Deck form. Once the deck is
+  /// saved it's added to the shared deck list and the app jumps to it in the
+  /// Decks tab (the same place creating a deck from that tab lands).
+  Future<void> _openNewDeck() async {
+    final result = await Navigator.of(context).push<DeckFormResult>(
+      MaterialPageRoute(builder: (_) => const DeckFormScreen()),
+    );
+    final created = result?.deck;
+    if (created == null) return;
+    DeckData.library.add(created);
+    widget.onOpenDeck(created);
   }
 
   Future<void> _openAddCardManually() async {
@@ -233,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         label: 'New Deck',
                         icon: Icons.add,
                         ghost: true,
-                        onTap: widget.onOpenDecks,
+                        onTap: _openNewDeck,
                       ),
                     ),
                   ],

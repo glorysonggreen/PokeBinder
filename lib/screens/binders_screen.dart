@@ -7,6 +7,7 @@ import '../widgets/card_caption.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/min_tap_target.dart';
 import '../widgets/pokebinder_controls.dart';
+import 'binder_add_card_screen.dart';
 import 'binder_detail_screen.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
@@ -151,6 +152,7 @@ class _BindersScreenState extends State<BindersScreen> {
           unassignedCards: _unassignedCards,
           onCardTap: _openCard,
           onAddCard: _openAddCardFor,
+          onCardRemoved: _removeCardFromBinder,
           onBinderChanged: _applyBinderChange,
           onBinderDeleted: _applyBinderDeletion,
         ),
@@ -168,6 +170,7 @@ class _BindersScreenState extends State<BindersScreen> {
           unassignedCards: _unassignedCards,
           onCardTap: _openCard,
           onAddCard: _openAddCardFor,
+          onCardRemoved: _removeCardFromBinder,
           onBinderChanged: _applyBinderChange,
           onBinderDeleted: _applyBinderDeletion,
         ),
@@ -194,7 +197,48 @@ class _BindersScreenState extends State<BindersScreen> {
     });
   }
 
+  /// Takes [card] out of its binder without deleting it: it lands in the
+  /// Unassigned bucket (same as when a whole binder is deleted), so it stays
+  /// in the collection and can be added to a binder again later.
+  void _removeCardFromBinder(PokemonCardData card) {
+    setState(() {
+      _removeCardById(card.id);
+      _unassignedCards.add(card.copyWith(binderName: 'Unassigned', page: 0));
+    });
+  }
+
+  /// "Add card" from a binder page opens the collection picker (the same
+  /// layout as the Deck Planner's Add Cards screen). The Unassigned bucket
+  /// isn't a binder, so it keeps the plain manual-entry form.
   Future<void> _openAddCardFor({
+    required String? binderId,
+    required int pageIndex,
+  }) async {
+    if (binderId == null) {
+      await _openManualCardForm(binderId: null, pageIndex: pageIndex);
+      return;
+    }
+
+    final binderIndex = _binders.indexWhere((b) => b.id == binderId);
+    if (binderIndex == -1) return;
+    final binder = _binders[binderIndex];
+
+    final picks = await Navigator.of(context).push<List<BinderCardPick>>(
+      MaterialPageRoute(
+        builder: (_) => BinderAddCardScreen(
+          binderName: binder.name,
+          pageIndex: pageIndex,
+          availableCards: () => _cardsOutsideBinder(binder.id),
+          onCardTap: _openCard,
+        ),
+      ),
+    );
+    if (picks == null || picks.isEmpty) return;
+
+    setState(() => _moveCardsToBinder(picks, binder.id, pageIndex));
+  }
+
+  Future<void> _openManualCardForm({
     required String? binderId,
     required int pageIndex,
   }) async {
@@ -211,6 +255,66 @@ class _BindersScreenState extends State<BindersScreen> {
     setState(
       () => _insertCard(result.card!, result.binderId!, result.pageIndex!),
     );
+  }
+
+  /// Every card in the collection that isn't already in [binderId] — the
+  /// candidates offered by the Add Cards picker. Always built from the live
+  /// binder/unassigned lists so edits made mid-flow are reflected.
+  List<PokemonCardData> _cardsOutsideBinder(String binderId) {
+    final matches = _binders.where((b) => b.id == binderId);
+    if (matches.isEmpty) return _allCards;
+    final inBinder = {
+      for (final page in matches.first.pages)
+        for (final card in page) card.id,
+    };
+    return _allCards.where((c) => !inBinder.contains(c.id)).toList();
+  }
+
+  /// Moves the picked cards into [binderId] on [pageIndex].
+  ///
+  /// Picking every owned copy moves the card as-is. Picking fewer splits it:
+  /// the remaining copies stay put and the picked copies become a new entry
+  /// in the binder, so no copies are ever lost or duplicated.
+  void _moveCardsToBinder(
+    List<BinderCardPick> picks,
+    String binderId,
+    int pageIndex,
+  ) {
+    final binderIndex = _binders.indexWhere((b) => b.id == binderId);
+    if (binderIndex == -1) return;
+    final binderName = _binders[binderIndex].name;
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+
+    for (var i = 0; i < picks.length; i++) {
+      final pick = picks[i];
+      final matches = _allCards.where((c) => c.id == pick.cardId);
+      if (matches.isEmpty) continue;
+      final card = matches.first;
+      final count =
+          pick.quantity > card.quantityOwned ? card.quantityOwned : pick.quantity;
+      if (count < 1) continue;
+
+      if (count == card.quantityOwned) {
+        _removeCardById(card.id);
+        _insertCard(
+          card.copyWith(binderName: binderName, page: pageIndex + 1),
+          binderId,
+          pageIndex,
+        );
+      } else {
+        _replaceCard(card.copyWith(quantityOwned: card.quantityOwned - count));
+        _insertCard(
+          card.copyWith(
+            id: 'card-$stamp-$i',
+            quantityOwned: count,
+            binderName: binderName,
+            page: pageIndex + 1,
+          ),
+          binderId,
+          pageIndex,
+        );
+      }
+    }
   }
 
   void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
@@ -235,6 +339,31 @@ class _BindersScreenState extends State<BindersScreen> {
             for (final page in pages) [...page],
           ];
           newPages[p].removeWhere((c) => c.id == id);
+          _binders[i] = _binders[i].copyWith(pages: newPages);
+          return;
+        }
+      }
+    }
+  }
+
+  /// Swaps the stored card that shares [updated]'s id for [updated], keeping
+  /// its position.
+  void _replaceCard(PokemonCardData updated) {
+    final unassignedIndex =
+        _unassignedCards.indexWhere((c) => c.id == updated.id);
+    if (unassignedIndex != -1) {
+      _unassignedCards[unassignedIndex] = updated;
+      return;
+    }
+    for (var i = 0; i < _binders.length; i++) {
+      final pages = _binders[i].pages;
+      for (var p = 0; p < pages.length; p++) {
+        final cardIndex = pages[p].indexWhere((c) => c.id == updated.id);
+        if (cardIndex != -1) {
+          final newPages = [
+            for (final page in pages) [...page],
+          ];
+          newPages[p][cardIndex] = updated;
           _binders[i] = _binders[i].copyWith(pages: newPages);
           return;
         }

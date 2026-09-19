@@ -170,6 +170,7 @@ class PokemonCardData {
   }) : dateAdded = dateAdded ?? DateTime.now();
 
   PokemonCardData copyWith({
+    String? id,
     String? name,
     String? setName,
     String? cardNumber,
@@ -187,7 +188,7 @@ class PokemonCardData {
     DateTime? dateAdded,
   }) {
     return PokemonCardData(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
       setName: setName ?? this.setName,
       cardNumber: cardNumber ?? this.cardNumber,
