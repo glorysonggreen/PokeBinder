@@ -4,6 +4,7 @@ import '../models/pokemon_card_data.dart';
 import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
+import '../widgets/card_caption.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
@@ -526,21 +527,7 @@ class _RecentCardTile extends StatelessWidget {
       children: [
         BinderCardTile(card: card, onTap: onTap),
         const SizedBox(height: PokeBinderSpacing.sp1),
-        Text(
-          card.name,
-          textAlign: TextAlign.center,
-          style: PokeBinderText.cardName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: PokeBinderSpacing.sp0),
-        Text(
-          '${card.setName} · #${card.cardNumber}',
-          textAlign: TextAlign.center,
-          style: PokeBinderText.cardMeta,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        CardCaption(card: card),
       ],
     );
   }

@@ -52,7 +52,9 @@ const double kPokemonCardImageWidthPx = 600;
 const double kPokemonCardImageHeightPx = 825;
 const double kPokemonCardImageAspectRatio = kPokemonCardImageWidthPx / kPokemonCardImageHeightPx;
 const double kCardInteractionHeightBuffer = 1.25;
-const double kCardCaptionHeight = 30.0;
+const double kCardCaptionHeight = 36.0;
+/// Height of the horizontally scrolling filter-chip rows.
+const double kFilterChipRowHeight = 36.0;
 
 /// The spacing scale. Every gap, padding and margin in the app should come
 /// from here so the UI stays on one rhythm.
@@ -92,7 +94,10 @@ final List<BoxShadow> kCardElevation = [
 
 /// The type scale. Whole-pixel sizes only:
 ///
-///   8 · 9 · 10 · 11 · 12 · 13 · 16 · 19 · 20
+///   11 · 12 · 14 · 15 · 18 · 22
+///
+/// 11 is the floor (labels, chips, tags, card captions); 12 is for
+/// secondary text; 14 is body / input / button size.
 ///
 /// Chakra Petch is used for headings, labels, buttons and chips. Body copy
 /// (the `const` styles below) has no family of its own and inherits
@@ -107,62 +112,62 @@ class PokeBinderText {
   // ---- Headings & labels (Chakra Petch) ---------------------------------
 
   static final eyebrow = chakraPetch(const TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.bold,
     letterSpacing: 1.4,
     color: PokeBinderColors.redDeep,
   ));
 
   static final heading = chakraPetch(const TextStyle(
-    fontSize: 19,
+    fontSize: 22,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.ink,
   ));
 
   /// Secondary headings: dialog titles, deck / trainer names.
   static final headingSm = chakraPetch(const TextStyle(
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.ink,
   ));
 
   /// Title of an item in a list row (card, binder, deck, wishlist entry...).
   static final rowTitle = chakraPetch(const TextStyle(
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.ink,
   ));
 
   static final statLabel = chakraPetch(const TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.7,
     color: PokeBinderColors.ink,
   ));
 
   static final sectionLabel = chakraPetch(const TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.7,
     color: PokeBinderColors.inkSoft,
   ));
 
   static final formLabel = chakraPetch(const TextStyle(
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.7,
     color: PokeBinderColors.inkSoft,
   ));
 
   static final resultCount = chakraPetch(const TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.7,
     color: PokeBinderColors.inkSoft,
   ));
 
   static final backLink = chakraPetch(const TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: FontWeight.w600,
     color: PokeBinderColors.redDeep,
   ));
@@ -170,21 +175,21 @@ class PokeBinderText {
   // ---- Buttons ------------------------------------------------------------
 
   static final buttonLabel = chakraPetch(const TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.3,
     color: PokeBinderColors.white,
   ));
 
   static final buttonGhostLabel = chakraPetch(const TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.3,
     color: PokeBinderColors.redDeep,
   ));
 
   static final buttonDangerLabel = chakraPetch(const TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.3,
     color: PokeBinderColors.danger,
@@ -193,32 +198,32 @@ class PokeBinderText {
   // ---- Tabs, pills, chips & tags -----------------------------------------
 
   static final tabLabelInactive = chakraPetch(const TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     color: PokeBinderColors.inkSoft,
   ));
 
   static final tabLabelActive = chakraPetch(const TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.redDeep,
   ));
 
   /// Label of a selectable filter / sort pill.
   static TextStyle pillLabel({required bool selected}) => chakraPetch(TextStyle(
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: selected ? FontWeight.bold : FontWeight.w600,
         color: selected ? PokeBinderColors.redDeep : PokeBinderColors.ink,
       ));
 
   static final chipLabel = chakraPetch(const TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.3,
     color: PokeBinderColors.inkSoft,
   ));
 
   static final chipLabelActive = chakraPetch(const TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.3,
     color: PokeBinderColors.white,
@@ -226,7 +231,7 @@ class PokeBinderText {
 
   /// Small status tag (format, legality...). Pass the tag's foreground color.
   static TextStyle tagLabel(Color color) => chakraPetch(TextStyle(
-        fontSize: 9,
+        fontSize: 11,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.3,
         color: color,
@@ -235,7 +240,7 @@ class PokeBinderText {
   /// Quantity shown between the +/- buttons of a stepper.
   static TextStyle quantityLabel({required bool active}) =>
       chakraPetch(TextStyle(
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: FontWeight.bold,
         color: active ? PokeBinderColors.redDeep : PokeBinderColors.inkSoft,
       ));
@@ -243,83 +248,83 @@ class PokeBinderText {
   // ---- Card captions -------------------------------------------------------
 
   static final cardName = chakraPetch(const TextStyle(
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.inkSoft,
   ));
 
   static final cardMeta = chakraPetch(TextStyle(
-    fontSize: 8,
+    fontSize: 11,
     fontWeight: FontWeight.w500,
-    color: PokeBinderColors.inkSoft.withValues(alpha: 0.75),
+    color: PokeBinderColors.inkSoft.withValues(alpha: 0.9),
   ));
 
   // ---- Body copy (inherits the app body font) -----------------------------
 
   static const subtitle = TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     color: PokeBinderColors.inkSoft,
   );
 
   static const fieldLabel = TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     color: PokeBinderColors.inkSoft,
   );
 
   static const fieldValue = TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.ink,
   );
 
   /// Current value shown in a dropdown-style selector.
   static const selectValue = TextStyle(
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: FontWeight.w600,
     color: PokeBinderColors.ink,
   );
 
   /// Text typed into a text field.
   static const input = TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     color: PokeBinderColors.ink,
   );
 
   /// Placeholder text inside a text field.
   static const hint = TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     color: PokeBinderColors.hint,
   );
 
   static const statNumber = TextStyle(
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.redDeep,
   );
 
   static const statNumberSm = TextStyle(
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: FontWeight.bold,
     color: PokeBinderColors.redDeep,
   );
 
   static const listRowTitle = TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     color: PokeBinderColors.ink,
   );
 
   static const listRowSubtitle = TextStyle(
-    fontSize: 10,
+    fontSize: 12,
     color: PokeBinderColors.inkSoft,
   );
 
   static const formError = TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     color: PokeBinderColors.danger,
   );
 
   static const authLinkText = TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     height: 1.4,
     color: PokeBinderColors.inkSoft,
   );
@@ -359,7 +364,7 @@ class PokeBinderTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: PokeBinderColors.ink,
         contentTextStyle: PokeBinderText.chakraPetch(const TextStyle(
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: FontWeight.w600,
           color: PokeBinderColors.white,
         )),
@@ -374,15 +379,15 @@ class PokeBinderTheme {
     final inter = GoogleFonts.interTextTheme(base);
     return inter.copyWith(
       bodyLarge: inter.bodyLarge?.copyWith(
-        fontSize: 12,
+        fontSize: 14,
         color: PokeBinderColors.ink,
       ),
       bodyMedium: inter.bodyMedium?.copyWith(
-        fontSize: 12,
+        fontSize: 14,
         color: PokeBinderColors.ink,
       ),
       bodySmall: inter.bodySmall?.copyWith(
-        fontSize: 11,
+        fontSize: 12,
         color: PokeBinderColors.inkSoft,
       ),
     );

@@ -260,7 +260,7 @@ class _ValueByRarityPanel extends StatelessWidget {
         boxShadow: kCardElevation,
       ),
       child: SizedBox(
-        height: 128,
+        height: 144,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -279,7 +279,7 @@ class _ValueByRarityPanel extends StatelessWidget {
                             ? '${(stats[i].value / 1000).toStringAsFixed(1)}k'
                             : stats[i].value.toStringAsFixed(0),
                         textAlign: TextAlign.center,
-                        style: PokeBinderText.cardMeta.copyWith(fontSize: 9),
+                        style: PokeBinderText.cardMeta,
                       ),
                       const SizedBox(height: PokeBinderSpacing.sp1),
                       Container(

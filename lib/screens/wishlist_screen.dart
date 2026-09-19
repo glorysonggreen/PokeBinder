@@ -64,7 +64,7 @@ String _formatValue(double value) {
 /// quantity, wants, notes, value, date added) so they all read at one
 /// consistent, legible size instead of the previous mix of tiny sizes.
 final TextStyle _metaStyle = PokeBinderText.cardMeta.copyWith(
-  fontSize: 10,
+  fontSize: 12,
   color: PokeBinderColors.inkSoft,
 );
 
@@ -320,7 +320,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
               const SizedBox(height: PokeBinderSpacing.sp2),
 
               SizedBox(
-                height: 32,
+                height: kFilterChipRowHeight,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [

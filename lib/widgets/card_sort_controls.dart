@@ -291,7 +291,7 @@ class TypeChipRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 32,
+      height: kFilterChipRowHeight,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -686,7 +686,7 @@ class FilterChipRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 32,
+      height: kFilterChipRowHeight,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [

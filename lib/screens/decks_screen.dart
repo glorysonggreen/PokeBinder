@@ -187,7 +187,7 @@ class _DecksScreenState extends State<DecksScreen> {
               if (_decks.isNotEmpty) ...[
                 const SizedBox(height: PokeBinderSpacing.sp4),
                 SizedBox(
-                  height: 32,
+                  height: kFilterChipRowHeight,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
@@ -702,7 +702,7 @@ class _DeckRow extends StatelessWidget {
             children: [
               Container(
                 width: 3,
-                height: 30,
+                height: 42,
                 margin: const EdgeInsets.only(right: PokeBinderSpacing.sp3),
                 decoration: BoxDecoration(
                   color: deck.format.accentColor,

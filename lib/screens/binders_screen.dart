@@ -3,6 +3,7 @@ import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
+import '../widgets/card_caption.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_detail_screen.dart';
@@ -622,19 +623,7 @@ class _AllCardsTab extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: PokeBinderSpacing.sp1),
-                          Text(
-                            card.name,
-                            style: PokeBinderText.cardName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: PokeBinderSpacing.sp0),
-                          Text(
-                            '${card.setName} · #${card.cardNumber}',
-                            style: PokeBinderText.cardMeta,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          CardCaption(card: card),
                         ],
                       ),
                   ],
