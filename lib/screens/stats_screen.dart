@@ -125,12 +125,7 @@ class _StatsScreenState extends State<StatsScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -202,7 +197,10 @@ class _StatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+      padding: const EdgeInsets.symmetric(
+        vertical: PokeBinderSpacing.sp4,
+        horizontal: PokeBinderSpacing.sp1,
+      ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -216,11 +214,11 @@ class _StatBox extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value, style: PokeBinderText.statNumber.copyWith(fontSize: 17)),
-          const SizedBox(height: 4),
+          Text(value, style: PokeBinderText.statNumberSm),
+          const SizedBox(height: PokeBinderSpacing.sp1),
           Text(
             label.toUpperCase(),
-            style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
+            style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.4),
           ),
         ],
       ),
@@ -269,7 +267,9 @@ class _ValueByRarityPanel extends StatelessWidget {
             for (var i = 0; i < stats.length; i++)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: PokeBinderSpacing.sp1,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -279,9 +279,9 @@ class _ValueByRarityPanel extends StatelessWidget {
                             ? '${(stats[i].value / 1000).toStringAsFixed(1)}k'
                             : stats[i].value.toStringAsFixed(0),
                         textAlign: TextAlign.center,
-                        style: PokeBinderText.cardMeta.copyWith(fontSize: 8.5),
+                        style: PokeBinderText.cardMeta.copyWith(fontSize: 9),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: PokeBinderSpacing.sp1),
                       Container(
                         height: 78 * _barFraction(stats[i].value, maxValue),
                         decoration: BoxDecoration(
@@ -292,13 +292,13 @@ class _ValueByRarityPanel extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: PokeBinderSpacing.sp2),
                       Text(
                         stats[i].rarity,
                         textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: PokeBinderText.cardMeta.copyWith(fontSize: 7.5),
+                        style: PokeBinderText.cardMeta,
                       ),
                     ],
                   ),
@@ -346,7 +346,7 @@ class _CardsBySetPanel extends StatelessWidget {
               child: Center(
                 child: Text(
                   '$total',
-                  style: PokeBinderText.statNumber.copyWith(fontSize: 16),
+                  style: PokeBinderText.statNumberSm,
                 ),
               ),
             ),
@@ -359,7 +359,7 @@ class _CardsBySetPanel extends StatelessWidget {
                 for (var i = 0; i < stats.length; i++)
                   Padding(
                     padding: EdgeInsets.only(
-                      bottom: i == stats.length - 2 ? 0 : 6,
+                      bottom: i == stats.length - 2 ? 0 : PokeBinderSpacing.sp2,
                     ),
                     child: Row(
                       children: [
@@ -371,7 +371,7 @@ class _CardsBySetPanel extends StatelessWidget {
                             color: _kDonutColors[i % _kDonutColors.length],
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: PokeBinderSpacing.sp1),
                         Expanded(
                           child: Text(
                             stats[i].setName,
@@ -501,7 +501,7 @@ class _TopValueRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -543,11 +543,7 @@ class _TopValueRow extends StatelessWidget {
                       ),
                       child: Text(
                         '$rank',
-                        style: PokeBinderText.chakraPetch(const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: PokeBinderColors.white,
-                        )),
+                        style: PokeBinderText.chipLabelActive,
                       ),
                     ),
                   ),
@@ -560,28 +556,24 @@ class _TopValueRow extends StatelessWidget {
                   children: [
                     Text(
                       card.name,
-                      style: PokeBinderText.chakraPetch(const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: PokeBinderColors.ink,
-                      )),
+                      style: PokeBinderText.rowTitle,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: PokeBinderSpacing.sp1),
                     Text(
                       '${card.setName} · #${card.cardNumber}',
                       style: PokeBinderText.listRowSubtitle,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: PokeBinderSpacing.sp2),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
+                      spacing: PokeBinderSpacing.sp2,
+                      runSpacing: PokeBinderSpacing.sp1,
                       children: [
                         _RarityTag(rarity: card.rarity),
                         _ConditionTag(code: card.condition),
                       ],
                     ),
                     if (card.notes.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: PokeBinderSpacing.sp1),
                       Text(
                         card.notes,
                         maxLines: 2,
@@ -597,11 +589,7 @@ class _TopValueRow extends StatelessWidget {
               const SizedBox(width: PokeBinderSpacing.sp2),
               Text(
                 '₱${(card.estimatedValue * card.quantityOwned).toStringAsFixed(0)}',
-                style: PokeBinderText.chakraPetch(const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: PokeBinderColors.redDeep,
-                )),
+                style: PokeBinderText.buttonGhostLabel,
               ),
             ],
           ),
@@ -624,7 +612,7 @@ class _RarityTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(rarity, style: PokeBinderText.listRowSubtitle),
       ],
     );
@@ -647,7 +635,7 @@ class _ConditionTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(label, style: PokeBinderText.listRowSubtitle),
       ],
     );

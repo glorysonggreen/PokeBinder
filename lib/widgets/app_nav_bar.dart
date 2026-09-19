@@ -120,12 +120,12 @@ class _NavItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(active ? tab.activeIcon : tab.icon, size: 22, color: color),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 tab.label,
                 style: PokeBinderText.chipLabel.copyWith(
@@ -133,7 +133,7 @@ class _NavItem extends StatelessWidget {
                   fontWeight: active ? FontWeight.bold : FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: PokeBinderSpacing.sp0),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 width: active ? 4 : 0,
@@ -198,7 +198,7 @@ class _ScanNavButton extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: PokeBinderSpacing.sp1),
             Text(
               'Scan',
               style: PokeBinderText.chipLabel.copyWith(

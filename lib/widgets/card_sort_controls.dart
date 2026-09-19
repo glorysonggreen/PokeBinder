@@ -116,18 +116,20 @@ class CardSortSelector extends StatelessWidget {
           side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         ),
         constraints: const BoxConstraints(minWidth: 190),
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
         itemBuilder: (context) => [
           for (final option in CardSortOption.values)
             PopupMenuItem(
               value: option,
               height: 38,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PokeBinderSpacing.sp1,
+              ),
               child: CardSortMenuRow(option: option, selected: option == selected),
             ),
         ],
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: PokeBinderSpacing.chip,
           decoration: BoxDecoration(
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(20),
@@ -138,7 +140,7 @@ class CardSortSelector extends StatelessWidget {
             children: [
               Text('SORT: ${selected.label.toUpperCase()}',
                   style: PokeBinderText.resultCount),
-              const SizedBox(width: 2),
+              const SizedBox(width: PokeBinderSpacing.sp0),
               const Icon(
                 Icons.expand_more_rounded,
                 size: 15,
@@ -163,7 +165,7 @@ class CardSortMenuRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: PokeBinderSpacing.sp2,
-        vertical: 8,
+        vertical: PokeBinderSpacing.sp2,
       ),
       decoration: BoxDecoration(
         color: selected ? PokeBinderColors.red.withValues(alpha: 0.08) : null,
@@ -180,13 +182,7 @@ class CardSortMenuRow extends StatelessWidget {
           Expanded(
             child: Text(
               option.label,
-              style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                color: selected
-                    ? PokeBinderColors.redDeep
-                    : PokeBinderColors.ink,
-              )),
+              style: PokeBinderText.pillLabel(selected: selected),
             ),
           ),
           if (selected)
@@ -227,7 +223,10 @@ class CardFilterChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: PokeBinderSpacing.sp3,
+          vertical: PokeBinderSpacing.sp2,
+        ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: active ? null : PokeBinderColors.cream2,
@@ -253,7 +252,7 @@ class CardFilterChip extends StatelessWidget {
               size: 13,
               color: active ? PokeBinderColors.white : PokeBinderColors.inkSoft,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: PokeBinderSpacing.sp1),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 150),
               style: active ? PokeBinderText.chipLabelActive : PokeBinderText.chipLabel,
@@ -298,7 +297,7 @@ class TypeChipRow extends StatelessWidget {
         children: [
           for (final entry in _types.entries)
             Padding(
-              padding: const EdgeInsets.only(right: 6),
+              padding: const EdgeInsets.only(right: PokeBinderSpacing.sp1),
               child: CardFilterChip(
                 label: entry.value,
                 icon: _typeIcon(entry.key),
@@ -693,7 +692,7 @@ class FilterChipRow extends StatelessWidget {
         children: [
           for (final entry in options.entries)
             Padding(
-              padding: const EdgeInsets.only(right: 6),
+              padding: const EdgeInsets.only(right: PokeBinderSpacing.sp1),
               child: CardFilterChip(
                 label: entry.value,
                 icon: iconFor(entry.key),

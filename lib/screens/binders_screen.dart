@@ -383,11 +383,11 @@ class _TopTabBar extends StatelessWidget {
         children: [
           for (var i = 0; i < labels.length; i++)
             Padding(
-              padding: const EdgeInsets.only(right: 18),
+              padding: const EdgeInsets.only(right: PokeBinderSpacing.sp4),
               child: GestureDetector(
                 onTap: () => onChanged(i),
                 child: Container(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
@@ -628,7 +628,7 @@ class _AllCardsTab extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: PokeBinderSpacing.sp0),
                           Text(
                             '${card.setName} · #${card.cardNumber}',
                             style: PokeBinderText.cardMeta,
@@ -785,7 +785,7 @@ class _BinderListPanel extends StatelessWidget {
                             : 'View All Binders (+$hiddenCount)',
                         style: PokeBinderText.backLink,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: PokeBinderSpacing.sp1),
                       Icon(
                         viewingAllBinders
                             ? Icons.expand_less_rounded
@@ -813,7 +813,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 2),
+      padding: const EdgeInsets.only(left: PokeBinderSpacing.sp0),
       child: Text('${title.toUpperCase()} · $count', style: PokeBinderText.sectionLabel),
     );
   }
@@ -863,7 +863,7 @@ class _BinderGridTile extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
         decoration: BoxDecoration(
           color: PokeBinderColors.white,
           borderRadius: BorderRadius.circular(13),
@@ -906,7 +906,7 @@ class _BinderGridTile extends StatelessWidget {
                     onTap: onTogglePin,
                     behavior: HitTestBehavior.opaque,
                     child: Padding(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(PokeBinderSpacing.sp1),
                       child: Icon(
                         isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
                         size: 14,
@@ -918,7 +918,7 @@ class _BinderGridTile extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: PokeBinderSpacing.sp2),
             Text(
               title,
               maxLines: 1,
@@ -928,7 +928,7 @@ class _BinderGridTile extends StatelessWidget {
                 color: PokeBinderColors.ink,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: PokeBinderSpacing.sp0),
             Text(
               subtitle,
               maxLines: 1,
@@ -988,18 +988,20 @@ class _BinderSortSelector extends StatelessWidget {
           side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         ),
         constraints: const BoxConstraints(minWidth: 175),
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
         itemBuilder: (context) => [
           for (final option in BinderSortOption.values)
             PopupMenuItem(
               value: option,
               height: 38,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PokeBinderSpacing.sp1,
+              ),
               child: _BinderSortMenuRow(option: option, selected: option == selected),
             ),
         ],
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: PokeBinderSpacing.chip,
           decoration: BoxDecoration(
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(20),
@@ -1010,7 +1012,7 @@ class _BinderSortSelector extends StatelessWidget {
             children: [
               Text('SORT: ${selected.label.toUpperCase()}',
                   style: PokeBinderText.resultCount),
-              const SizedBox(width: 2),
+              const SizedBox(width: PokeBinderSpacing.sp0),
               const Icon(
                 Icons.expand_more_rounded,
                 size: 15,
@@ -1035,7 +1037,7 @@ class _BinderSortMenuRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: PokeBinderSpacing.sp2,
-        vertical: 8,
+        vertical: PokeBinderSpacing.sp2,
       ),
       decoration: BoxDecoration(
         color: selected ? PokeBinderColors.red.withValues(alpha: 0.08) : null,
@@ -1052,13 +1054,7 @@ class _BinderSortMenuRow extends StatelessWidget {
           Expanded(
             child: Text(
               option.label,
-              style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                color: selected
-                    ? PokeBinderColors.redDeep
-                    : PokeBinderColors.ink,
-              )),
+              style: PokeBinderText.pillLabel(selected: selected),
             ),
           ),
           if (selected)

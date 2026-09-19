@@ -23,14 +23,7 @@ class PokeBinderApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: PokeBinderColors.cream,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: PokeBinderColors.red,
-          primary: PokeBinderColors.red,
-        ),
-      ),
+      theme: PokeBinderTheme.light(),
       home: const LoginScreen(),
     );
   }

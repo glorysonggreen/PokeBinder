@@ -130,12 +130,7 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp3,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -156,7 +151,7 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                             size: 13,
                             color: PokeBinderText.backLink.color,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: PokeBinderSpacing.sp1),
                           Text('Edit', style: PokeBinderText.backLink),
                         ],
                       ),
@@ -204,7 +199,7 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: PokeBinderSpacing.sp0),
                             Text(
                               '${card.setName} · #${card.cardNumber}',
                               style: PokeBinderText.cardMeta,

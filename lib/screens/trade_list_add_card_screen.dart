@@ -306,7 +306,7 @@ class _TradeCardPickerRow extends StatelessWidget {
       color: selected
           ? PokeBinderColors.red.withValues(alpha: 0.045)
           : Colors.transparent,
-      padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+      padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -334,36 +334,30 @@ class _TradeCardPickerRow extends StatelessWidget {
                         children: [
                           Text(
                             card.name,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: PokeBinderColors.ink,
-                            ),
+                            style: PokeBinderText.rowTitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: PokeBinderSpacing.sp1),
                           Text(
                             '${card.setName} · #${card.cardNumber} · ${card.rarity}',
-                            style: PokeBinderText.listRowSubtitle
-                                .copyWith(fontSize: 10),
+                            style: PokeBinderText.listRowSubtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: PokeBinderSpacing.sp0),
                           Text(
                             selected
                                 ? 'Own ${card.quantityOwned} · $quantity In Trade'
                                 : 'Own ${card.quantityOwned}',
                             style: PokeBinderText.listRowSubtitle.copyWith(
-                              fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: PokeBinderColors.ink,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: PokeBinderSpacing.sp1),
                           _CardMetaRow(card: card),
                         ],
                       ),
@@ -396,10 +390,10 @@ class _CardMetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final metaStyle = PokeBinderText.listRowSubtitle.copyWith(fontSize: 9.5);
+    final metaStyle = PokeBinderText.listRowSubtitle;
     return Wrap(
-      spacing: 7,
-      runSpacing: 2,
+      spacing: PokeBinderSpacing.sp2,
+      runSpacing: PokeBinderSpacing.sp0,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         if (card.condition.isNotEmpty)
@@ -408,7 +402,7 @@ class _CardMetaRow extends StatelessWidget {
             children: [
               Icon(conditionIconFor(card.condition),
                   size: 11, color: PokeBinderColors.teal),
-              const SizedBox(width: 4),
+              const SizedBox(width: PokeBinderSpacing.sp1),
               Text(
                 kConditionOptions
                     .firstWhere((c) => c.$2 == card.condition,
@@ -425,7 +419,7 @@ class _CardMetaRow extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.folder_outlined, size: 11, color: PokeBinderColors.inkSoft),
-            const SizedBox(width: 4),
+            const SizedBox(width: PokeBinderSpacing.sp1),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 90),
               child: Text(
@@ -464,7 +458,7 @@ class _QuantityStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: PokeBinderSpacing.sp0),
       decoration: BoxDecoration(
         color: PokeBinderColors.cream2,
         borderRadius: BorderRadius.circular(20),
@@ -481,13 +475,7 @@ class _QuantityStepper extends StatelessWidget {
             child: Text(
               '$quantity',
               textAlign: TextAlign.center,
-              style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: quantity > 0
-                    ? PokeBinderColors.redDeep
-                    : PokeBinderColors.inkSoft,
-              )),
+              style: PokeBinderText.quantityLabel(active: quantity > 0),
             ),
           ),
           _StepperButton(icon: Icons.add_rounded, onTap: onIncrement),
@@ -512,7 +500,7 @@ class _StepperButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp1),
           child: Icon(
             icon,
             size: 14,

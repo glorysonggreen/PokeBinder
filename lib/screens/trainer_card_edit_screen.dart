@@ -93,12 +93,7 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -246,7 +241,10 @@ class _FavoriteCardField extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: PokeBinderSpacing.sp3,
+            vertical: PokeBinderSpacing.sp3,
+          ),
           decoration: BoxDecoration(
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(12),
@@ -266,21 +264,20 @@ class _FavoriteCardField extends StatelessWidget {
                     borderRadius: 6,
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: PokeBinderSpacing.sp2),
               ] else ...[
                 Icon(
                   Icons.star_outline_rounded,
                   size: 16,
                   color: PokeBinderColors.redDeep.withValues(alpha: 0.55),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: PokeBinderSpacing.sp2),
               ],
               Expanded(
                 child: Text(
                   selected != null ? selected.name : 'Choose a favorite card',
                   overflow: TextOverflow.ellipsis,
-                  style: PokeBinderText.fieldValue
-                      .copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: PokeBinderText.selectValue,
                 ),
               ),
               const Icon(

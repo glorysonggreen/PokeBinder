@@ -130,12 +130,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp5,
-            PokeBinderSpacing.sp5,
-            PokeBinderSpacing.sp5,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -159,14 +154,11 @@ class _ScannerScreenState extends State<ScannerScreen>
                       child: Text(
                         _scanning ? 'Scanning…' : 'Align Card Within Frame',
                         key: ValueKey(_scanning),
-                        style: PokeBinderText.chakraPetch(TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.4,
+                        style: PokeBinderText.eyebrow.copyWith(
                           color: _scanning
                               ? PokeBinderColors.redDeep
                               : PokeBinderColors.inkSoft,
-                        )),
+                        ),
                       ),
                     ),
                   ],
@@ -181,12 +173,7 @@ class _ScannerScreenState extends State<ScannerScreen>
                     const SizedBox(height: PokeBinderSpacing.sp2),
                     Text(
                       'TAP TO CAPTURE',
-                      style: PokeBinderText.chakraPetch(const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.6,
-                        color: PokeBinderColors.redDeep,
-                      )),
+                      style: PokeBinderText.eyebrow,
                     ),
                   ],
                 ),
@@ -240,7 +227,7 @@ class _Viewfinder extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       width: 230,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(PokeBinderSpacing.sp5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
@@ -307,7 +294,9 @@ class _Viewfinder extends StatelessWidget {
                   return Align(
                     alignment: Alignment(0, y),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: PokeBinderSpacing.sp1,
+                      ),
                       child: Container(
                         width: double.infinity,
                         height: 2,
@@ -564,7 +553,10 @@ class _GhostLinkButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: PokeBinderSpacing.sp3,
+            vertical: PokeBinderSpacing.sp3,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: PokeBinderColors.red.withValues(alpha: 0.22)),
@@ -573,14 +565,12 @@ class _GhostLinkButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 13, color: PokeBinderColors.redDeep.withValues(alpha: 0.8)),
-              const SizedBox(width: 6),
+              const SizedBox(width: PokeBinderSpacing.sp1),
               Text(
                 label,
-                style: PokeBinderText.chakraPetch(const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                style: PokeBinderText.chipLabel.copyWith(
                   color: PokeBinderColors.redDeep,
-                )),
+                ),
               ),
             ],
           ),
@@ -664,7 +654,7 @@ class _ScanRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -715,28 +705,24 @@ class _ScanRow extends StatelessWidget {
                   children: [
                     Text(
                       card.name,
-                      style: PokeBinderText.chakraPetch(const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: PokeBinderColors.ink,
-                      )),
+                      style: PokeBinderText.rowTitle,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: PokeBinderSpacing.sp1),
                     Text(
                       '${card.setName} · #${card.cardNumber}',
                       style: PokeBinderText.listRowSubtitle,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: PokeBinderSpacing.sp2),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
+                      spacing: PokeBinderSpacing.sp2,
+                      runSpacing: PokeBinderSpacing.sp1,
                       children: [
                         _RarityTag(rarity: card.rarity),
                         _ConditionTag(code: card.condition),
                       ],
                     ),
                     if (card.notes.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: PokeBinderSpacing.sp1),
                       Text(
                         card.notes,
                         maxLines: 2,
@@ -778,7 +764,7 @@ class _RarityTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(rarity, style: PokeBinderText.listRowSubtitle),
       ],
     );
@@ -802,7 +788,7 @@ class _ConditionTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(label, style: PokeBinderText.listRowSubtitle),
       ],
     );
@@ -820,18 +806,14 @@ class _ScanTimeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: PokeBinderSpacing.chip,
       decoration: BoxDecoration(
         color: PokeBinderColors.inkSoft.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         label,
-        style: PokeBinderText.chakraPetch(const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: PokeBinderColors.inkSoft,
-        )),
+        style: PokeBinderText.chipLabel,
       ),
     );
   }

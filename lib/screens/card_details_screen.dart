@@ -128,12 +128,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -300,7 +295,10 @@ class _FieldTile extends StatelessWidget {
           ? BoxConstraints(minHeight: minHeight!)
           : null,
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: PokeBinderSpacing.sp3,
+        vertical: PokeBinderSpacing.sp3,
+      ),
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
         borderRadius: BorderRadius.circular(12),
@@ -321,12 +319,12 @@ class _FieldTile extends StatelessWidget {
                   children: [
                     if (icon != null) ...[
                       Icon(icon, size: 13, color: PokeBinderColors.redDeep),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: PokeBinderSpacing.sp1),
                     ],
                     Text(
                       label.toUpperCase(),
                       style: PokeBinderText.fieldLabel.copyWith(
-                        letterSpacing: 0.6,
+                        letterSpacing: 0.7,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -343,7 +341,7 @@ class _FieldTile extends StatelessWidget {
               children: [
                 if (icon != null) ...[
                   Icon(icon, size: 14, color: PokeBinderColors.redDeep.withValues(alpha: 0.7)),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: PokeBinderSpacing.sp1),
                 ],
                 Text(
                   label,
@@ -404,7 +402,10 @@ class _StatBox extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PokeBinderSpacing.sp3,
+                vertical: PokeBinderSpacing.sp3,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -418,7 +419,7 @@ class _StatBox extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(PokeBinderSpacing.sp2),
                     decoration: BoxDecoration(
                       color: PokeBinderColors.red.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
@@ -574,7 +575,7 @@ class _AddToDeckSheetState extends State<_AddToDeckSheet> {
                             onTap: () => _selectDeck(deck),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
+                                  horizontal: PokeBinderSpacing.sp3, vertical: PokeBinderSpacing.sp3),
                               child: Row(
                                 children: [
                                   Icon(deck.format.icon,
@@ -588,15 +589,13 @@ class _AddToDeckSheetState extends State<_AddToDeckSheet> {
                                       children: [
                                         Text(
                                           deck.name,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: PokeBinderColors.ink,
-                                          ),
+                                          style: PokeBinderText.rowTitle,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(
+                                          height: PokeBinderSpacing.sp0,
+                                        ),
                                         Text(
                                           inDeck > 0
                                               ? '${deck.format.label} · $inDeck in deck'
@@ -637,13 +636,16 @@ class _AddToDeckSheetState extends State<_AddToDeckSheet> {
                     .pop(const _AddToDeckSheetResult.createNew()),
                 child: Padding(
                   padding:
-                      const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                      const EdgeInsets.symmetric(
+                        vertical: PokeBinderSpacing.sp2,
+                        horizontal: PokeBinderSpacing.sp0,
+                      ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.add_circle_outline_rounded,
                           size: 16, color: PokeBinderColors.redDeep),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: PokeBinderSpacing.sp1),
                       Text(
                         'Create a new deck',
                         style: PokeBinderText.backLink,
@@ -678,11 +680,7 @@ class _AddToDeckSheetState extends State<_AddToDeckSheet> {
                         child: Text(
                           '$_quantity',
                           textAlign: TextAlign.center,
-                          style: PokeBinderText.chakraPetch(const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: PokeBinderColors.redDeep,
-                          )),
+                          style: PokeBinderText.statNumberSm,
                         ),
                       ),
                       _StepperButton(
@@ -728,7 +726,7 @@ class _StepperButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp2),
           child: Icon(
             icon,
             size: 16,

@@ -13,7 +13,7 @@ class BackLink extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp1),
         child: Text(label, style: PokeBinderText.backLink),
       ),
     );
@@ -40,7 +40,7 @@ class CollectionSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final field = Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 12,
+        horizontal: PokeBinderSpacing.sp3,
         vertical: PokeBinderSpacing.sp2,
       ),
       decoration: BoxDecoration(
@@ -55,25 +55,25 @@ class CollectionSearchBar extends StatelessWidget {
             size: 16,
             color: PokeBinderColors.inkSoft,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: PokeBinderSpacing.sp2),
           Expanded(
             child: IgnorePointer(
               ignoring: !enabled,
               child: TextField(
                 enabled: enabled,
                 onChanged: onChanged,
-                style: const TextStyle(fontSize: 11.5, color: PokeBinderColors.ink),
+                style: PokeBinderText.input,
                 decoration: InputDecoration(
                   isDense: true,
                   border: InputBorder.none,
                   hintText: hint,
-                  hintStyle: const TextStyle(color: Color(0xFFA89C86)),
+                  hintStyle: PokeBinderText.hint,
                 ),
               ),
             ),
           ),
           if (trailing != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: PokeBinderSpacing.sp2),
             trailing!,
           ],
         ],
@@ -109,7 +109,7 @@ class SegmentedTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(PokeBinderSpacing.sp1),
       decoration: BoxDecoration(
         color: PokeBinderColors.cream2,
         borderRadius: BorderRadius.circular(11),
@@ -124,7 +124,9 @@ class SegmentedTabBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   onTap: () => onChanged(i),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: PokeBinderSpacing.sp2,
+                    ),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: i == index ? PokeBinderColors.white : null,
@@ -221,7 +223,7 @@ class PasswordVisibilityToggle extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp2),
           child: Icon(
             obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
             size: 16,
@@ -254,7 +256,10 @@ class ChoiceChipPill extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: PokeBinderSpacing.sp3,
+            vertical: PokeBinderSpacing.sp2,
+          ),
           decoration: BoxDecoration(
             color: selected ? null : PokeBinderColors.white,
             gradient: selected ? PokeBinderColors.redGradient : null,
@@ -331,7 +336,7 @@ class EmptyFilterState extends StatelessWidget {
               color: PokeBinderColors.ink,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: PokeBinderSpacing.sp1),
           Text(
             subtitle,
             textAlign: TextAlign.center,
@@ -389,7 +394,9 @@ class PillButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: enabled ? onTap : null,
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              vertical: PokeBinderSpacing.sp3,
+            ),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
@@ -415,7 +422,7 @@ class PillButton extends StatelessWidget {
               children: [
                 if (icon != null) ...[
                   Icon(icon, size: 14, color: labelStyle.color),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: PokeBinderSpacing.sp1),
                 ],
                 Flexible(
                   child: Text(
@@ -431,6 +438,30 @@ class PillButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Icon + label used inside the red "Delete ..." / "Remove ..." buttons at
+/// the bottom of the edit forms.
+class PokeDangerLabel extends StatelessWidget {
+  final String label;
+
+  const PokeDangerLabel(this.label, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(
+          Icons.delete_outline,
+          size: 14,
+          color: PokeBinderColors.danger,
+        ),
+        const SizedBox(width: PokeBinderSpacing.sp2),
+        Text(label, style: PokeBinderText.buttonDangerLabel),
+      ],
     );
   }
 }
