@@ -86,14 +86,19 @@ class MoreScreen extends StatelessWidget {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(PokeBinderSpacing.sp4),
+          padding: const EdgeInsets.fromLTRB(
+            PokeBinderSpacing.sp5,
+            PokeBinderSpacing.sp5,
+            PokeBinderSpacing.sp5,
+            PokeBinderSpacing.sp4,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('MORE', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Everything Else', style: PokeBinderText.heading),
-              const SizedBox(height: PokeBinderSpacing.sp1),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               Text(
                 'Profile, stats, lists, and preferences.',
                 style: PokeBinderText.subtitle,

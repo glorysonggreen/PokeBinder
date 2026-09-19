@@ -136,7 +136,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                 _isEditing ? 'Edit Deck' : 'Create a Deck',
                 style: PokeBinderText.heading,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 _isEditing
                     ? "Update the deck's details — its decklist stays put."
@@ -144,7 +144,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                         'to it right after.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               LabeledFormField(
                 label: 'Deck name',

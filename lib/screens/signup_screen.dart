@@ -74,14 +74,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackLink(onTap: () => Navigator.of(context).maybePop()),
-              const SizedBox(height: PokeBinderSpacing.sp3),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Create Your Account', style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 'Start tracking your collection in minutes.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp5),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               LabeledFormField(
                 label: 'Trainer name',

@@ -105,12 +105,12 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
               BackLink(onTap: () => Navigator.of(context).maybePop()),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Edit Trainer Card', style: PokeBinderText.heading),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 'Update how your trainer card introduces you.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               LabeledFormField(
                 label: 'Trainer name',

@@ -222,7 +222,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                         : 'Add a Card',
                 style: PokeBinderText.heading,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 _isEditing
                     ? 'Update the details below.'
@@ -232,7 +232,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                         : 'No scanner handy? Enter the details yourself.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               LabeledFormField(
                 label: 'Card name',

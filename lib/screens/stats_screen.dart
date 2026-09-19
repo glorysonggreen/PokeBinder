@@ -144,7 +144,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 'Value, rarity, and set breakdown across every binder.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               Row(
                 children: [

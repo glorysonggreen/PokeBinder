@@ -271,7 +271,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 'Keep track of pickups to chase and dupes to move.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               SegmentedTabBar(
                 index: isWishlist ? 0 : 1,

@@ -165,9 +165,9 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text(title, style: PokeBinderText.heading),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(subtitle, style: PokeBinderText.subtitle),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
               LayoutBuilder(
                 builder: (context, constraints) {
                   const crossAxisCount = 3;
