@@ -40,7 +40,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<BinderData> _binders = BinderData.sampleBinders;
+  final List<BinderData> _binders = BinderData.library;
   final List<PokemonCardData> _cards = PokemonCardData.library;
 
   BinderData get _continueBinder {

@@ -43,7 +43,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
   BinderData? get _favoriteBinder {
     final id = _profile.favoriteBinderId;
     if (id == null) return null;
-    final matches = BinderData.sampleBinders.where((b) => b.id == id);
+    final matches = BinderData.library.where((b) => b.id == id);
     return matches.isNotEmpty ? matches.first : null;
   }
 
@@ -70,7 +70,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
       MaterialPageRoute(
         builder: (_) => CardDetailsScreen(
           card: card,
-          binders: BinderData.sampleBinders,
+          binders: BinderData.library,
           onSave: (oldCard, result) {
             setState(() {
               final index =
@@ -96,7 +96,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
     final trainerName = _profile.name;
     final trainerTitle = _profile.title;
     final bio = _profile.bio;
-    final binderCount = BinderData.sampleBinders.length;
+    final binderCount = BinderData.library.length;
     final deckCount = DeckData.library.length;
     final favoriteCard = _favoriteCard;
     final favoriteBinder = _favoriteBinder;

@@ -11,18 +11,21 @@ import 'binder_form_screen.dart';
 /// Cards" bucket when [binderId] is null. Reached by tapping a tile on
 /// the Binders overview (BindersScreen).
 ///
-/// This screen doesn't own the binder/card data — [binders] and
-/// [unassignedCards] are the same live List objects the parent screen
-/// holds, so any mutation the parent makes (e.g. after a card is moved
-/// to a different binder via CardDetailsScreen) is visible here the
-/// next time this screen rebuilds. Actions taken from this screen call
-/// back into the parent via [onCardTap] / [onAddCard] / [onCardRemoved] /
-/// [onBinderChanged] / [onBinderDeleted], and this screen refreshes itself
-/// right after each of those completes.
+/// This screen doesn't own the binder/card data. [binders] is the same
+/// live List the parent screen holds, and a binder's own cards are read
+/// straight off [PokemonCardData.library] via [BinderData.pages] — so any
+/// edit made anywhere in the app (e.g. from Decks, Trade List, or Stats)
+/// is visible here as soon as this screen rebuilds. [unassignedCards]
+/// is a function rather than a plain list for the same reason: it
+/// re-queries [PokemonCardData.library] each time it's called instead of
+/// handing over a snapshot that could go stale. Actions taken from this
+/// screen call back into the parent via [onCardTap] / [onAddCard] /
+/// [onCardRemoved] / [onBinderChanged] / [onBinderDeleted], and this
+/// screen refreshes itself right after each of those completes.
 class BinderDetailScreen extends StatefulWidget {
   final String? binderId;
   final List<BinderData> binders;
-  final List<PokemonCardData> unassignedCards;
+  final List<PokemonCardData> Function() unassignedCards;
   final Future<void> Function(PokemonCardData card) onCardTap;
   final Future<void> Function({required String? binderId, required int pageIndex})
       onAddCard;
@@ -66,7 +69,7 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
   }
 
   List<PokemonCardData> get _currentPageCards {
-    if (_isUnassigned) return widget.unassignedCards;
+    if (_isUnassigned) return widget.unassignedCards();
     final binder = _binder;
     if (binder == null || binder.pages.isEmpty) return const [];
     final index = _pageIndex.clamp(0, binder.pages.length - 1);
@@ -187,9 +190,10 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
     final removing =
         !_isUnassigned && _removeMode && currentPageCards.isNotEmpty;
     final title = _isUnassigned ? 'Unassigned Cards' : binder!.name;
+    final unassignedCount = widget.unassignedCards().length;
     final subtitle = _isUnassigned
-        ? '${widget.unassignedCards.length} '
-            '${widget.unassignedCards.length == 1 ? 'card' : 'cards'} · no binder'
+        ? '$unassignedCount '
+            '${unassignedCount == 1 ? 'card' : 'cards'} · no binder'
         : 'Page ${_pageIndex + 1} of ${binder!.pageCount}';
 
     return Scaffold(

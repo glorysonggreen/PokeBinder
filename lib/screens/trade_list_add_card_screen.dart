@@ -32,7 +32,7 @@ class _TradeListAddCardScreenState extends State<TradeListAddCardScreen> {
       if (entry.sourceCardId != null) entry.sourceCardId!: entry.quantity,
   };
 
-  final List<BinderData> _binders = BinderData.sampleBinders;
+  final List<BinderData> _binders = BinderData.library;
 
   String _query = '';
   CardSortOption _sortOption = CardSortOption.alphabetical;

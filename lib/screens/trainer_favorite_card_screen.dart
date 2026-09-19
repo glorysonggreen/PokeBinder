@@ -27,7 +27,7 @@ class _TrainerFavoriteCardScreenState
     extends State<TrainerFavoriteCardScreen> {
   late String? _selectedCardId = widget.initialCardId;
 
-  final List<BinderData> _binders = BinderData.sampleBinders;
+  final List<BinderData> _binders = BinderData.library;
 
   String _query = '';
   CardSortOption _sortOption = CardSortOption.alphabetical;

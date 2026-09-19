@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
-import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
@@ -70,19 +69,13 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
     }
     final pageCount = requestedPages < minPages ? minPages : requestedPages;
 
-    final pages = <List<PokemonCardData>>[
-      if (existing != null) ...existing.pages,
-      for (var i = (existing?.pageCount ?? 0); i < pageCount; i++)
-        <PokemonCardData>[],
-    ];
-
     final binder = BinderData(
       id: existing?.id ?? 'binder-${DateTime.now().microsecondsSinceEpoch}',
       name: name,
       description: _descriptionController.text.trim(),
       category: _categoryController.text.trim(),
       slotsPerPage: _slotsPerPage,
-      pages: pages,
+      pageCount: pageCount,
       isPinned: existing?.isPinned ?? false,
       createdAt: existing?.createdAt ?? DateTime.now(),
     );
