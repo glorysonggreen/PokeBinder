@@ -16,9 +16,9 @@ import 'binder_form_screen.dart';
 /// holds, so any mutation the parent makes (e.g. after a card is moved
 /// to a different binder via CardDetailsScreen) is visible here the
 /// next time this screen rebuilds. Actions taken from this screen call
-/// back into the parent via [onCardTap] / [onAddCard] / [onBinderChanged]
-/// / [onBinderDeleted], and this screen refreshes itself right after
-/// each of those completes.
+/// back into the parent via [onCardTap] / [onAddCard] / [onCardRemoved] /
+/// [onBinderChanged] / [onBinderDeleted], and this screen refreshes itself
+/// right after each of those completes.
 class BinderDetailScreen extends StatefulWidget {
   final String? binderId;
   final List<BinderData> binders;
@@ -26,6 +26,10 @@ class BinderDetailScreen extends StatefulWidget {
   final Future<void> Function(PokemonCardData card) onCardTap;
   final Future<void> Function({required String? binderId, required int pageIndex})
       onAddCard;
+
+  /// Takes a card out of this binder (it is kept in the collection, as an
+  /// unassigned card).
+  final ValueChanged<PokemonCardData> onCardRemoved;
   final ValueChanged<BinderData> onBinderChanged;
   final ValueChanged<BinderData> onBinderDeleted;
 
@@ -36,6 +40,7 @@ class BinderDetailScreen extends StatefulWidget {
     required this.unassignedCards,
     required this.onCardTap,
     required this.onAddCard,
+    required this.onCardRemoved,
     required this.onBinderChanged,
     required this.onBinderDeleted,
   });
@@ -46,6 +51,11 @@ class BinderDetailScreen extends StatefulWidget {
 
 class _BinderDetailScreenState extends State<BinderDetailScreen> {
   int _pageIndex = 0;
+
+  /// True while the user is picking cards to take out of the binder: tiles
+  /// get a remove badge and tapping one asks to confirm instead of opening
+  /// its details.
+  bool _removeMode = false;
 
   bool get _isUnassigned => widget.binderId == null;
 
@@ -74,6 +84,59 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
       pageIndex: _isUnassigned ? 0 : _pageIndex,
     );
     if (mounted) setState(() {});
+  }
+
+  void _goToPage(int index) {
+    setState(() {
+      _pageIndex = index;
+      // Nothing to remove on an empty page — drop back to normal mode.
+      if (_currentPageCards.isEmpty) _removeMode = false;
+    });
+  }
+
+  Future<void> _confirmRemove(PokemonCardData card) async {
+    final binder = _binder;
+    if (binder == null) return;
+
+    final copies =
+        card.quantityOwned > 1 ? ' (all ${card.quantityOwned} copies)' : '';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove from binder?'),
+        content: Text(
+          '"${card.name}"$copies will come out of "${binder.name}" and move '
+          'to Unassigned Cards. It stays in your collection.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            icon: const Icon(
+              Icons.remove_circle_outline,
+              size: 16,
+              color: PokeBinderColors.danger,
+            ),
+            label: const Text(
+              'Remove',
+              style: TextStyle(color: PokeBinderColors.danger),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    widget.onCardRemoved(card);
+    setState(() {
+      if (_currentPageCards.isEmpty) _removeMode = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Moved "${card.name}" to Unassigned Cards.')),
+    );
   }
 
   Future<void> _openEditBinder() async {
@@ -121,6 +184,8 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
     }
 
     final currentPageCards = _currentPageCards;
+    final removing =
+        !_isUnassigned && _removeMode && currentPageCards.isNotEmpty;
     final title = _isUnassigned ? 'Unassigned Cards' : binder!.name;
     final subtitle = _isUnassigned
         ? '${widget.unassignedCards.length} '
@@ -142,27 +207,43 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                     onTap: () => Navigator.of(context).pop(),
                   ),
                   if (!_isUnassigned)
-                    InkWell(
-                      onTap: _openEditBinder,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 13,
-                            color: PokeBinderText.backLink.color,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (removing)
+                          _HeaderAction(
+                            icon: Icons.check,
+                            label: 'Done',
+                            onTap: () => setState(() => _removeMode = false),
+                          )
+                        else ...[
+                          if (currentPageCards.isNotEmpty) ...[
+                            _HeaderAction(
+                              icon: Icons.remove_circle_outline,
+                              label: 'Remove',
+                              onTap: () => setState(() => _removeMode = true),
+                            ),
+                            const SizedBox(width: PokeBinderSpacing.sp3),
+                          ],
+                          _HeaderAction(
+                            icon: Icons.edit_outlined,
+                            label: 'Edit',
+                            onTap: _openEditBinder,
                           ),
-                          const SizedBox(width: PokeBinderSpacing.sp1),
-                          Text('Edit', style: PokeBinderText.backLink),
                         ],
-                      ),
+                      ],
                     ),
                 ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text(title, style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
-              Text(subtitle, style: PokeBinderText.subtitle),
+              Text(
+                removing
+                    ? 'Tap a card to remove it from this binder.'
+                    : subtitle,
+                style: PokeBinderText.subtitle,
+              ),
               const SizedBox(height: PokeBinderSpacing.sp3),
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -188,31 +269,50 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                           children: [
                             SizedBox(
                               height: cardHeight,
-                              child: BinderCardTile(
-                                card: card,
-                                onTap: () => _openCard(card),
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: BinderCardTile(
+                                      card: card,
+                                      onTap: removing
+                                          ? () => _confirmRemove(card)
+                                          : () => _openCard(card),
+                                    ),
+                                  ),
+                                  if (removing)
+                                    const Positioned(
+                                      top: 4,
+                                      right: 4,
+                                      child: IgnorePointer(
+                                        child: _RemoveBadge(),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: PokeBinderSpacing.sp1),
                             CardCaption(card: card),
                           ],
                         ),
-                      Column(
-                        children: [
-                          SizedBox(
-                            height: cardHeight,
-                            child: AddCardTile(onTap: _openAddCard),
-                          ),
-                          const SizedBox(height: PokeBinderSpacing.sp1),
-                          Text(
-                            'Add Card Manually',
-                            style: PokeBinderText.cardName,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                      if (!removing)
+                        Column(
+                          children: [
+                            SizedBox(
+                              height: cardHeight,
+                              child: AddCardTile(onTap: _openAddCard),
+                            ),
+                            const SizedBox(height: PokeBinderSpacing.sp1),
+                            Text(
+                              // Real binders open the collection picker; the
+                              // Unassigned bucket still uses manual entry.
+                              _isUnassigned ? 'Add Card Manually' : 'Add Cards',
+                              style: PokeBinderText.cardName,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                     ],
                   );
                 },
@@ -227,7 +327,7 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                         ghost: true,
                         enabled: _pageIndex > 0,
                         onTap: _pageIndex > 0
-                            ? () => setState(() => _pageIndex--)
+                            ? () => _goToPage(_pageIndex - 1)
                             : () {},
                       ),
                     ),
@@ -238,7 +338,7 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                         ghost: true,
                         enabled: _pageIndex < binder!.pageCount - 1,
                         onTap: _pageIndex < binder.pageCount - 1
-                            ? () => setState(() => _pageIndex++)
+                            ? () => _goToPage(_pageIndex + 1)
                             : () {},
                       ),
                     ),
@@ -249,6 +349,55 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Small icon + label action in the screen's top-right corner ("Edit",
+/// "Remove", "Done"), styled like the Back link.
+class _HeaderAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _HeaderAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: PokeBinderText.backLink.color),
+          const SizedBox(width: PokeBinderSpacing.sp1),
+          Text(label, style: PokeBinderText.backLink),
+        ],
+      ),
+    );
+  }
+}
+
+/// Red minus badge shown on each card while removing cards from a binder.
+class _RemoveBadge extends StatelessWidget {
+  const _RemoveBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        color: PokeBinderColors.danger,
+        shape: BoxShape.circle,
+        border: Border.all(color: PokeBinderColors.white, width: 1.5),
+        boxShadow: kCardElevation,
+      ),
+      child: const Icon(Icons.remove, size: 14, color: Colors.white),
     );
   }
 }

@@ -55,7 +55,11 @@ extension DeckSortOptionLabel on DeckSortOption {
 }
 
 class DecksScreen extends StatefulWidget {
-  const DecksScreen({super.key});
+  /// When set, the deck with this id is opened right after the screen is
+  /// built (e.g. after creating a deck from the Home quick actions).
+  final String? initialDeckId;
+
+  const DecksScreen({super.key, this.initialDeckId});
 
   @override
   State<DecksScreen> createState() => _DecksScreenState();
@@ -68,6 +72,18 @@ class _DecksScreenState extends State<DecksScreen> {
   bool _incompleteOnly = false;
   bool _viewingAllDecks = false;
   DeckSortOption _deckSort = DeckSortOption.name;
+
+  @override
+  void initState() {
+    super.initState();
+    final initialId = widget.initialDeckId;
+    if (initialId == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final matches = _decks.where((d) => d.id == initialId);
+      if (matches.isNotEmpty) _openDeckDetail(matches.first);
+    });
+  }
 
   List<DeckData> get _visibleDecks {
     return _decks.where((deck) {

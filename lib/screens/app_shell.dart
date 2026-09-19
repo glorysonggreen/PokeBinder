@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
+import '../models/deck_data.dart';
 import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/app_nav_bar.dart';
@@ -30,6 +31,8 @@ class _AppShellState extends State<AppShell> {
   int _bindersLinkToken = 0;
   int _bindersInitialTabIndex = 0;
   String? _bindersInitialBinderId;
+  int _decksLinkToken = 0;
+  String? _decksInitialDeckId;
 
   void _switchTab(AppTab tab) => setState(() => _tab = tab);
 
@@ -42,6 +45,16 @@ class _AppShellState extends State<AppShell> {
       _bindersInitialTabIndex = tabIndex;
       _bindersInitialBinderId = binderId;
       _tab = AppTab.binders;
+    });
+  }
+
+  /// Switches to the Decks tab and opens [deck] there. Bumping the token
+  /// rebuilds DecksScreen so it picks up the new deck and jumps to it.
+  void _openDeck(DeckData deck) {
+    setState(() {
+      _decksLinkToken++;
+      _decksInitialDeckId = deck.id;
+      _tab = AppTab.decks;
     });
   }
 
@@ -60,7 +73,7 @@ class _AppShellState extends State<AppShell> {
             onOpenBinder: (BinderData binder) =>
                 _openBinders(tabIndex: 0, binderId: binder.id),
             onOpenScan: () => _switchTab(AppTab.scan),
-            onOpenDecks: () => _switchTab(AppTab.decks),
+            onOpenDeck: _openDeck,
           ),
           BindersScreen(
             key: ValueKey(_bindersLinkToken),
@@ -68,7 +81,10 @@ class _AppShellState extends State<AppShell> {
             initialBinderId: _bindersInitialBinderId,
           ),
           const ScannerScreen(),
-          const DecksScreen(),
+          DecksScreen(
+            key: ValueKey(_decksLinkToken),
+            initialDeckId: _decksInitialDeckId,
+          ),
           MoreScreen(
             profile: _profile,
             onProfileChanged: _handleProfileChanged,
