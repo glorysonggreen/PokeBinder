@@ -146,9 +146,9 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: PokeBinderSpacing.sp1),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               Text('TRAINER CARD', style: PokeBinderText.eyebrow),
-              const SizedBox(height: PokeBinderSpacing.sp3),
+              const SizedBox(height: PokeBinderSpacing.sp4),
 
               _TrainerHeaderPanel(
                 trainerName: trainerName,

@@ -55,7 +55,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               BackLink(onTap: _backToLogin),
-              const SizedBox(height: PokeBinderSpacing.sp3),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Reset Your Password', style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
@@ -63,7 +63,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 'reset link.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp5),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               if (sentToEmail == null) ...[
                 LabeledFormField(

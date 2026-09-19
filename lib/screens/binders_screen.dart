@@ -279,7 +279,7 @@ class _BindersScreenState extends State<BindersScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('COLLECTION', style: PokeBinderText.eyebrow),
-              const SizedBox(height: PokeBinderSpacing.sp3),
+              const SizedBox(height: PokeBinderSpacing.sp4),
               _TopTabBar(
                 index: _tabIndex,
                 labels: const ['Binders', 'All Cards'],

@@ -169,12 +169,12 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
                 _isEditing ? 'Edit Wishlist Entry' : 'Add to Wishlist',
                 style: PokeBinderText.heading,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 "Track a card you're hoping to pull or pick up.",
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               LabeledFormField(
                 label: 'Card name',

@@ -166,12 +166,12 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Edit Trade Entry', style: PokeBinderText.heading),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 "List a card you're ready to trade away.",
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               LabeledFormField(
                 label: 'Card name',

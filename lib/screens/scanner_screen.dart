@@ -131,18 +131,18 @@ class _ScannerScreenState extends State<ScannerScreen>
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
+            PokeBinderSpacing.sp5,
+            PokeBinderSpacing.sp5,
+            PokeBinderSpacing.sp5,
             PokeBinderSpacing.sp6,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('CARD SCANNER', style: PokeBinderText.eyebrow),
-              const SizedBox(height: 2),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               Text('Scan a card', style: PokeBinderText.heading),
-              const SizedBox(height: PokeBinderSpacing.sp1),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               Text(
                 'Line the card up in the frame and tap to capture.',
                 style: PokeBinderText.subtitle,

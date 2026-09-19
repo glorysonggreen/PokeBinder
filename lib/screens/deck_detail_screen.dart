@@ -191,9 +191,9 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp5,
-            PokeBinderSpacing.sp3,
-            PokeBinderSpacing.sp5,
+            PokeBinderSpacing.sp4,
+            PokeBinderSpacing.sp4,
+            PokeBinderSpacing.sp4,
             PokeBinderSpacing.sp6,
           ),
           child: Column(

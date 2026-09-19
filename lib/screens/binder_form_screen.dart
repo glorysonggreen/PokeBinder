@@ -149,7 +149,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                 _isEditing ? 'Edit Binder' : 'Create a Binder',
                 style: PokeBinderText.heading,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 _isEditing
                     ? 'Update the details — pages already in this binder '
@@ -158,7 +158,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                         'to it right after.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp4),
+              const SizedBox(height: PokeBinderSpacing.sp3),
 
               LabeledFormField(
                 label: 'Binder name',
