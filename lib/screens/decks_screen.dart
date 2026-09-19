@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/min_tap_target.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'deck_detail_screen.dart';
 import 'deck_form_screen.dart';
@@ -298,54 +299,61 @@ class _DeckFilterChip extends StatelessWidget {
             : PokeBinderText.chipLabelActive)
         : PokeBinderText.chipLabel;
 
+    // The pill itself stays compact (matches its old visual size); wrapping
+    // it in Center lets the row around it grow to kFilterChipRowHeight
+    // (44, a real tap target) without stretching the pill's background,
+    // border or shadow to fill that height.
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(
-          horizontal: PokeBinderSpacing.sp3,
-          vertical: PokeBinderSpacing.sp2,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: active ? null : PokeBinderColors.cream2,
-          gradient: active
-              ? (isToggle
-                  ? PokeBinderColors.goldGradient
-                  : PokeBinderColors.redGradient)
-              : null,
-          border: active
-              ? null
-              : Border.all(
-                  color: isToggle
-                      ? PokeBinderColors.goldDeep.withValues(alpha: 0.35)
-                      : PokeBinderColors.ink.withValues(alpha: 0.06),
-                ),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: (isToggle
-                            ? PokeBinderColors.goldDeep
-                            : PokeBinderColors.redDeep)
-                        .withValues(alpha: 0.28),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+      behavior: HitTestBehavior.opaque,
+      child: Center(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(
+            horizontal: PokeBinderSpacing.sp3,
+            vertical: PokeBinderSpacing.sp2,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: active ? null : PokeBinderColors.cream2,
+            gradient: active
+                ? (isToggle
+                    ? PokeBinderColors.goldGradient
+                    : PokeBinderColors.redGradient)
+                : null,
+            border: active
+                ? null
+                : Border.all(
+                    color: isToggle
+                        ? PokeBinderColors.goldDeep.withValues(alpha: 0.35)
+                        : PokeBinderColors.ink.withValues(alpha: 0.06),
                   ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: iconColor),
-            const SizedBox(width: PokeBinderSpacing.sp1),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 150),
-              style: labelStyle,
-              child: Text(label),
-            ),
-          ],
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: (isToggle
+                              ? PokeBinderColors.goldDeep
+                              : PokeBinderColors.redDeep)
+                          .withValues(alpha: 0.28),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: iconColor),
+              const SizedBox(width: PokeBinderSpacing.sp1),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 150),
+                style: labelStyle,
+                child: Text(label),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -509,30 +517,26 @@ class _DeckListPanel extends StatelessWidget {
             const SizedBox(height: PokeBinderSpacing.sp3),
         ],
         if (hiddenCount > 0 || viewingAllDecks)
-          Padding(
-            padding: const EdgeInsets.only(top: PokeBinderSpacing.sp2),
-            child: GestureDetector(
-              onTap: onToggleViewAllDecks,
-              behavior: HitTestBehavior.opaque,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    viewingAllDecks
-                        ? 'Show Less'
-                        : 'View All Decks (+$hiddenCount)',
-                    style: PokeBinderText.backLink,
-                  ),
-                  const SizedBox(width: PokeBinderSpacing.sp1),
-                  Icon(
-                    viewingAllDecks
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
-                    size: 14,
-                    color: PokeBinderText.backLink.color,
-                  ),
-                ],
-              ),
+          MinTapTarget(
+            onTap: onToggleViewAllDecks,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  viewingAllDecks
+                      ? 'Show Less'
+                      : 'View All Decks (+$hiddenCount)',
+                  style: PokeBinderText.backLink,
+                ),
+                const SizedBox(width: PokeBinderSpacing.sp1),
+                Icon(
+                  viewingAllDecks
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded,
+                  size: 14,
+                  color: PokeBinderText.backLink.color,
+                ),
+              ],
             ),
           ),
       ],
@@ -598,25 +602,33 @@ class _DeckSortSelector extends StatelessWidget {
               child: _DeckSortMenuRow(option: option, selected: option == selected),
             ),
         ],
-        child: Container(
-          padding: PokeBinderSpacing.chip,
-          decoration: BoxDecoration(
-            color: PokeBinderColors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('SORT: ${selected.label.toUpperCase()}',
-                  style: PokeBinderText.resultCount),
-              const SizedBox(width: PokeBinderSpacing.sp0),
-              const Icon(
-                Icons.expand_more_rounded,
-                size: 15,
-                color: PokeBinderColors.inkSoft,
+        // ConstrainedBox+Center grows the tappable area PopupMenuButton
+        // hit-tests against to kMinTapTarget (44) without growing the pill
+        // itself, which stays sized by PokeBinderSpacing.chip as before.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kMinTapTarget),
+          child: Center(
+            child: Container(
+              padding: PokeBinderSpacing.chip,
+              decoration: BoxDecoration(
+                color: PokeBinderColors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('SORT: ${selected.label.toUpperCase()}',
+                      style: PokeBinderText.resultCount),
+                  const SizedBox(width: PokeBinderSpacing.sp0),
+                  const Icon(
+                    Icons.expand_more_rounded,
+                    size: 15,
+                    color: PokeBinderColors.inkSoft,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -740,20 +752,17 @@ class _DeckRow extends StatelessWidget {
                 ok: complete,
                 label: complete ? '✓ Complete' : 'Missing $missing',
               ),
-              GestureDetector(
+              MinTapTarget(
                 onTap: onTogglePin,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.all(PokeBinderSpacing.sp1),
-                  child: Icon(
-                    deck.isPinned
-                        ? Icons.push_pin_rounded
-                        : Icons.push_pin_outlined,
-                    size: 15,
-                    color: deck.isPinned
-                        ? PokeBinderColors.red
-                        : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
-                  ),
+                semanticLabel: deck.isPinned ? 'Unpin deck' : 'Pin deck',
+                child: Icon(
+                  deck.isPinned
+                      ? Icons.push_pin_rounded
+                      : Icons.push_pin_outlined,
+                  size: 15,
+                  color: deck.isPinned
+                      ? PokeBinderColors.red
+                      : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
                 ),
               ),
             ],

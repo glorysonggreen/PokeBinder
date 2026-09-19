@@ -53,8 +53,16 @@ const double kPokemonCardImageHeightPx = 825;
 const double kPokemonCardImageAspectRatio = kPokemonCardImageWidthPx / kPokemonCardImageHeightPx;
 const double kCardInteractionHeightBuffer = 1.25;
 const double kCardCaptionHeight = 36.0;
-/// Height of the horizontally scrolling filter-chip rows.
-const double kFilterChipRowHeight = 36.0;
+/// Height of the horizontally scrolling filter-chip rows. Matches
+/// [kMinTapTarget] so the chips inside them can hit that target without
+/// growing visually (see [MinTapTarget]).
+const double kFilterChipRowHeight = 44.0;
+
+/// Minimum width/height for anything tappable, per Apple's 44pt and
+/// Material's 48dp guidance (44 is the stricter/shared floor). Small visual
+/// controls (pills, icon buttons, text links) should keep their compact look
+/// but sit inside a tap area of at least this size — see [MinTapTarget].
+const double kMinTapTarget = 44.0;
 
 /// The spacing scale. Every gap, padding and margin in the app should come
 /// from here so the UI stays on one rhythm.

@@ -128,25 +128,33 @@ class CardSortSelector extends StatelessWidget {
               child: CardSortMenuRow(option: option, selected: option == selected),
             ),
         ],
-        child: Container(
-          padding: PokeBinderSpacing.chip,
-          decoration: BoxDecoration(
-            color: PokeBinderColors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('SORT: ${selected.label.toUpperCase()}',
-                  style: PokeBinderText.resultCount),
-              const SizedBox(width: PokeBinderSpacing.sp0),
-              const Icon(
-                Icons.expand_more_rounded,
-                size: 15,
-                color: PokeBinderColors.inkSoft,
+        // ConstrainedBox+Center grows the tappable area PopupMenuButton
+        // hit-tests against to kMinTapTarget (44) without growing the pill
+        // itself, which stays sized by PokeBinderSpacing.chip as before.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kMinTapTarget),
+          child: Center(
+            child: Container(
+              padding: PokeBinderSpacing.chip,
+              decoration: BoxDecoration(
+                color: PokeBinderColors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('SORT: ${selected.label.toUpperCase()}',
+                      style: PokeBinderText.resultCount),
+                  const SizedBox(width: PokeBinderSpacing.sp0),
+                  const Icon(
+                    Icons.expand_more_rounded,
+                    size: 15,
+                    color: PokeBinderColors.inkSoft,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -218,9 +226,15 @@ class CardFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The pill itself stays compact (matches its old visual size); wrapping
+    // it in Center lets the row around it grow to kFilterChipRowHeight
+    // (44, a real tap target) without stretching the pill's background,
+    // border or shadow to fill that height.
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
+      behavior: HitTestBehavior.opaque,
+      child: Center(
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(
@@ -259,6 +273,7 @@ class CardFilterChip extends StatelessWidget {
               child: Text(label),
             ),
           ],
+        ),
         ),
       ),
     );

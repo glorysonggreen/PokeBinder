@@ -508,25 +508,33 @@ class _WishlistSortSelector extends StatelessWidget {
               ),
             ),
         ],
-        child: Container(
-          padding: PokeBinderSpacing.chip,
-          decoration: BoxDecoration(
-            color: PokeBinderColors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('SORT: ${selected.label.toUpperCase()}',
-                  style: PokeBinderText.resultCount),
-              const SizedBox(width: PokeBinderSpacing.sp0),
-              const Icon(
-                Icons.expand_more_rounded,
-                size: 15,
-                color: PokeBinderColors.inkSoft,
+        // ConstrainedBox+Center grows the tappable area PopupMenuButton
+        // hit-tests against to kMinTapTarget (44) without growing the pill
+        // itself, which stays sized by PokeBinderSpacing.chip as before.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kMinTapTarget),
+          child: Center(
+            child: Container(
+              padding: PokeBinderSpacing.chip,
+              decoration: BoxDecoration(
+                color: PokeBinderColors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.1)),
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('SORT: ${selected.label.toUpperCase()}',
+                      style: PokeBinderText.resultCount),
+                  const SizedBox(width: PokeBinderSpacing.sp0),
+                  const Icon(
+                    Icons.expand_more_rounded,
+                    size: 15,
+                    color: PokeBinderColors.inkSoft,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

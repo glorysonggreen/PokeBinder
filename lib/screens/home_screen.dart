@@ -5,6 +5,7 @@ import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
 import '../widgets/card_caption.dart';
+import '../widgets/min_tap_target.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
@@ -254,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     if (_cards.isNotEmpty)
-                      GestureDetector(
+                      MinTapTarget(
                         onTap: widget.onOpenAllCards,
                         child: Text(
                           'View All',
