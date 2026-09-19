@@ -116,7 +116,7 @@ class _CardFrame extends StatelessWidget {
             if (showInsetBorder)
               Positioned.fill(
                 child: Container(
-                  margin: const EdgeInsets.all(4),
+                  margin: const EdgeInsets.all(PokeBinderSpacing.sp1),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     border: Border.all(

@@ -14,7 +14,7 @@ InputDecoration pokeInputDecoration({
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(color: Color(0xFFA89C86), fontSize: 11.5),
+    hintStyle: PokeBinderText.hint,
     filled: true,
     fillColor: PokeBinderColors.white,
     isDense: true,
@@ -24,8 +24,10 @@ InputDecoration pokeInputDecoration({
     prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 0),
     suffixIcon: suffixIcon,
     suffixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 0),
-    contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: PokeBinderSpacing.sp3,
+      vertical: PokeBinderSpacing.sp4,
+    ),
     border: border,
     enabledBorder: border,
     focusedBorder: OutlineInputBorder(
@@ -52,7 +54,7 @@ class LabeledFormField extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
             child: Text(label.toUpperCase(), style: PokeBinderText.formLabel),
           ),
           DecoratedBox(
@@ -86,7 +88,7 @@ class FormFieldRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(child: left),
-        const SizedBox(width: 10),
+        const SizedBox(width: PokeBinderSpacing.sp2),
         Expanded(child: right),
       ],
     );
@@ -146,13 +148,17 @@ class PokeDropdownField<T> extends StatelessWidget {
               side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
             ),
             constraints: BoxConstraints(minWidth: menuWidth),
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(
+              vertical: PokeBinderSpacing.sp2,
+            ),
             itemBuilder: (context) => [
               for (final option in options)
                 PopupMenuItem<T>(
                   value: option.value,
                   height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: PokeBinderSpacing.sp1,
+                  ),
                   child: _PokeDropdownMenuRow(
                     label: option.label,
                     icon: option.icon,
@@ -162,7 +168,10 @@ class PokeDropdownField<T> extends StatelessWidget {
             ],
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PokeBinderSpacing.sp3,
+                vertical: PokeBinderSpacing.sp4,
+              ),
               decoration: BoxDecoration(
                 color: PokeBinderColors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -173,14 +182,13 @@ class PokeDropdownField<T> extends StatelessWidget {
                     Icon(displayIcon,
                         size: 16,
                         color: PokeBinderColors.redDeep.withValues(alpha: 0.55)),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
                   ],
                   Expanded(
                     child: Text(
                       selected.label,
                       overflow: TextOverflow.ellipsis,
-                      style: PokeBinderText.fieldValue
-                          .copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: PokeBinderText.selectValue,
                     ),
                   ),
                   const Icon(
@@ -214,7 +222,7 @@ class _PokeDropdownMenuRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: PokeBinderSpacing.sp2,
-        vertical: 8,
+        vertical: PokeBinderSpacing.sp2,
       ),
       decoration: BoxDecoration(
         color: selected ? PokeBinderColors.red.withValues(alpha: 0.08) : null,
@@ -228,16 +236,12 @@ class _PokeDropdownMenuRow extends StatelessWidget {
                 color: selected
                     ? PokeBinderColors.redDeep
                     : PokeBinderColors.inkSoft),
-            const SizedBox(width: 8),
+            const SizedBox(width: PokeBinderSpacing.sp2),
           ],
           Expanded(
             child: Text(
               label,
-              style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                color: selected ? PokeBinderColors.redDeep : PokeBinderColors.ink,
-              )),
+              style: PokeBinderText.pillLabel(selected: selected),
             ),
           ),
           if (selected)

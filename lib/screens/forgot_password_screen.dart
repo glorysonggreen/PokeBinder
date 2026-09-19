@@ -45,12 +45,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

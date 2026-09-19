@@ -119,12 +119,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -243,25 +238,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                           color: PokeBinderColors.danger.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.delete_outline,
-                              size: 14,
-                              color: PokeBinderColors.danger,
-                            ),
-                            SizedBox(width: PokeBinderSpacing.sp2),
-                            Text(
-                              'Delete Deck',
-                              style: TextStyle(
-                                color: PokeBinderColors.danger,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: const PokeDangerLabel('Delete Deck'),
                       ),
                     ),
                   ),

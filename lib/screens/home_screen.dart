@@ -257,12 +257,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: widget.onOpenAllCards,
                         child: Text(
                           'View All',
-                          style: PokeBinderText.chakraPetch(const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.3,
+                          style: PokeBinderText.chipLabel.copyWith(
                             color: PokeBinderColors.redDeep,
-                          )),
+                          ),
                         ),
                       ),
                   ],
@@ -359,18 +356,17 @@ class _CardCountBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: PokeBinderSpacing.sp1,
+        vertical: PokeBinderSpacing.sp1,
+      ),
       decoration: BoxDecoration(
         color: PokeBinderColors.cream2,
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         '$count cards',
-        style: PokeBinderText.chakraPetch(const TextStyle(
-          fontSize: 8.5,
-          fontWeight: FontWeight.w600,
-          color: PokeBinderColors.inkSoft,
-        )),
+        style: PokeBinderText.cardName,
       ),
     );
   }
@@ -392,7 +388,10 @@ class _StatBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+          padding: const EdgeInsets.symmetric(
+            vertical: PokeBinderSpacing.sp3,
+            horizontal: PokeBinderSpacing.sp1,
+          ),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -407,10 +406,10 @@ class _StatBox extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(value, style: PokeBinderText.statNumber),
-              const SizedBox(height: 4),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 label.toUpperCase(),
-                style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
+                style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.4),
               ),
             ],
           ),
@@ -437,7 +436,7 @@ class _ContinueBinderPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
           decoration: BoxDecoration(
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(14),
@@ -451,7 +450,7 @@ class _ContinueBinderPanel extends StatelessWidget {
                 children: [
                   Text('CONTINUE A BINDER', style: PokeBinderText.sectionLabel),
                   if (binder.isPinned) ...[
-                    const SizedBox(width: 6),
+                    const SizedBox(width: PokeBinderSpacing.sp1),
                     const Icon(
                       Icons.push_pin_rounded,
                       size: 11,
@@ -489,10 +488,9 @@ class _ContinueBinderPanel extends StatelessWidget {
                       children: [
                         Text(
                           binder.name,
-                          style: PokeBinderText.listRowTitle
-                              .copyWith(fontWeight: FontWeight.bold, fontSize: 13),
+                          style: PokeBinderText.rowTitle,
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: PokeBinderSpacing.sp0),
                         Text(
                           '${binder.pageCount} pages · ${binder.cardCount} cards',
                           style: PokeBinderText.listRowSubtitle,
@@ -535,7 +533,7 @@ class _RecentCardTile extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: PokeBinderSpacing.sp0),
         Text(
           '${card.setName} · #${card.cardNumber}',
           textAlign: TextAlign.center,

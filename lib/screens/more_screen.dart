@@ -200,12 +200,9 @@ class _MoreRow extends StatelessWidget {
                   children: [
                     Text(
                       data.title,
-                      style: PokeBinderText.listRowTitle.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
+                      style: PokeBinderText.rowTitle,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: PokeBinderSpacing.sp0),
                     Text(data.subtitle, style: PokeBinderText.listRowSubtitle),
                   ],
                 ),

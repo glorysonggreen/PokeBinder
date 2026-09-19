@@ -158,12 +158,7 @@ class _DecksScreenState extends State<DecksScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp5,
-            PokeBinderSpacing.sp5,
-            PokeBinderSpacing.sp5,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -215,7 +210,9 @@ class _DecksScreenState extends State<DecksScreen> {
                         const SizedBox(width: PokeBinderSpacing.sp2),
                       ],
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: PokeBinderSpacing.sp0,
+                        ),
                         child: Container(
                           width: 1,
                           height: 18,
@@ -306,7 +303,10 @@ class _DeckFilterChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: PokeBinderSpacing.sp3,
+          vertical: PokeBinderSpacing.sp2,
+        ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: active ? null : PokeBinderColors.cream2,
@@ -339,7 +339,7 @@ class _DeckFilterChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 13, color: iconColor),
-            const SizedBox(width: 6),
+            const SizedBox(width: PokeBinderSpacing.sp1),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 150),
               style: labelStyle,
@@ -361,19 +361,14 @@ class _FormatTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = format.accentColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: PokeBinderSpacing.chip,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         format.shortLabel.toUpperCase(),
-        style: PokeBinderText.chakraPetch(TextStyle(
-          fontSize: 8.5,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.4,
-          color: color,
-        )),
+        style: PokeBinderText.tagLabel(color),
       ),
     );
   }
@@ -501,7 +496,7 @@ class _DeckListPanel extends StatelessWidget {
         for (final section in sections) ...[
           if (showMultipleSections) ...[
             Padding(
-              padding: const EdgeInsets.only(left: 2),
+              padding: const EdgeInsets.only(left: PokeBinderSpacing.sp0),
               child: Text(
                 '${section.title.toUpperCase()} · ${section.totalCount}',
                 style: PokeBinderText.sectionLabel,
@@ -528,7 +523,7 @@ class _DeckListPanel extends StatelessWidget {
                         : 'View All Decks (+$hiddenCount)',
                     style: PokeBinderText.backLink,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: PokeBinderSpacing.sp1),
                   Icon(
                     viewingAllDecks
                         ? Icons.expand_less_rounded
@@ -591,18 +586,20 @@ class _DeckSortSelector extends StatelessWidget {
           side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         ),
         constraints: const BoxConstraints(minWidth: 175),
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
         itemBuilder: (context) => [
           for (final option in DeckSortOption.values)
             PopupMenuItem(
               value: option,
               height: 38,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PokeBinderSpacing.sp1,
+              ),
               child: _DeckSortMenuRow(option: option, selected: option == selected),
             ),
         ],
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: PokeBinderSpacing.chip,
           decoration: BoxDecoration(
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(20),
@@ -613,7 +610,7 @@ class _DeckSortSelector extends StatelessWidget {
             children: [
               Text('SORT: ${selected.label.toUpperCase()}',
                   style: PokeBinderText.resultCount),
-              const SizedBox(width: 2),
+              const SizedBox(width: PokeBinderSpacing.sp0),
               const Icon(
                 Icons.expand_more_rounded,
                 size: 15,
@@ -638,7 +635,7 @@ class _DeckSortMenuRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: PokeBinderSpacing.sp2,
-        vertical: 8,
+        vertical: PokeBinderSpacing.sp2,
       ),
       decoration: BoxDecoration(
         color: selected ? PokeBinderColors.red.withValues(alpha: 0.08) : null,
@@ -655,13 +652,7 @@ class _DeckSortMenuRow extends StatelessWidget {
           Expanded(
             child: Text(
               option.label,
-              style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                color: selected
-                    ? PokeBinderColors.redDeep
-                    : PokeBinderColors.ink,
-              )),
+              style: PokeBinderText.pillLabel(selected: selected),
             ),
           ),
           if (selected)
@@ -724,13 +715,10 @@ class _DeckRow extends StatelessWidget {
                   children: [
                     Text(
                       deck.name,
-                      style: PokeBinderText.listRowTitle.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
+                      style: PokeBinderText.rowTitle,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: PokeBinderSpacing.sp1),
                     Row(
                       children: [
                         _FormatTag(format: deck.format),
@@ -756,7 +744,7 @@ class _DeckRow extends StatelessWidget {
                 onTap: onTogglePin,
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(PokeBinderSpacing.sp1),
                   child: Icon(
                     deck.isPinned
                         ? Icons.push_pin_rounded
@@ -785,19 +773,16 @@ class _StatusTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: PokeBinderSpacing.chip,
       decoration: BoxDecoration(
         color: ok ? _kTagOkBg : _kTagWarnBg,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         label,
-        style: PokeBinderText.chakraPetch(TextStyle(
-          fontSize: 9.5,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.3,
-          color: ok ? _kTagOkFg : PokeBinderColors.danger,
-        )),
+        style: PokeBinderText.tagLabel(
+          ok ? _kTagOkFg : PokeBinderColors.danger,
+        ),
       ),
     );
   }

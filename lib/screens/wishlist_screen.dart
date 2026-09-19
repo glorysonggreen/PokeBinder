@@ -256,7 +256,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(PokeBinderSpacing.sp4),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -325,7 +325,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   scrollDirection: Axis.horizontal,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.only(
+                        right: PokeBinderSpacing.sp1,
+                      ),
                       child: CardFilterChip(
                         label: 'All',
                         icon: Icons.apps_rounded,
@@ -338,7 +340,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     ),
                     for (final priority in WishlistPriority.values)
                       Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.only(
+                          right: PokeBinderSpacing.sp1,
+                        ),
                         child: CardFilterChip(
                           label: priority.label,
                           icon: priority.icon,
@@ -436,7 +440,10 @@ class _WishlistStatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      padding: const EdgeInsets.symmetric(
+        vertical: PokeBinderSpacing.sp3,
+        horizontal: PokeBinderSpacing.sp1,
+      ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -450,8 +457,8 @@ class _WishlistStatBox extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value, style: PokeBinderText.statNumber.copyWith(fontSize: 16)),
-          const SizedBox(height: 2),
+          Text(value, style: PokeBinderText.statNumberSm),
+          const SizedBox(height: PokeBinderSpacing.sp0),
           Text(label, style: PokeBinderText.statLabel),
         ],
       ),
@@ -486,13 +493,15 @@ class _WishlistSortSelector extends StatelessWidget {
           side: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         ),
         constraints: const BoxConstraints(minWidth: 170),
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
         itemBuilder: (context) => [
           for (final option in _WishlistSort.values)
             PopupMenuItem(
               value: option,
               height: 38,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PokeBinderSpacing.sp1,
+              ),
               child: _WishlistSortMenuRow(
                 option: option,
                 selected: option == selected,
@@ -500,7 +509,7 @@ class _WishlistSortSelector extends StatelessWidget {
             ),
         ],
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: PokeBinderSpacing.chip,
           decoration: BoxDecoration(
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(20),
@@ -511,7 +520,7 @@ class _WishlistSortSelector extends StatelessWidget {
             children: [
               Text('SORT: ${selected.label.toUpperCase()}',
                   style: PokeBinderText.resultCount),
-              const SizedBox(width: 2),
+              const SizedBox(width: PokeBinderSpacing.sp0),
               const Icon(
                 Icons.expand_more_rounded,
                 size: 15,
@@ -536,7 +545,7 @@ class _WishlistSortMenuRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: PokeBinderSpacing.sp2,
-        vertical: 8,
+        vertical: PokeBinderSpacing.sp2,
       ),
       decoration: BoxDecoration(
         color: selected ? PokeBinderColors.red.withValues(alpha: 0.08) : null,
@@ -549,15 +558,11 @@ class _WishlistSortMenuRow extends StatelessWidget {
             size: 15,
             color: selected ? PokeBinderColors.redDeep : PokeBinderColors.inkSoft,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: PokeBinderSpacing.sp2),
           Expanded(
             child: Text(
               option.label,
-              style: PokeBinderText.chakraPetch(TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                color: selected ? PokeBinderColors.redDeep : PokeBinderColors.ink,
-              )),
+              style: PokeBinderText.pillLabel(selected: selected),
             ),
           ),
           if (selected)
@@ -583,7 +588,7 @@ class _DismissBackground extends StatelessWidget {
     return Container(
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.symmetric(horizontal: PokeBinderSpacing.sp3),
-      margin: const EdgeInsets.symmetric(vertical: 2),
+      margin: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp0),
       decoration: BoxDecoration(
         color: PokeBinderColors.danger.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
@@ -636,7 +641,7 @@ class _WishlistCardListPanel extends StatelessWidget {
         child: ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
           itemCount: entries.length,
           separatorBuilder: (_, __) => Divider(
             height: 1,
@@ -686,7 +691,7 @@ class _WishlistRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -713,13 +718,9 @@ class _WishlistRow extends StatelessWidget {
                     Text(
                       entry.name,
                       overflow: TextOverflow.ellipsis,
-                      style: PokeBinderText.chakraPetch(const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: PokeBinderColors.ink,
-                      )),
+                      style: PokeBinderText.rowTitle,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: PokeBinderSpacing.sp1),
                     Text(
                       entry.setName.isEmpty
                           ? '—'
@@ -729,10 +730,10 @@ class _WishlistRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: PokeBinderText.listRowSubtitle,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: PokeBinderSpacing.sp2),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
+                      spacing: PokeBinderSpacing.sp2,
+                      runSpacing: PokeBinderSpacing.sp1,
                       children: [
                         if (entry.rarity.isNotEmpty)
                           _RarityTag(rarity: entry.rarity),
@@ -742,13 +743,13 @@ class _WishlistRow extends StatelessWidget {
                       ],
                     ),
                     if (!isWishlist && entry.askingFor.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: PokeBinderSpacing.sp2),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(Icons.compare_arrows_rounded,
                               size: 12, color: PokeBinderColors.inkSoft),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: PokeBinderSpacing.sp1),
                           Expanded(
                             child: Text(
                               'Wants: ${entry.askingFor}',
@@ -761,7 +762,7 @@ class _WishlistRow extends StatelessWidget {
                       ),
                     ],
                     if (entry.notes.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: PokeBinderSpacing.sp1),
                       Text(
                         entry.notes,
                         maxLines: 2,
@@ -780,13 +781,13 @@ class _WishlistRow extends StatelessWidget {
                 children: [
                   _QuantityBadge(isWishlist: isWishlist, quantity: entry.quantity),
                   if (entry.estimatedValue > 0) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: PokeBinderSpacing.sp2),
                     Text(
                       _formatValue(entry.estimatedValue),
                       style: _metaStyle.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ],
-                  const SizedBox(height: 6),
+                  const SizedBox(height: PokeBinderSpacing.sp2),
                   Text(
                     _relativeAdded(entry.dateAdded),
                     style: _metaStyle,
@@ -814,7 +815,7 @@ class _RarityTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(rarity, style: PokeBinderText.listRowSubtitle),
       ],
     );
@@ -838,7 +839,7 @@ class _ConditionTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(label, style: PokeBinderText.listRowSubtitle),
       ],
     );
@@ -859,7 +860,7 @@ class _PriorityTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(priority.icon, size: 11, color: priority.color),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(
           '${priority.label} priority',
           style: PokeBinderText.listRowSubtitle.copyWith(color: priority.color),
@@ -884,18 +885,14 @@ class _QuantityBadge extends StatelessWidget {
     final color =
         isWishlist ? PokeBinderColors.goldDeep : PokeBinderColors.teal;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: PokeBinderSpacing.chip,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         '×$quantity',
-        style: PokeBinderText.chakraPetch(TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: color,
-        )),
+        style: PokeBinderText.buttonGhostLabel.copyWith(color: color),
       ),
     );
   }
@@ -957,7 +954,7 @@ class _EmptyWishlistState extends StatelessWidget {
               color: PokeBinderColors.ink,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: PokeBinderSpacing.sp1),
           Text(
             isFiltered
                 ? 'Try a different search or priority.'

@@ -106,12 +106,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp4,
-            PokeBinderSpacing.sp6,
-          ),
+          padding: PokeBinderSpacing.page,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -126,8 +121,8 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                       onTap: () => _openEdit(context),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 4,
+                          horizontal: PokeBinderSpacing.sp1,
+                          vertical: PokeBinderSpacing.sp1,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -137,7 +132,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                               size: 12,
                               color: PokeBinderColors.redDeep,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: PokeBinderSpacing.sp1),
                             Text('Edit', style: PokeBinderText.backLink),
                           ],
                         ),
@@ -333,16 +328,11 @@ class _TrainerHeaderPanel extends StatelessWidget {
                 const SizedBox(height: PokeBinderSpacing.sp3),
                 Text(
                   trainerName,
-                  style: PokeBinderText.chakraPetch(const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.2,
-                    color: PokeBinderColors.ink,
-                  )),
+                  style: PokeBinderText.headingSm,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: PokeBinderSpacing.sp2),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: PokeBinderSpacing.chip,
                   decoration: BoxDecoration(
                     color: PokeBinderColors.cream2.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(20),
@@ -352,12 +342,9 @@ class _TrainerHeaderPanel extends StatelessWidget {
                   ),
                   child: Text(
                     trainerTitle.toUpperCase(),
-                    style: PokeBinderText.chakraPetch(const TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
+                    style: PokeBinderText.eyebrow.copyWith(
                       color: PokeBinderColors.goldDeep,
-                    )),
+                    ),
                   ),
                 ),
                 if (bio != null && bio!.trim().isNotEmpty) ...[
@@ -413,7 +400,12 @@ class _FavoriteCardPanel extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+            padding: const EdgeInsets.fromLTRB(
+              PokeBinderSpacing.sp2,
+              PokeBinderSpacing.sp3,
+              PokeBinderSpacing.sp2,
+              PokeBinderSpacing.sp3,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -439,18 +431,14 @@ class _FavoriteCardPanel extends StatelessWidget {
                     children: [
                       Text(
                         card.name,
-                        style: PokeBinderText.chakraPetch(const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: PokeBinderColors.ink,
-                        )),
+                        style: PokeBinderText.rowTitle,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: PokeBinderSpacing.sp1),
                       Text(
                         '${card.setName} · #${card.cardNumber}',
                         style: PokeBinderText.listRowSubtitle,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: PokeBinderSpacing.sp0),
                       Text(
                         'Own ${card.quantityOwned}',
                         style: PokeBinderText.listRowSubtitle.copyWith(
@@ -458,17 +446,17 @@ class _FavoriteCardPanel extends StatelessWidget {
                           color: PokeBinderColors.ink,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: PokeBinderSpacing.sp2),
                       Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
+                        spacing: PokeBinderSpacing.sp2,
+                        runSpacing: PokeBinderSpacing.sp1,
                         children: [
                           _RarityTag(rarity: card.rarity),
                           _ConditionTag(code: card.condition),
                         ],
                       ),
                       if (card.notes.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: PokeBinderSpacing.sp1),
                         Text(
                           card.notes,
                           maxLines: 2,
@@ -515,7 +503,7 @@ class _RarityTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(rarity, style: PokeBinderText.listRowSubtitle),
       ],
     );
@@ -540,7 +528,7 @@ class _ConditionTag extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
-        const SizedBox(width: 4),
+        const SizedBox(width: PokeBinderSpacing.sp1),
         Text(label, style: PokeBinderText.listRowSubtitle),
       ],
     );
@@ -561,7 +549,10 @@ class _TrainerStatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+      padding: const EdgeInsets.symmetric(
+        vertical: PokeBinderSpacing.sp4,
+        horizontal: PokeBinderSpacing.sp1,
+      ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -576,10 +567,10 @@ class _TrainerStatBox extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(value, style: PokeBinderText.statNumber),
-          const SizedBox(height: 4),
+          const SizedBox(height: PokeBinderSpacing.sp1),
           Text(
             label,
-            style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.0),
+            style: PokeBinderText.statLabel.copyWith(letterSpacing: 1.4),
           ),
         ],
       ),
@@ -602,7 +593,7 @@ class _FavoriteBinderPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
           decoration: BoxDecoration(
             color: PokeBinderColors.white,
             borderRadius: BorderRadius.circular(14),
@@ -639,14 +630,11 @@ class _FavoriteBinderPanel extends StatelessWidget {
                           child: Text(
                             binder.name,
                             overflow: TextOverflow.ellipsis,
-                            style: PokeBinderText.listRowTitle.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
+                            style: PokeBinderText.rowTitle,
                           ),
                         ),
                         if (binder.isPinned) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: PokeBinderSpacing.sp1),
                           const Icon(
                             Icons.push_pin_rounded,
                             size: 11,
@@ -655,7 +643,7 @@ class _FavoriteBinderPanel extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: PokeBinderSpacing.sp0),
                     Text(
                       '${binder.pageCount} pages · ${binder.cardCount} cards',
                       style: PokeBinderText.listRowSubtitle,
@@ -686,7 +674,7 @@ class _FavoriteDeckPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
         borderRadius: BorderRadius.circular(14),
@@ -723,14 +711,11 @@ class _FavoriteDeckPanel extends StatelessWidget {
                       child: Text(
                         deck.name,
                         overflow: TextOverflow.ellipsis,
-                        style: PokeBinderText.listRowTitle.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
+                        style: PokeBinderText.rowTitle,
                       ),
                     ),
                     if (deck.isPinned) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: PokeBinderSpacing.sp1),
                       const Icon(
                         Icons.push_pin_rounded,
                         size: 11,
@@ -739,7 +724,7 @@ class _FavoriteDeckPanel extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: PokeBinderSpacing.sp0),
                 Text(
                   '${deck.cardCount}/${deck.targetSize} cards · ${deck.format.label}',
                   style: PokeBinderText.listRowSubtitle,
@@ -806,13 +791,13 @@ class _LockedBadgeSlot extends StatelessWidget {
                   size: 16,
                   color: PokeBinderColors.inkSoft.withValues(alpha: 0.5),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: PokeBinderSpacing.sp1),
                 Text(
                   'LOCKED',
                   style: PokeBinderText.chakraPetch(TextStyle(
-                    fontSize: 7.5,
+                    fontSize: 8,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 0.6,
+                    letterSpacing: 0.7,
                     color: PokeBinderColors.inkSoft.withValues(alpha: 0.45),
                   )),
                 ),
