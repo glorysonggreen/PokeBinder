@@ -383,7 +383,7 @@ class _StatDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      height: 26,
+      height: 34,
       color: PokeBinderColors.ink.withValues(alpha: 0.08),
     );
   }
@@ -468,7 +468,6 @@ class _DeckProgressBar extends StatelessWidget {
                 Text(
                   'Deck is ready to play!',
                   style: PokeBinderText.listRowSubtitle.copyWith(
-                    fontSize: 11,
                     color: _kTagOkFg,
                     fontWeight: FontWeight.bold,
                   ),
@@ -615,7 +614,7 @@ class _DeckTypeBalanceBar extends StatelessWidget {
                       '${slice.label} ${slice.count} · '
                       '${((slice.count / total) * 100).round()}%',
                       style: PokeBinderText.cardMeta.copyWith(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: PokeBinderColors.ink,
                       ),
                     ),

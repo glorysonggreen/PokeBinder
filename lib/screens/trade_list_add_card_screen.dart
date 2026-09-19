@@ -471,7 +471,7 @@ class _QuantityStepper extends StatelessWidget {
             onTap: quantity > 0 ? onDecrement : null,
           ),
           SizedBox(
-            width: 22,
+            width: 28,
             child: Text(
               '$quantity',
               textAlign: TextAlign.center,

@@ -795,7 +795,7 @@ class _LockedBadgeSlot extends StatelessWidget {
                 Text(
                   'LOCKED',
                   style: PokeBinderText.chakraPetch(TextStyle(
-                    fontSize: 8,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.7,
                     color: PokeBinderColors.inkSoft.withValues(alpha: 0.45),
