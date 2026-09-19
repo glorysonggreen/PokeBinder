@@ -39,7 +39,7 @@ class StatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<StatsScreen> {
-  final List<BinderData> _binders = BinderData.sampleBinders;
+  final List<BinderData> _binders = BinderData.library;
 
   List<PokemonCardData> get _library => PokemonCardData.library;
 

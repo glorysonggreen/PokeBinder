@@ -86,7 +86,7 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final binders = BinderData.sampleBinders;
+    final binders = BinderData.library;
     final decks = DeckData.library;
 
     return Scaffold(

@@ -57,7 +57,7 @@ class _ScannerScreenState extends State<ScannerScreen>
     ),
   ];
 
-  final List<BinderData> _binders = BinderData.sampleBinders;
+  final List<BinderData> _binders = BinderData.library;
 
   @override
   void dispose() {

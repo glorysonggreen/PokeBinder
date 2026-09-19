@@ -60,9 +60,15 @@ class BindersScreen extends StatefulWidget {
 }
 
 class _BindersScreenState extends State<BindersScreen> {
-  final List<BinderData> _binders = BinderData.sampleBinders;
-  final List<PokemonCardData> _unassignedCards = PokemonCardData.library
-      .where((c) => c.supertype != CardSupertype.pokemon)
+  // The same shared lists every other screen reads and writes —
+  // BinderData.library for binder metadata, PokemonCardData.library for
+  // the cards themselves. Nothing in this screen keeps its own copy of
+  // either, so edits made here are visible everywhere else immediately,
+  // and vice versa.
+  final List<BinderData> _binders = BinderData.library;
+
+  List<PokemonCardData> get _unassignedCards => PokemonCardData.library
+      .where((c) => c.binderName == kUnassignedBinderName)
       .toList();
 
   late int _tabIndex = widget.initialTabIndex;
@@ -79,11 +85,9 @@ class _BindersScreenState extends State<BindersScreen> {
   String? _conditionFilter;
   TimeSortDirection _timeDirection = TimeSortDirection.newest;
 
-  List<PokemonCardData> get _allCards => [
-        for (final binder in _binders)
-          for (final page in binder.pages) ...page,
-        ..._unassignedCards,
-      ];
+  /// Every card in the collection — this *is* PokemonCardData.library, since
+  /// every card is either in some binder or in the Unassigned bucket.
+  List<PokemonCardData> get _allCards => PokemonCardData.library;
 
   @override
   void initState() {
@@ -140,16 +144,17 @@ class _BindersScreenState extends State<BindersScreen> {
   }
 
   /// Opens the full-screen detail view for [binder]. The detail screen
-  /// shares the same live `_binders`/`_unassignedCards` list objects, so
-  /// any edits it makes (directly, or via the callbacks below) are
-  /// visible here immediately — no snapshot to keep in sync.
+  /// shares the same live [_binders] list, and reads this binder's cards
+  /// (and the Unassigned bucket) straight off `PokemonCardData.library`,
+  /// so any edits it makes — directly, or via the callbacks below — are
+  /// visible here immediately, with nothing to keep in sync by hand.
   Future<void> _openBinderDetail(BinderData binder) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BinderDetailScreen(
           binderId: binder.id,
           binders: _binders,
-          unassignedCards: _unassignedCards,
+          unassignedCards: () => _unassignedCards,
           onCardTap: _openCard,
           onAddCard: _openAddCardFor,
           onCardRemoved: _removeCardFromBinder,
@@ -167,7 +172,7 @@ class _BindersScreenState extends State<BindersScreen> {
         builder: (_) => BinderDetailScreen(
           binderId: null,
           binders: _binders,
-          unassignedCards: _unassignedCards,
+          unassignedCards: () => _unassignedCards,
           onCardTap: _openCard,
           onAddCard: _openAddCardFor,
           onCardRemoved: _removeCardFromBinder,
@@ -179,22 +184,41 @@ class _BindersScreenState extends State<BindersScreen> {
     setState(() {});
   }
 
+  /// Applies an edit made in BinderFormScreen. A rename needs to cascade
+  /// to every card in this binder — `card.binderName` is how a card knows
+  /// which binder it's in, so if it isn't updated too the binder would
+  /// appear to lose all its cards.
   void _applyBinderChange(BinderData updated) {
     setState(() {
       final index = _binders.indexWhere((b) => b.id == updated.id);
-      if (index != -1) _binders[index] = updated;
+      if (index == -1) return;
+      final previousName = _binders[index].name;
+      if (previousName != updated.name) {
+        _renameCardsBinder(previousName, updated.name);
+      }
+      _binders[index] = updated;
     });
   }
 
   void _applyBinderDeletion(BinderData deleted) {
     setState(() {
-      for (final page in deleted.pages) {
-        for (final card in page) {
-          _unassignedCards.add(card.copyWith(binderName: 'Unassigned', page: 0));
-        }
-      }
+      _renameCardsBinder(deleted.name, kUnassignedBinderName, resetPage: true);
       _binders.removeWhere((b) => b.id == deleted.id);
     });
+  }
+
+  /// Repoints every card whose `binderName` is [oldName] to [newName] in
+  /// PokemonCardData.library — the only place binder membership lives.
+  void _renameCardsBinder(String oldName, String newName,
+      {bool resetPage = false}) {
+    final library = PokemonCardData.library;
+    for (var i = 0; i < library.length; i++) {
+      if (library[i].binderName != oldName) continue;
+      library[i] = library[i].copyWith(
+        binderName: newName,
+        page: resetPage ? 0 : null,
+      );
+    }
   }
 
   /// Takes [card] out of its binder without deleting it: it lands in the
@@ -202,8 +226,10 @@ class _BindersScreenState extends State<BindersScreen> {
   /// in the collection and can be added to a binder again later.
   void _removeCardFromBinder(PokemonCardData card) {
     setState(() {
-      _removeCardById(card.id);
-      _unassignedCards.add(card.copyWith(binderName: 'Unassigned', page: 0));
+      final index = PokemonCardData.library.indexWhere((c) => c.id == card.id);
+      if (index == -1) return;
+      PokemonCardData.library[index] = PokemonCardData.library[index]
+          .copyWith(binderName: kUnassignedBinderName, page: 0);
     });
   }
 
@@ -252,25 +278,40 @@ class _BindersScreenState extends State<BindersScreen> {
       ),
     );
     if (result == null || result.deleted) return;
-    setState(
-      () => _insertCard(result.card!, result.binderId!, result.pageIndex!),
-    );
+    setState(() {
+      _growBinderIfNeeded(result.binderId!, result.pageIndex!);
+      PokemonCardData.library.add(result.card!);
+    });
   }
 
   /// Every card in the collection that isn't already in [binderId] — the
-  /// candidates offered by the Add Cards picker. Always built from the live
-  /// binder/unassigned lists so edits made mid-flow are reflected.
+  /// candidates offered by the Add Cards picker. Always reads
+  /// PokemonCardData.library live so edits made mid-flow are reflected.
   List<PokemonCardData> _cardsOutsideBinder(String binderId) {
     final matches = _binders.where((b) => b.id == binderId);
-    if (matches.isEmpty) return _allCards;
-    final inBinder = {
-      for (final page in matches.first.pages)
-        for (final card in page) card.id,
-    };
-    return _allCards.where((c) => !inBinder.contains(c.id)).toList();
+    if (matches.isEmpty) return PokemonCardData.library;
+    final binderName = matches.first.name;
+    return PokemonCardData.library
+        .where((c) => c.binderName != binderName)
+        .toList();
   }
 
-  /// Moves the picked cards into [binderId] on [pageIndex].
+  /// Grows [binderId]'s page count so it covers [pageIndex], if it doesn't
+  /// already — mirrors what typing a page number ahead of a binder's
+  /// current size used to do by padding out its `pages` list.
+  void _growBinderIfNeeded(String binderId, int pageIndex) {
+    if (binderId == kUnassignedBinderId) return;
+    final index = _binders.indexWhere((b) => b.id == binderId);
+    if (index == -1) return;
+    final binder = _binders[index];
+    if (pageIndex >= binder.pageCount) {
+      _binders[index] = binder.copyWith(pageCount: pageIndex + 1);
+    }
+  }
+
+  /// Moves the picked cards into [binderId] on [pageIndex] by updating each
+  /// card's `binderName`/`page` fields directly in PokemonCardData.library —
+  /// the only place a card's binder placement lives.
   ///
   /// Picking every owned copy moves the card as-is. Picking fewer splits it:
   /// the remaining copies stay put and the picked copies become a new entry
@@ -282,112 +323,54 @@ class _BindersScreenState extends State<BindersScreen> {
   ) {
     final binderIndex = _binders.indexWhere((b) => b.id == binderId);
     if (binderIndex == -1) return;
+    _growBinderIfNeeded(binderId, pageIndex);
     final binderName = _binders[binderIndex].name;
     final stamp = DateTime.now().microsecondsSinceEpoch;
+    final library = PokemonCardData.library;
 
     for (var i = 0; i < picks.length; i++) {
       final pick = picks[i];
-      final matches = _allCards.where((c) => c.id == pick.cardId);
-      if (matches.isEmpty) continue;
-      final card = matches.first;
+      final cardIndex = library.indexWhere((c) => c.id == pick.cardId);
+      if (cardIndex == -1) continue;
+      final card = library[cardIndex];
       final count =
           pick.quantity > card.quantityOwned ? card.quantityOwned : pick.quantity;
       if (count < 1) continue;
 
       if (count == card.quantityOwned) {
-        _removeCardById(card.id);
-        _insertCard(
-          card.copyWith(binderName: binderName, page: pageIndex + 1),
-          binderId,
-          pageIndex,
-        );
+        library[cardIndex] =
+            card.copyWith(binderName: binderName, page: pageIndex + 1);
       } else {
-        _replaceCard(card.copyWith(quantityOwned: card.quantityOwned - count));
-        _insertCard(
-          card.copyWith(
-            id: 'card-$stamp-$i',
-            quantityOwned: count,
-            binderName: binderName,
-            page: pageIndex + 1,
-          ),
-          binderId,
-          pageIndex,
-        );
+        library[cardIndex] =
+            card.copyWith(quantityOwned: card.quantityOwned - count);
+        library.add(card.copyWith(
+          id: 'card-$stamp-$i',
+          quantityOwned: count,
+          binderName: binderName,
+          page: pageIndex + 1,
+        ));
       }
     }
   }
 
+  /// Applies an edit made from CardDetailsScreen (reached by tapping a card
+  /// here). [result.card] already carries the binder/page the form chose,
+  /// so this just needs to write it back into the library.
   void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
     setState(() {
-      _removeCardById(oldCard.id);
-      if (!result.deleted) {
-        _insertCard(result.card!, result.binderId!, result.pageIndex!);
+      final index =
+          PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
+      if (result.deleted) {
+        if (index != -1) PokemonCardData.library.removeAt(index);
+        return;
+      }
+      _growBinderIfNeeded(result.binderId!, result.pageIndex!);
+      if (index != -1) {
+        PokemonCardData.library[index] = result.card!;
+      } else {
+        PokemonCardData.library.add(result.card!);
       }
     });
-  }
-
-  void _removeCardById(String id) {
-    if (_unassignedCards.any((c) => c.id == id)) {
-      _unassignedCards.removeWhere((c) => c.id == id);
-      return;
-    }
-    for (var i = 0; i < _binders.length; i++) {
-      final pages = _binders[i].pages;
-      for (var p = 0; p < pages.length; p++) {
-        if (pages[p].any((c) => c.id == id)) {
-          final newPages = [
-            for (final page in pages) [...page],
-          ];
-          newPages[p].removeWhere((c) => c.id == id);
-          _binders[i] = _binders[i].copyWith(pages: newPages);
-          return;
-        }
-      }
-    }
-  }
-
-  /// Swaps the stored card that shares [updated]'s id for [updated], keeping
-  /// its position.
-  void _replaceCard(PokemonCardData updated) {
-    final unassignedIndex =
-        _unassignedCards.indexWhere((c) => c.id == updated.id);
-    if (unassignedIndex != -1) {
-      _unassignedCards[unassignedIndex] = updated;
-      return;
-    }
-    for (var i = 0; i < _binders.length; i++) {
-      final pages = _binders[i].pages;
-      for (var p = 0; p < pages.length; p++) {
-        final cardIndex = pages[p].indexWhere((c) => c.id == updated.id);
-        if (cardIndex != -1) {
-          final newPages = [
-            for (final page in pages) [...page],
-          ];
-          newPages[p][cardIndex] = updated;
-          _binders[i] = _binders[i].copyWith(pages: newPages);
-          return;
-        }
-      }
-    }
-  }
-
-  void _insertCard(PokemonCardData card, String binderId, int pageIndex) {
-    if (binderId == kUnassignedBinderId) {
-      _unassignedCards.add(card);
-      return;
-    }
-
-    final index = _binders.indexWhere((b) => b.id == binderId);
-    if (index == -1) return;
-
-    final binder = _binders[index];
-    final newPages = [
-      for (final page in binder.pages) [...page],
-      for (var i = binder.pageCount; i <= pageIndex; i++) <PokemonCardData>[],
-    ];
-    newPages[pageIndex].add(card);
-
-    _binders[index] = binder.copyWith(pages: newPages);
   }
 
   @override

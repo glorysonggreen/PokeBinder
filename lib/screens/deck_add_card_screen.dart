@@ -28,7 +28,7 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
     for (final entry in widget.initialEntries) entry.cardId: entry.quantity,
   };
 
-  final List<BinderData> _binders = BinderData.sampleBinders;
+  final List<BinderData> _binders = BinderData.library;
 
   String _query = '';
   CardSortOption _sortOption = CardSortOption.alphabetical;

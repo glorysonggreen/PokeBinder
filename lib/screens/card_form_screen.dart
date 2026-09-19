@@ -83,8 +83,8 @@ class _CardFormScreenState extends State<CardFormScreen> {
             (b) => b.name == widget.existingCard!.binderName,
             orElse: () => const BinderData(
               id: kUnassignedBinderId,
-              name: 'Unassigned',
-              pages: [],
+              name: kUnassignedBinderName,
+              pageCount: 0,
             ),
           )
           .id;
@@ -142,7 +142,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
       type: _prefillCard?.type ?? PokemonCardType.colorless,
       quantityOwned: quantity,
       condition: _conditionCode,
-      binderName: binder?.name ?? 'Unassigned',
+      binderName: binder?.name ?? kUnassignedBinderName,
       page: pageNumber,
       estimatedValue: value < 0 ? 0 : value,
       notes: _notesController.text.trim(),

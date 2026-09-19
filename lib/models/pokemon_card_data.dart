@@ -217,7 +217,7 @@ class PokemonCardData {
     type: PokemonCardType.fire,
     quantityOwned: 2,
     condition: 'NM',
-    binderName: 'Rare Holos',
+    binderName: 'Kanto Starters',
     page: 1,
     estimatedValue: 6200,
     notes: 'Kept in top loader, light corner wear on back.',
