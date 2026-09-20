@@ -152,6 +152,7 @@ class _TradeListAddCardScreenState extends State<TradeListAddCardScreen> {
       estimatedValue: existing?.estimatedValue ?? card.estimatedValue,
       askingFor: existing?.askingFor ?? '',
       sourceCardId: card.id,
+      imageAssetPath: card.imageAssetPath,
       dateAdded: existing?.dateAdded ?? DateTime.now(),
     );
   }

@@ -103,6 +103,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
       kind: WishlistEntryKind.wishlist,
       priority: _priority,
       estimatedValue: double.tryParse(_valueController.text.trim()) ?? 0,
+      imageAssetPath: widget.existingEntry?.imageAssetPath,
       dateAdded: widget.existingEntry?.dateAdded ?? DateTime.now(),
     );
 
