@@ -103,6 +103,7 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
       estimatedValue: double.tryParse(_valueController.text.trim()) ?? 0,
       askingFor: _askingForController.text.trim(),
       sourceCardId: widget.existingEntry.sourceCardId,
+      imageAssetPath: widget.existingEntry.imageAssetPath,
       dateAdded: widget.existingEntry.dateAdded,
     );
 

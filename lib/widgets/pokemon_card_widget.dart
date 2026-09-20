@@ -34,6 +34,9 @@ class PokemonCard extends StatelessWidget {
 /// falls back to a type-colored gradient swatch.
 class CardThumbnail extends StatelessWidget {
   final PokemonCardData? card;
+
+  /// Overrides [card]'s artwork when set.
+  final String? imageAssetPath;
   final double width;
   final double height;
   final double borderRadius;
@@ -41,6 +44,7 @@ class CardThumbnail extends StatelessWidget {
   const CardThumbnail({
     super.key,
     required this.card,
+    this.imageAssetPath,
     this.width = 26,
     this.height = 36,
     this.borderRadius = 6,
@@ -48,7 +52,7 @@ class CardThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = card?.imageAssetPath;
+    final path = imageAssetPath ?? card?.imageAssetPath;
     return Container(
       width: width,
       height: height,

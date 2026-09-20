@@ -713,6 +713,7 @@ class _WishlistRow extends StatelessWidget {
                 ),
                 child: CardThumbnail(
                   card: matchedCard,
+                  imageAssetPath: entry.imageAssetPath,
                   width: 92,
                   height: 127,
                   borderRadius: 5,

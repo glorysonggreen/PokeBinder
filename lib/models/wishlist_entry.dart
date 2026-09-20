@@ -63,6 +63,11 @@ class WishlistEntry {
   /// Entries typed in by hand leave this null.
   final String? sourceCardId;
 
+  /// Asset path for this entry's card image, same as
+  /// [PokemonCardData.imageAssetPath]. Falls back to the catalog artwork
+  /// (matched by name) when null.
+  final String? imageAssetPath;
+
   WishlistEntry({
     required this.id,
     required this.name,
@@ -77,6 +82,7 @@ class WishlistEntry {
     this.estimatedValue = 0,
     this.askingFor = '',
     this.sourceCardId,
+    this.imageAssetPath,
     DateTime? dateAdded,
   }) : dateAdded = dateAdded ?? DateTime.now();
 
@@ -93,6 +99,7 @@ class WishlistEntry {
     double? estimatedValue,
     String? askingFor,
     String? sourceCardId,
+    String? imageAssetPath,
   }) {
     return WishlistEntry(
       id: id,
@@ -108,6 +115,7 @@ class WishlistEntry {
       estimatedValue: estimatedValue ?? this.estimatedValue,
       askingFor: askingFor ?? this.askingFor,
       sourceCardId: sourceCardId ?? this.sourceCardId,
+      imageAssetPath: imageAssetPath ?? this.imageAssetPath,
       dateAdded: dateAdded,
     );
   }
@@ -123,6 +131,7 @@ class WishlistEntry {
           kind: WishlistEntryKind.wishlist,
           priority: WishlistPriority.high,
           estimatedValue: 1800,
+          imageAssetPath: '../assets/pikachu_vmax_vivid_voltage.jpg',
           dateAdded: DateTime.now().subtract(const Duration(days: 6)),
         ),
         WishlistEntry(
@@ -135,6 +144,7 @@ class WishlistEntry {
           kind: WishlistEntryKind.wishlist,
           priority: WishlistPriority.medium,
           estimatedValue: 950,
+          imageAssetPath: '../assets/mewtwo_ex_next_destinies.jpg',
           dateAdded: DateTime.now().subtract(const Duration(days: 3)),
         ),
         WishlistEntry(
@@ -150,6 +160,7 @@ class WishlistEntry {
           priority: WishlistPriority.low,
           estimatedValue: 110,
           askingFor: 'Any Base Set Fire-type',
+          imageAssetPath: '../assets/bulbasaur_base_set.jpg',
           dateAdded: DateTime.now().subtract(const Duration(days: 9)),
         ),
         WishlistEntry(
@@ -163,6 +174,7 @@ class WishlistEntry {
           priority: WishlistPriority.medium,
           estimatedValue: 90,
           askingFor: 'Pikachu VMAX or store credit',
+          imageAssetPath: '../assets/charmander_base_set.jpg',
           dateAdded: DateTime.now().subtract(const Duration(days: 2)),
         ),
       ];
