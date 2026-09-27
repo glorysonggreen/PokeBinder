@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/wishlist_entry.dart';
+import 'sync_status.dart';
 
 /// Syncs [WishlistEntry.library] with the `wishlist_entries` table.
 /// Screens keep mutating `library` directly; they just also call [upsert]
@@ -20,10 +21,16 @@ class WishlistRepository {
   }
 
   static Future<void> upsert(WishlistEntry entry) {
-    return _table.upsert(entry.toRow());
+    return SyncStatus.track(
+      'save that entry',
+      () => _table.upsert(entry.toRow()),
+    );
   }
 
   static Future<void> delete(String id) {
-    return _table.delete().eq('id', id);
+    return SyncStatus.track(
+      'delete that entry',
+      () => _table.delete().eq('id', id),
+    );
   }
 }

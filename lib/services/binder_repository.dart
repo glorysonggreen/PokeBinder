@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/binder_data.dart';
+import 'sync_status.dart';
 
 /// Syncs [BinderData.library] with the `binders` table. Screens keep
 /// mutating `library` directly; they just also call [upsert] or [delete]
@@ -20,10 +21,16 @@ class BinderRepository {
   }
 
   static Future<void> upsert(BinderData binder) {
-    return _table.upsert(binder.toRow());
+    return SyncStatus.track(
+      'save that binder',
+      () => _table.upsert(binder.toRow()),
+    );
   }
 
   static Future<void> delete(String id) {
-    return _table.delete().eq('id', id);
+    return SyncStatus.track(
+      'delete that binder',
+      () => _table.delete().eq('id', id),
+    );
   }
 }

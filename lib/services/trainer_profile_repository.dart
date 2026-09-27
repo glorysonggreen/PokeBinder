@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/trainer_profile_data.dart';
+import 'sync_status.dart';
 
 /// Loads and saves the signed-in user's one row in `trainer_profiles`.
 class TrainerProfileRepository {
@@ -21,6 +22,9 @@ class TrainerProfileRepository {
   }
 
   static Future<void> upsert(TrainerProfileData profile) {
-    return _table.upsert(profile.toRow());
+    return SyncStatus.track(
+      'save your profile',
+      () => _table.upsert(profile.toRow()),
+    );
   }
 }
