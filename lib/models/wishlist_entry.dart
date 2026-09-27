@@ -120,62 +120,53 @@ class WishlistEntry {
     );
   }
 
-  static List<WishlistEntry> get sampleEntries => [
-        WishlistEntry(
-          id: 'wish-pikachu-vmax',
-          name: 'Pikachu VMAX',
-          setName: 'Vivid Voltage',
-          cardNumber: '44/185',
-          rarity: 'Hyper Rare',
-          quantity: 1,
-          kind: WishlistEntryKind.wishlist,
-          priority: WishlistPriority.high,
-          estimatedValue: 1800,
-          imageAssetPath: '../assets/pikachu_vmax_vivid_voltage.jpg',
-          dateAdded: DateTime.now().subtract(const Duration(days: 6)),
-        ),
-        WishlistEntry(
-          id: 'wish-mewtwo-ex',
-          name: 'Mewtwo EX',
-          setName: 'Next Destinies',
-          cardNumber: '54/99',
-          rarity: 'Double Rare',
-          quantity: 2,
-          kind: WishlistEntryKind.wishlist,
-          priority: WishlistPriority.medium,
-          estimatedValue: 950,
-          imageAssetPath: '../assets/mewtwo_ex_next_destinies.jpg',
-          dateAdded: DateTime.now().subtract(const Duration(days: 3)),
-        ),
-        WishlistEntry(
-          id: 'trade-bulbasaur',
-          name: 'Bulbasaur',
-          setName: 'Base Set',
-          cardNumber: '44/102',
-          rarity: 'Common',
-          condition: 'LP',
-          quantity: 2,
-          notes: 'Duplicate copy, light edge wear',
-          kind: WishlistEntryKind.trade,
-          priority: WishlistPriority.low,
-          estimatedValue: 110,
-          askingFor: 'Any Base Set Fire-type',
-          imageAssetPath: '../assets/bulbasaur_base_set.jpg',
-          dateAdded: DateTime.now().subtract(const Duration(days: 9)),
-        ),
-        WishlistEntry(
-          id: 'trade-charmander',
-          name: 'Charmander',
-          setName: 'Base Set',
-          cardNumber: '46/102',
-          rarity: 'Common',
-          quantity: 3,
-          kind: WishlistEntryKind.trade,
-          priority: WishlistPriority.medium,
-          estimatedValue: 90,
-          askingFor: 'Pikachu VMAX or store credit',
-          imageAssetPath: '../assets/charmander_base_set.jpg',
-          dateAdded: DateTime.now().subtract(const Duration(days: 2)),
-        ),
-      ];
+  /// Builds an entry from a row returned by the `wishlist_entries` table.
+  factory WishlistEntry.fromRow(Map<String, dynamic> row) {
+    return WishlistEntry(
+      id: row['id'] as String,
+      name: row['name'] as String,
+      setName: row['set_name'] as String? ?? '',
+      cardNumber: row['card_number'] as String? ?? '',
+      rarity: row['rarity'] as String? ?? '',
+      condition: row['condition'] as String? ?? 'NM',
+      quantity: (row['quantity'] as num?)?.toInt() ?? 1,
+      notes: row['notes'] as String? ?? '',
+      kind: WishlistEntryKind.values.byName(row['kind'] as String? ?? 'wishlist'),
+      priority: WishlistPriority.values
+          .byName(row['priority'] as String? ?? 'medium'),
+      estimatedValue: (row['estimated_value'] as num?)?.toDouble() ?? 0,
+      askingFor: row['asking_for'] as String? ?? '',
+      sourceCardId: row['source_card_id'] as String?,
+      imageAssetPath: row['image_asset_path'] as String?,
+      dateAdded: DateTime.parse(row['date_added'] as String),
+    );
+  }
+
+  /// The row to upsert into the `wishlist_entries` table. `user_id` is
+  /// left out — the column defaults to `auth.uid()` on insert and never
+  /// changes on update.
+  Map<String, dynamic> toRow() {
+    return {
+      'id': id,
+      'name': name,
+      'set_name': setName,
+      'card_number': cardNumber,
+      'rarity': rarity,
+      'condition': condition,
+      'quantity': quantity,
+      'notes': notes,
+      'kind': kind.name,
+      'priority': priority.name,
+      'estimated_value': estimatedValue,
+      'asking_for': askingFor,
+      'source_card_id': sourceCardId,
+      'image_asset_path': imageAssetPath,
+      'date_added': dateAdded.toIso8601String(),
+    };
+  }
+
+  /// The signed-in user's wishlist and trade-list entries, loaded from the
+  /// `wishlist_entries` table by [WishlistRepository.loadAll]. Empty until
+  /// then.
+  static final List<WishlistEntry> library = [];
 }

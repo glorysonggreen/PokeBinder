@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../services/binder_repository.dart';
+import '../services/card_repository.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
@@ -132,6 +134,8 @@ class _BindersScreenState extends State<BindersScreen> {
       if (index == -1) return;
       _binders[index] = _binders[index].copyWith(isPinned: !_binders[index].isPinned);
     });
+    final updated = _binders.where((b) => b.id == binder.id);
+    if (updated.isNotEmpty) BinderRepository.upsert(updated.first);
   }
 
   Future<void> _openNewBinder() async {
@@ -141,6 +145,7 @@ class _BindersScreenState extends State<BindersScreen> {
     if (result?.binder == null) return;
 
     setState(() => _binders.add(result!.binder!));
+    BinderRepository.upsert(result!.binder!);
     if (!mounted) return;
     await _openBinderDetail(result!.binder!);
   }
@@ -200,6 +205,7 @@ class _BindersScreenState extends State<BindersScreen> {
       }
       _binders[index] = updated;
     });
+    BinderRepository.upsert(updated);
   }
 
   void _applyBinderDeletion(BinderData deleted) {
@@ -207,6 +213,7 @@ class _BindersScreenState extends State<BindersScreen> {
       _renameCardsBinder(deleted.name, kUnassignedBinderName, resetPage: true);
       _binders.removeWhere((b) => b.id == deleted.id);
     });
+    BinderRepository.delete(deleted.id);
   }
 
   /// Repoints every card whose `binderName` is [oldName] to [newName] in
@@ -220,6 +227,7 @@ class _BindersScreenState extends State<BindersScreen> {
         binderName: newName,
         page: resetPage ? 0 : null,
       );
+      CardRepository.upsert(library[i]);
     }
   }
 
@@ -227,12 +235,20 @@ class _BindersScreenState extends State<BindersScreen> {
   /// Unassigned bucket (same as when a whole binder is deleted), so it stays
   /// in the collection and can be added to a binder again later.
   void _removeCardFromBinder(PokemonCardData card) {
+    var found = true;
     setState(() {
       final index = PokemonCardData.library.indexWhere((c) => c.id == card.id);
-      if (index == -1) return;
+      if (index == -1) {
+        found = false;
+        return;
+      }
       PokemonCardData.library[index] = PokemonCardData.library[index]
           .copyWith(binderName: kUnassignedBinderName, page: 0);
     });
+    if (!found) return;
+    CardRepository.upsert(
+      PokemonCardData.library.firstWhere((c) => c.id == card.id),
+    );
   }
 
   /// "Add card" from a binder page opens the collection picker (the same
@@ -284,6 +300,7 @@ class _BindersScreenState extends State<BindersScreen> {
       _growBinderIfNeeded(result.binderId!, result.pageIndex!);
       PokemonCardData.library.add(result.card!);
     });
+    CardRepository.upsert(result.card!);
   }
 
   /// Every card in the collection that isn't already in [binderId] — the
@@ -308,6 +325,7 @@ class _BindersScreenState extends State<BindersScreen> {
     final binder = _binders[index];
     if (pageIndex >= binder.pageCount) {
       _binders[index] = binder.copyWith(pageCount: pageIndex + 1);
+      BinderRepository.upsert(_binders[index]);
     }
   }
 
@@ -342,15 +360,19 @@ class _BindersScreenState extends State<BindersScreen> {
       if (count == card.quantityOwned) {
         library[cardIndex] =
             card.copyWith(binderName: binderName, page: pageIndex + 1);
+        CardRepository.upsert(library[cardIndex]);
       } else {
         library[cardIndex] =
             card.copyWith(quantityOwned: card.quantityOwned - count);
-        library.add(card.copyWith(
+        CardRepository.upsert(library[cardIndex]);
+        final newCard = card.copyWith(
           id: 'card-$stamp-$i',
           quantityOwned: count,
           binderName: binderName,
           page: pageIndex + 1,
-        ));
+        );
+        library.add(newCard);
+        CardRepository.upsert(newCard);
       }
     }
   }
@@ -373,6 +395,11 @@ class _BindersScreenState extends State<BindersScreen> {
         PokemonCardData.library.add(result.card!);
       }
     });
+    if (result.deleted) {
+      CardRepository.delete(oldCard.id);
+    } else {
+      CardRepository.upsert(result.card!);
+    }
   }
 
   @override

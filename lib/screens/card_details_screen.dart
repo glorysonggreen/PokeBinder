@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../services/deck_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/interactive_3d_card.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -109,6 +110,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
       cards[entryIndex] = cards[entryIndex].copyWith(quantity: quantity);
     }
     DeckData.library[index] = DeckData.library[index].copyWith(cards: cards);
+    DeckRepository.upsert(DeckData.library[index]);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

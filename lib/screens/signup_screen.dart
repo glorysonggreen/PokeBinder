@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../services/trainer_profile_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
@@ -19,6 +21,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _submitting = false;
   String? _error;
 
   @override
@@ -34,7 +37,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_error != null) setState(() => _error = null);
   }
 
-  void _attemptSignUp() {
+  Future<void> _attemptSignUp() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -51,11 +54,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    setState(() => _error = null);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => AppShell(trainerName: name)),
-      (route) => false,
-    );
+    setState(() {
+      _error = null;
+      _submitting = true;
+    });
+    try {
+      await AuthService.signUp(
+        email: email,
+        password: password,
+        trainerName: name,
+      );
+      if (!AuthService.isSignedIn) {
+        // Email confirmation is on for this project (see
+        // SUPABASE_SETUP.md) — there's no session yet to create the
+        // trainer profile with, so send them back to log in once they've
+        // confirmed.
+        if (!mounted) return;
+        setState(() {
+          _submitting = false;
+          _error = 'Check your email to confirm your account, then log in.';
+        });
+        return;
+      }
+      await TrainerProfileRepository.load(fallbackName: name);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => AppShell(trainerName: name)),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = 'Could not create that account — try again.';
+      });
+    }
   }
 
   @override
@@ -148,7 +181,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               const SizedBox(height: PokeBinderSpacing.sp2),
               PillButton(
-                label: '+ Create Account',
+                label: _submitting ? 'Creating Account…' : '+ Create Account',
+                enabled: !_submitting,
                 onTap: _attemptSignUp,
               ),
               const SizedBox(height: PokeBinderSpacing.sp5),

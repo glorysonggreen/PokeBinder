@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/wishlist_entry.dart';
+import '../services/wishlist_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/motion_widgets.dart';
@@ -79,7 +80,7 @@ class WishlistScreen extends StatefulWidget {
 class _WishlistScreenState extends State<WishlistScreen> {
   static const _kEntriesPerPage = 5;
 
-  final List<WishlistEntry> _entries = WishlistEntry.sampleEntries;
+  final List<WishlistEntry> _entries = WishlistEntry.library;
   WishlistEntryKind _kind = WishlistEntryKind.wishlist;
   _WishlistSort _sort = _WishlistSort.newest;
   WishlistPriority? _priorityFilter;
@@ -143,6 +144,10 @@ class _WishlistScreenState extends State<WishlistScreen> {
         ),
       );
       if (result == null) return;
+      final removed = _entries
+          .where((e) =>
+              e.kind == WishlistEntryKind.trade && e.sourceCardId != null)
+          .toList();
       setState(() {
         // Only the card-linked trade entries are managed by the picker;
         // anything typed in by hand elsewhere is left untouched.
@@ -150,6 +155,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
             e.kind == WishlistEntryKind.trade && e.sourceCardId != null);
         _entries.addAll(result);
       });
+      for (final entry in removed) {
+        WishlistRepository.delete(entry.id);
+      }
+      for (final entry in result) {
+        WishlistRepository.upsert(entry);
+      }
       return;
     }
 
@@ -160,6 +171,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
     if (result == null || result.deleted) return;
     setState(() => _entries.add(result.entry!));
+    WishlistRepository.upsert(result.entry!);
   }
 
   Future<void> _openEdit(WishlistEntry entry) async {
@@ -176,6 +188,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
       _entries.removeWhere((e) => e.id == entry.id);
       if (!result.deleted) _entries.add(result.entry!);
     });
+    if (result.deleted) {
+      WishlistRepository.delete(entry.id);
+    } else {
+      WishlistRepository.upsert(result.entry!);
+    }
   }
 
   Future<bool> _confirmRemove(WishlistEntry entry) async {
@@ -214,6 +231,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   void _removeEntry(WishlistEntry entry) {
     final removedIndex = _entries.indexOf(entry);
     setState(() => _entries.remove(entry));
+    WishlistRepository.delete(entry.id);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -222,10 +240,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
           content: Text('Removed "${entry.name}"'),
           action: SnackBarAction(
             label: 'UNDO',
-            onPressed: () => setState(() {
-              final index = removedIndex.clamp(0, _entries.length);
-              _entries.insert(index, entry);
-            }),
+            onPressed: () {
+              setState(() {
+                final index = removedIndex.clamp(0, _entries.length);
+                _entries.insert(index, entry);
+              });
+              WishlistRepository.upsert(entry);
+            },
           ),
         ),
       );

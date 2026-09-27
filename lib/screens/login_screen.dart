@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/motion_widgets.dart';
@@ -19,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
+  bool _submitting = false;
   String? _error;
 
   @override
@@ -28,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _attemptLogin() {
+  Future<void> _attemptLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -37,11 +39,24 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    setState(() => _error = null);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const AppShell()),
-      (route) => false,
-    );
+    setState(() {
+      _error = null;
+      _submitting = true;
+    });
+    try {
+      await AuthService.signIn(email: email, password: password);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AppShell()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = 'Could not log in — check your email and password.';
+      });
+    }
   }
 
   void _comingSoon(String provider) {
@@ -133,7 +148,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              PillButton(label: 'Log In', onTap: _attemptLogin),
+              PillButton(
+                label: _submitting ? 'Logging In…' : 'Log In',
+                enabled: !_submitting,
+                onTap: _attemptLogin,
+              ),
               const SizedBox(height: PokeBinderSpacing.sp5),
 
               const _OrDivider(label: 'OR CONTINUE WITH'),
