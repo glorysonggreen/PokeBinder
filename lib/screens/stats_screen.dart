@@ -2,8 +2,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
@@ -214,7 +216,7 @@ class _StatBox extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value, style: PokeBinderText.statNumberSm),
+          CountUpText(value, style: PokeBinderText.statNumberSm),
           const SizedBox(height: PokeBinderSpacing.sp1),
           Text(
             label.toUpperCase(),
@@ -338,16 +340,24 @@ class _CardsBySetPanel extends StatelessWidget {
           SizedBox(
             width: 92,
             height: 92,
-            child: CustomPaint(
-              painter: _DonutPainter(
-                values: [for (final s in stats) s.count.toDouble()],
-                colors: _kDonutColors,
-              ),
+            // The ring sweeps around from empty as the total counts up.
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: PokeBinderMotion.adapt(context, PokeBinderMotion.count),
+              curve: PokeBinderMotion.smooth,
               child: Center(
-                child: Text(
+                child: CountUpText(
                   '$total',
                   style: PokeBinderText.statNumberSm,
                 ),
+              ),
+              builder: (context, progress, child) => CustomPaint(
+                painter: _DonutPainter(
+                  values: [for (final s in stats) s.count.toDouble()],
+                  colors: _kDonutColors,
+                  progress: progress,
+                ),
+                child: child,
               ),
             ),
           ),
@@ -400,7 +410,14 @@ class _DonutPainter extends CustomPainter {
   final List<double> values;
   final List<Color> colors;
 
-  const _DonutPainter({required this.values, required this.colors});
+  /// 0 = nothing drawn, 1 = full ring. Animated from the parent.
+  final double progress;
+
+  const _DonutPainter({
+    required this.values,
+    required this.colors,
+    this.progress = 1,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -412,7 +429,7 @@ class _DonutPainter extends CustomPainter {
     var startAngle = -math.pi / 2;
 
     for (var i = 0; i < values.length; i++) {
-      final sweep = (values[i] / total) * 2 * math.pi;
+      final sweep = (values[i] / total) * 2 * math.pi * progress;
       final paint = Paint()
         ..color = colors[i % colors.length]
         ..style = PaintingStyle.stroke
@@ -431,7 +448,9 @@ class _DonutPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DonutPainter oldDelegate) =>
-      oldDelegate.values != values || oldDelegate.colors != colors;
+      oldDelegate.values != values ||
+      oldDelegate.colors != colors ||
+      oldDelegate.progress != progress;
 }
 
 class _TopValuePanel extends StatelessWidget {

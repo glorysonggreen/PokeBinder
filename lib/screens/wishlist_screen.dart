@@ -3,6 +3,7 @@ import '../models/pokemon_card_data.dart';
 import '../models/wishlist_entry.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'wishlist_form_screen.dart';
@@ -659,15 +660,18 @@ class _WishlistCardListPanel extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             final entry = entries[index];
-            return Dismissible(
-              key: ValueKey(entry.id),
-              direction: DismissDirection.endToStart,
-              confirmDismiss: (_) => onConfirmRemove(entry),
-              onDismissed: (_) => onRemoved(entry),
-              background: const _DismissBackground(),
-              child: _WishlistRow(
-                entry: entry,
-                onTap: () => onTapEntry(entry),
+            return FadeSlideIn(
+              index: index,
+              child: Dismissible(
+                key: ValueKey(entry.id),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (_) => onConfirmRemove(entry),
+                onDismissed: (_) => onRemoved(entry),
+                background: const _DismissBackground(),
+                child: _WishlistRow(
+                  entry: entry,
+                  onTap: () => onTapEntry(entry),
+                ),
               ),
             );
           },

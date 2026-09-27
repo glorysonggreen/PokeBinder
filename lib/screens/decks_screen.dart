@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/min_tap_target.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'deck_detail_screen.dart';
 import 'deck_form_screen.dart';
@@ -493,12 +495,15 @@ class _DeckListPanel extends StatelessWidget {
                   thickness: 1,
                   color: PokeBinderColors.ink.withValues(alpha: 0.06),
                 ),
-              _DeckRow(
+              FadeSlideIn(
+                index: i,
+                child: _DeckRow(
                 deck: sectionDecks[i],
                 ready: readyCountOf(sectionDecks[i]),
                 complete: isCompleteOf(sectionDecks[i]),
                 onTap: () => onSelect(sectionDecks[i]),
                 onTogglePin: () => onTogglePin(sectionDecks[i]),
+                ),
               ),
             ],
           ],
@@ -545,12 +550,15 @@ class _DeckListPanel extends StatelessWidget {
                   style: PokeBinderText.backLink,
                 ),
                 const SizedBox(width: PokeBinderSpacing.sp1),
-                Icon(
-                  viewingAllDecks
-                      ? Icons.expand_less_rounded
-                      : Icons.expand_more_rounded,
-                  size: 14,
-                  color: PokeBinderText.backLink.color,
+                AnimatedRotation(
+                  turns: viewingAllDecks ? 0.5 : 0,
+                  duration: PokeBinderMotion.fast,
+                  curve: PokeBinderMotion.curve,
+                  child: Icon(
+                    Icons.expand_more_rounded,
+                    size: 14,
+                    color: PokeBinderText.backLink.color,
+                  ),
                 ),
               ],
             ),
@@ -771,14 +779,17 @@ class _DeckRow extends StatelessWidget {
               MinTapTarget(
                 onTap: onTogglePin,
                 semanticLabel: deck.isPinned ? 'Unpin deck' : 'Pin deck',
-                child: Icon(
-                  deck.isPinned
-                      ? Icons.push_pin_rounded
-                      : Icons.push_pin_outlined,
-                  size: 15,
-                  color: deck.isPinned
-                      ? PokeBinderColors.red
-                      : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                child: BouncySwitcher(
+                  child: Icon(
+                    deck.isPinned
+                        ? Icons.push_pin_rounded
+                        : Icons.push_pin_outlined,
+                    key: ValueKey(deck.isPinned),
+                    size: 15,
+                    color: deck.isPinned
+                        ? PokeBinderColors.red
+                        : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             ],

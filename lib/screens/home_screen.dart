@@ -7,6 +7,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
 import '../widgets/card_caption.dart';
 import '../widgets/min_tap_target.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
@@ -168,96 +169,111 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text('HOME DASHBOARD', style: PokeBinderText.eyebrow),
                 const SizedBox(height: PokeBinderSpacing.sp2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    _TrainerAvatar(onTap: _openTrainerCard),
-                    const SizedBox(width: PokeBinderSpacing.sp3),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome back, ${widget.profile.name}',
-                            style: PokeBinderText.heading,
-                          ),
-                          const SizedBox(height: PokeBinderSpacing.sp1),
-                          Text(
-                            'Your collection at a glance.',
-                            style: PokeBinderText.subtitle,
-                          ),
-                        ],
+                FadeSlideIn(
+                  index: 0,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _TrainerAvatar(onTap: _openTrainerCard),
+                      const SizedBox(width: PokeBinderSpacing.sp3),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome back, ${widget.profile.name}',
+                              style: PokeBinderText.heading,
+                            ),
+                            const SizedBox(height: PokeBinderSpacing.sp1),
+                            Text(
+                              'Your collection at a glance.',
+                              style: PokeBinderText.subtitle,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
-                CollectionSearchBar(
-                  hint: 'Search your whole collection…',
-                  enabled: false,
-                  onTap: widget.onOpenAllCards,
-                  trailing: _CardCountBadge(count: _totalCardCount),
+                FadeSlideIn(
+                  index: 1,
+                  child: CollectionSearchBar(
+                    hint: 'Search your whole collection…',
+                    enabled: false,
+                    onTap: widget.onOpenAllCards,
+                    trailing: _CardCountBadge(count: _totalCardCount),
+                  ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp3),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatBox(
-                        value: '$_totalCardCount',
-                        label: 'Cards',
-                        onTap: widget.onOpenAllCards,
+                FadeSlideIn(
+                  index: 2,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatBox(
+                          value: '$_totalCardCount',
+                          label: 'Cards',
+                          onTap: widget.onOpenAllCards,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: PokeBinderSpacing.sp2),
-                    Expanded(
-                      child: _StatBox(
-                        value: _formatCompactCurrency(_totalValue),
-                        label: 'Value',
-                        onTap: _openStats,
+                      const SizedBox(width: PokeBinderSpacing.sp2),
+                      Expanded(
+                        child: _StatBox(
+                          value: _formatCompactCurrency(_totalValue),
+                          label: 'Value',
+                          onTap: _openStats,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: PokeBinderSpacing.sp2),
-                    Expanded(
-                      child: _StatBox(
-                        value: '${_binders.length}',
-                        label: 'Binders',
-                        onTap: widget.onOpenBinders,
+                      const SizedBox(width: PokeBinderSpacing.sp2),
+                      Expanded(
+                        child: _StatBox(
+                          value: '${_binders.length}',
+                          label: 'Binders',
+                          onTap: widget.onOpenBinders,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
                 Text('QUICK ACTIONS', style: PokeBinderText.sectionLabel),
                 const SizedBox(height: PokeBinderSpacing.sp2),
-                Row(
-                  children: [
-                    Expanded(
-                      child: PillButton(
-                        label: 'New Binder',
-                        icon: Icons.add,
-                        ghost: true,
-                        onTap: _openNewBinder,
+                FadeSlideIn(
+                  index: 3,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: PillButton(
+                          label: 'New Binder',
+                          icon: Icons.add,
+                          ghost: true,
+                          onTap: _openNewBinder,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: PokeBinderSpacing.sp2),
-                    Expanded(
-                      child: PillButton(
-                        label: 'New Deck',
-                        icon: Icons.add,
-                        ghost: true,
-                        onTap: _openNewDeck,
+                      const SizedBox(width: PokeBinderSpacing.sp2),
+                      Expanded(
+                        child: PillButton(
+                          label: 'New Deck',
+                          icon: Icons.add,
+                          ghost: true,
+                          onTap: _openNewDeck,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
-                _ContinueBinderPanel(
-                  binder: continueBinder,
-                  onTap: () => widget.onOpenBinder(continueBinder),
+                FadeSlideIn(
+                  index: 4,
+                  child: _ContinueBinderPanel(
+                    binder: continueBinder,
+                    onTap: () => widget.onOpenBinder(continueBinder),
+                  ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
@@ -282,31 +298,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var i = 0; i < recentCards.length; i++) ...[
-                      if (i != 0) const SizedBox(width: PokeBinderSpacing.sp2),
-                      Expanded(
-                        child: _RecentCardTile(
-                          card: recentCards[i],
-                          onTap: () => _openCard(recentCards[i]),
+                FadeSlideIn(
+                  index: 5,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = 0; i < recentCards.length; i++) ...[
+                        if (i != 0) const SizedBox(width: PokeBinderSpacing.sp2),
+                        Expanded(
+                          child: _RecentCardTile(
+                            card: recentCards[i],
+                            onTap: () => _openCard(recentCards[i]),
+                          ),
                         ),
+                      ],
+                      if (recentCards.isNotEmpty)
+                        const SizedBox(width: PokeBinderSpacing.sp2),
+                      Expanded(
+                        child: _AddCardManuallyTile(onTap: _openAddCardManually),
                       ),
                     ],
-                    if (recentCards.isNotEmpty)
-                      const SizedBox(width: PokeBinderSpacing.sp2),
-                    Expanded(
-                      child: _AddCardManuallyTile(onTap: _openAddCardManually),
-                    ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
-                PillButton(
-                  label: 'Scan a New Card',
-                  icon: Icons.center_focus_strong_rounded,
-                  onTap: widget.onOpenScan,
+                FadeSlideIn(
+                  index: 6,
+                  child: PillButton(
+                    label: 'Scan a New Card',
+                    icon: Icons.center_focus_strong_rounded,
+                    onTap: widget.onOpenScan,
+                  ),
                 ),
               ],
             ),
@@ -422,7 +444,7 @@ class _StatBox extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(value, style: PokeBinderText.statNumber),
+              CountUpText(value, style: PokeBinderText.statNumber),
               const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
                 label.toUpperCase(),

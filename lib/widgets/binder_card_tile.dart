@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import 'motion_widgets.dart';
 import 'pokemon_card_widget.dart';
 
 class BinderCardTile extends StatelessWidget {
@@ -15,8 +16,10 @@ class BinderCardTile extends StatelessWidget {
 
     return AspectRatio(
       aspectRatio: kPokemonCardImageAspectRatio,
-      child: GestureDetector(
+      child: PressableScale(
         onTap: onTap,
+        // Sweeps a holo-foil highlight across the artwork on every press.
+        shineRadius: hasImage ? 5 : null,
         child: hasImage
             ? Container(
                 decoration: BoxDecoration(

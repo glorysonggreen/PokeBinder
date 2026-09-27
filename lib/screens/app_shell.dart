@@ -3,6 +3,7 @@ import '../models/binder_data.dart';
 import '../models/deck_data.dart';
 import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/app_nav_bar.dart';
 import 'binders_screen.dart';
 import 'decks_screen.dart';
@@ -62,7 +63,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
-      body: IndexedStack(
+      body: FadeIndexedStack(
         index: AppTab.values.indexOf(_tab),
         children: [
           HomeScreen(
