@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -356,6 +357,19 @@ class PokeBinderTheme {
 
     return base.copyWith(
       textTheme: bodyTextTheme(base.textTheme),
+      // One consistent, gentle transition for every Navigator.push in the
+      // app. Android/desktop get a soft fade-and-slide; iOS/macOS keep the
+      // native slide (which also gives swipe-back-to-go-back).
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       dialogTheme: DialogThemeData(
         backgroundColor: PokeBinderColors.cream,
         surfaceTintColor: Colors.transparent,

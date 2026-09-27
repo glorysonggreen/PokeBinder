@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
 import '../widgets/card_caption.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/min_tap_target.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_add_card_screen.dart';
 import 'binder_detail_screen.dart';
@@ -401,68 +403,72 @@ class _BindersScreenState extends State<BindersScreen> {
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
               Expanded(
-                child: _tabIndex == 0
-                    ? _BindersTab(
-                        binders: filteredBinders,
-                        search: _binderSearch,
-                        unassignedCount: _unassignedCards.length,
-                        binderSort: _binderSort,
-                        viewingAllBinders: _viewingAllBinders,
-                        onSearchChanged: (v) =>
-                            setState(() => _binderSearch = v),
-                        onBinderSortChanged: (option) =>
-                            setState(() => _binderSort = option),
-                        onToggleViewAllBinders: _toggleViewAllBinders,
-                        onSelectBinder: _openBinderDetail,
-                        onSelectUnassigned: _openUnassignedDetail,
-                        onTogglePin: _toggleBinderPin,
-                        onNewBinder: _openNewBinder,
-                        onClearFilters: () =>
-                            setState(() => _binderSearch = ''),
-                      )
-                    : _AllCardsTab(
-                        cards: _allCards,
-                        search: _cardSearch,
-                        sortOption: _sortOption,
-                        typeFilter: _typeFilter,
-                        subtypeFilter: _subtypeFilter,
-                        setFilter: _setFilter,
-                        rarityFilter: _rarityFilter,
-                        conditionFilter: _conditionFilter,
-                        timeDirection: _timeDirection,
-                        onSearchChanged: (v) =>
-                            setState(() => _cardSearch = v),
-                        onSortChanged: (option) => setState(() {
-                          _sortOption = option;
-                          _typeFilter = null;
-                          _subtypeFilter = null;
-                          _setFilter = null;
-                          _rarityFilter = null;
-                          _conditionFilter = null;
-                          _timeDirection = TimeSortDirection.newest;
-                        }),
-                        onTypeFilterChanged: (t) =>
-                            setState(() => _typeFilter = t),
-                        onSubtypeFilterChanged: (s) =>
-                            setState(() => _subtypeFilter = s),
-                        onSetFilterChanged: (s) =>
-                            setState(() => _setFilter = s),
-                        onRarityFilterChanged: (r) =>
-                            setState(() => _rarityFilter = r),
-                        onConditionFilterChanged: (c) =>
-                            setState(() => _conditionFilter = c),
-                        onTimeDirectionChanged: (d) =>
-                            setState(() => _timeDirection = d),
-                        onCardTap: _openCard,
-                        onClearFilters: () => setState(() {
-                          _cardSearch = '';
-                          _typeFilter = null;
-                          _subtypeFilter = null;
-                          _setFilter = null;
-                          _rarityFilter = null;
-                          _conditionFilter = null;
-                        }),
-                      ),
+                child: FadeSlideIn.fade(
+                  // A new key each time the tab changes replays the fade-in.
+                  key: ValueKey(_tabIndex),
+                  child: _tabIndex == 0
+                      ? _BindersTab(
+                          binders: filteredBinders,
+                          search: _binderSearch,
+                          unassignedCount: _unassignedCards.length,
+                          binderSort: _binderSort,
+                          viewingAllBinders: _viewingAllBinders,
+                          onSearchChanged: (v) =>
+                              setState(() => _binderSearch = v),
+                          onBinderSortChanged: (option) =>
+                              setState(() => _binderSort = option),
+                          onToggleViewAllBinders: _toggleViewAllBinders,
+                          onSelectBinder: _openBinderDetail,
+                          onSelectUnassigned: _openUnassignedDetail,
+                          onTogglePin: _toggleBinderPin,
+                          onNewBinder: _openNewBinder,
+                          onClearFilters: () =>
+                              setState(() => _binderSearch = ''),
+                        )
+                      : _AllCardsTab(
+                          cards: _allCards,
+                          search: _cardSearch,
+                          sortOption: _sortOption,
+                          typeFilter: _typeFilter,
+                          subtypeFilter: _subtypeFilter,
+                          setFilter: _setFilter,
+                          rarityFilter: _rarityFilter,
+                          conditionFilter: _conditionFilter,
+                          timeDirection: _timeDirection,
+                          onSearchChanged: (v) =>
+                              setState(() => _cardSearch = v),
+                          onSortChanged: (option) => setState(() {
+                            _sortOption = option;
+                            _typeFilter = null;
+                            _subtypeFilter = null;
+                            _setFilter = null;
+                            _rarityFilter = null;
+                            _conditionFilter = null;
+                            _timeDirection = TimeSortDirection.newest;
+                          }),
+                          onTypeFilterChanged: (t) =>
+                              setState(() => _typeFilter = t),
+                          onSubtypeFilterChanged: (s) =>
+                              setState(() => _subtypeFilter = s),
+                          onSetFilterChanged: (s) =>
+                              setState(() => _setFilter = s),
+                          onRarityFilterChanged: (r) =>
+                              setState(() => _rarityFilter = r),
+                          onConditionFilterChanged: (c) =>
+                              setState(() => _conditionFilter = c),
+                          onTimeDirectionChanged: (d) =>
+                              setState(() => _timeDirection = d),
+                          onCardTap: _openCard,
+                          onClearFilters: () => setState(() {
+                            _cardSearch = '';
+                            _typeFilter = null;
+                            _subtypeFilter = null;
+                            _setFilter = null;
+                            _rarityFilter = null;
+                            _conditionFilter = null;
+                          }),
+                        ),
+                ),
               ),
             ],
           ),
@@ -500,7 +506,9 @@ class _TopTabBar extends StatelessWidget {
               padding: const EdgeInsets.only(right: PokeBinderSpacing.sp4),
               child: GestureDetector(
                 onTap: () => onChanged(i),
-                child: Container(
+                child: AnimatedContainer(
+                  duration: PokeBinderMotion.fast,
+                  curve: PokeBinderMotion.curve,
                   padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
                   decoration: BoxDecoration(
                     border: Border(
@@ -512,11 +520,12 @@ class _TopTabBar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  child: Text(
-                    labels[i],
+                  child: AnimatedDefaultTextStyle(
+                    duration: PokeBinderMotion.fast,
                     style: i == index
                         ? PokeBinderText.tabLabelActive
                         : PokeBinderText.tabLabelInactive,
+                    child: Text(labels[i]),
                   ),
                 ),
               ),
@@ -725,19 +734,23 @@ class _AllCardsTab extends StatelessWidget {
                     mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
                   ),
                   children: [
-                    for (final card in filtered)
-                      Column(
-                        children: [
-                          SizedBox(
-                            height: cardHeight,
-                            child: BinderCardTile(
-                              card: card,
-                              onTap: () => onCardTap(card),
+                    // Cards are dealt onto the page one after another.
+                    for (final (i, card) in filtered.indexed)
+                      FadeSlideIn(
+                        index: i,
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: cardHeight,
+                              child: BinderCardTile(
+                                card: card,
+                                onTap: () => onCardTap(card),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: PokeBinderSpacing.sp1),
-                          CardCaption(card: card),
-                        ],
+                            const SizedBox(height: PokeBinderSpacing.sp1),
+                            CardCaption(card: card),
+                          ],
+                        ),
                       ),
                   ],
                 );
@@ -851,13 +864,17 @@ class _BinderListPanel extends StatelessWidget {
                 spacing: gap,
                 runSpacing: gap,
                 children: [
-                  for (final binder in section.binders)
-                    SizedBox(
-                      width: tileWidth,
-                      child: _BinderGridTile(
-                        binder: binder,
-                        onTap: () => onSelect(binder),
-                        onTogglePin: () => onTogglePin(binder),
+                  // Tiles are "dealt" one after another.
+                  for (final (i, binder) in section.binders.indexed)
+                    FadeSlideIn(
+                      index: i,
+                      child: SizedBox(
+                        width: tileWidth,
+                        child: _BinderGridTile(
+                          binder: binder,
+                          onTap: () => onSelect(binder),
+                          onTogglePin: () => onTogglePin(binder),
+                        ),
                       ),
                     ),
                   if (section.includesUnsorted)
@@ -885,12 +902,16 @@ class _BinderListPanel extends StatelessWidget {
                       style: PokeBinderText.backLink,
                     ),
                     const SizedBox(width: PokeBinderSpacing.sp1),
-                    Icon(
-                      viewingAllBinders
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      size: 14,
-                      color: PokeBinderText.backLink.color,
+                    // One chevron that flips, instead of swapping two icons.
+                    AnimatedRotation(
+                      turns: viewingAllBinders ? 0.5 : 0,
+                      duration: PokeBinderMotion.fast,
+                      curve: PokeBinderMotion.curve,
+                      child: Icon(
+                        Icons.expand_more_rounded,
+                        size: 14,
+                        color: PokeBinderText.backLink.color,
+                      ),
                     ),
                   ],
                 ),
@@ -957,7 +978,7 @@ class _BinderGridTile extends StatelessWidget {
     final icon = overrideIcon ?? Icons.menu_book_rounded;
     final isPinned = binder?.isPinned ?? false;
 
-    return GestureDetector(
+    return PressableScale(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
@@ -1003,12 +1024,18 @@ class _BinderGridTile extends StatelessWidget {
                   MinTapTarget(
                     onTap: onTogglePin,
                     semanticLabel: isPinned ? 'Unpin binder' : 'Pin binder',
-                    child: Icon(
-                      isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-                      size: 14,
-                      color: isPinned
-                          ? PokeBinderColors.red
-                          : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                    // The pin pops between outlined and filled with a little bounce.
+                    child: BouncySwitcher(
+                      child: Icon(
+                        isPinned
+                            ? Icons.push_pin_rounded
+                            : Icons.push_pin_outlined,
+                        key: ValueKey(isPinned),
+                        size: 14,
+                        color: isPinned
+                            ? PokeBinderColors.red
+                            : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                      ),
                     ),
                   ),
               ],

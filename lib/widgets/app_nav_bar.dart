@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
+import 'motion_widgets.dart';
 
 enum AppTab { home, binders, scan, decks, more }
 
@@ -124,23 +126,34 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(active ? tab.activeIcon : tab.icon, size: 22, color: color),
+              // The filled icon pops in with a little bounce when selected.
+              BouncySwitcher(
+                child: Icon(
+                  active ? tab.activeIcon : tab.icon,
+                  key: ValueKey(active),
+                  size: 22,
+                  color: color,
+                ),
+              ),
               const SizedBox(height: PokeBinderSpacing.sp1),
-              Text(
-                tab.label,
+              AnimatedDefaultTextStyle(
+                duration: PokeBinderMotion.fast,
                 style: PokeBinderText.chipLabel.copyWith(
                   color: color,
                   fontWeight: active ? FontWeight.bold : FontWeight.w600,
                 ),
+                child: Text(tab.label),
               ),
               const SizedBox(height: PokeBinderSpacing.sp0),
+              // The gold dot stretches into a small pill under the active tab.
               AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: active ? 4 : 0,
+                duration: PokeBinderMotion.pop,
+                curve: PokeBinderMotion.smooth,
+                width: active ? 16 : 0,
                 height: 4,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: PokeBinderColors.gold,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ],
@@ -151,11 +164,22 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-class _ScanNavButton extends StatelessWidget {
+class _ScanNavButton extends StatefulWidget {
   final bool active;
   final VoidCallback onTap;
 
   const _ScanNavButton({required this.active, required this.onTap});
+
+  @override
+  State<_ScanNavButton> createState() => _ScanNavButtonState();
+}
+
+class _ScanNavButtonState extends State<_ScanNavButton> {
+  bool _pressed = false;
+
+  // Every tap adds one full turn, so the icon spins like a Poke Ball being
+  // thrown.
+  double _turns = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -166,34 +190,62 @@ class _ScanNavButton extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Material(
-              color: Colors.transparent,
-              shape: const CircleBorder(),
-              child: InkWell(
-                onTap: onTap,
-                customBorder: const CircleBorder(),
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: PokeBinderColors.redGradient,
-                    border: Border.all(
-                      color: active ? PokeBinderColors.gold : PokeBinderColors.cream,
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: PokeBinderColors.redDeep.withValues(alpha: 0.5),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
+            // Squishes on press, springs back on release.
+            AnimatedScale(
+              scale: _pressed ? 0.88 : 1,
+              duration: PokeBinderMotion.adapt(
+                context,
+                _pressed ? PokeBinderMotion.press : PokeBinderMotion.release,
+              ),
+              curve:
+                  _pressed ? PokeBinderMotion.curve : PokeBinderMotion.spring,
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  onTap: () {
+                    setState(() => _turns += 1);
+                    widget.onTap();
+                  },
+                  onHighlightChanged: (value) {
+                    if (mounted) setState(() => _pressed = value);
+                  },
+                  customBorder: const CircleBorder(),
+                  child: AnimatedContainer(
+                    duration: PokeBinderMotion.fast,
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: PokeBinderColors.redGradient,
+                      border: Border.all(
+                        color: widget.active
+                            ? PokeBinderColors.gold
+                            : PokeBinderColors.cream,
+                        width: 3,
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.center_focus_strong_rounded,
-                    color: PokeBinderColors.white,
-                    size: 26,
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              PokeBinderColors.redDeep.withValues(alpha: 0.5),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: AnimatedRotation(
+                      turns: _turns,
+                      duration: PokeBinderMotion.adapt(
+                        context,
+                        const Duration(milliseconds: 600),
+                      ),
+                      curve: PokeBinderMotion.bounce,
+                      child: const Icon(
+                        Icons.center_focus_strong_rounded,
+                        color: PokeBinderColors.white,
+                        size: 26,
+                      ),
+                    ),
                   ),
                 ),
               ),

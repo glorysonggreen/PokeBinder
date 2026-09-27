@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'app_shell.dart';
 import 'forgot_password_screen.dart';
@@ -202,39 +203,47 @@ class _AuthBanner extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: PokeBinderColors.goldGradient,
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x26000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 3),
+          PopIn(
+            child: Container(
+              width: 56,
+              height: 56,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: PokeBinderColors.goldGradient,
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x26000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Text(
+                'PB',
+                style: PokeBinderText.headingSm.copyWith(
+                  color: PokeBinderColors.white,
                 ),
-              ],
-            ),
-            child: Text(
-              'PB',
-              style: PokeBinderText.headingSm.copyWith(
-                color: PokeBinderColors.white,
               ),
             ),
           ),
           const SizedBox(height: PokeBinderSpacing.sp4),
-          Text(
-            heading,
-            textAlign: TextAlign.center,
-            style: PokeBinderText.heading,
+          FadeSlideIn(
+            index: 1,
+            child: Text(
+              heading,
+              textAlign: TextAlign.center,
+              style: PokeBinderText.heading,
+            ),
           ),
           const SizedBox(height: PokeBinderSpacing.sp1),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: PokeBinderText.subtitle,
+          FadeSlideIn(
+            index: 2,
+            child: Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: PokeBinderText.subtitle,
+            ),
           ),
         ],
       ),

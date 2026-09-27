@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
+import 'motion_widgets.dart';
 
 class BackLink extends StatelessWidget {
   final VoidCallback onTap;
@@ -123,13 +125,15 @@ class SegmentedTabBar extends StatelessWidget {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
                   onTap: () => onChanged(i),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: PokeBinderMotion.fast,
+                    curve: PokeBinderMotion.curve,
                     padding: const EdgeInsets.symmetric(
                       vertical: PokeBinderSpacing.sp2,
                     ),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: i == index ? PokeBinderColors.white : null,
+                      color: i == index ? PokeBinderColors.white : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: i == index
                           ? [
@@ -142,11 +146,12 @@ class SegmentedTabBar extends StatelessWidget {
                             ]
                           : null,
                     ),
-                    child: Text(
-                      labels[i],
+                    child: AnimatedDefaultTextStyle(
+                      duration: PokeBinderMotion.fast,
                       style: i == index
                           ? PokeBinderText.tabLabelActive
                           : PokeBinderText.tabLabelInactive,
+                      child: Text(labels[i]),
                     ),
                   ),
                 ),
@@ -300,72 +305,78 @@ class EmptyFilterState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        vertical: PokeBinderSpacing.sp6,
-        horizontal: PokeBinderSpacing.sp4,
-      ),
-      decoration: BoxDecoration(
-        color: PokeBinderColors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: PokeBinderColors.cream2.withValues(alpha: 0.6),
-            ),
-            child: Icon(
-              icon,
-              size: 24,
-              color: PokeBinderColors.goldDeep.withValues(alpha: 0.75),
-            ),
-          ),
-          const SizedBox(height: PokeBinderSpacing.sp3),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: PokeBinderText.subtitle.copyWith(
-              fontWeight: FontWeight.w600,
-              color: PokeBinderColors.ink,
-            ),
-          ),
-          const SizedBox(height: PokeBinderSpacing.sp1),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: PokeBinderText.subtitle,
-          ),
-          if (onClearFilters != null) ...[
-            const SizedBox(height: PokeBinderSpacing.sp3),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: onClearFilters,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: PokeBinderSpacing.sp3,
-                    vertical: PokeBinderSpacing.sp1,
-                  ),
-                  child: Text(clearFiltersLabel, style: PokeBinderText.backLink),
+    return FadeSlideIn(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          vertical: PokeBinderSpacing.sp6,
+          horizontal: PokeBinderSpacing.sp4,
+        ),
+        decoration: BoxDecoration(
+          color: PokeBinderColors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // The icon badge bounces in a beat after the card appears.
+            PopIn(
+              delay: const Duration(milliseconds: 120),
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: PokeBinderColors.cream2.withValues(alpha: 0.6),
+                ),
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: PokeBinderColors.goldDeep.withValues(alpha: 0.75),
                 ),
               ),
             ),
+            const SizedBox(height: PokeBinderSpacing.sp3),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: PokeBinderText.subtitle.copyWith(
+                fontWeight: FontWeight.w600,
+                color: PokeBinderColors.ink,
+              ),
+            ),
+            const SizedBox(height: PokeBinderSpacing.sp1),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: PokeBinderText.subtitle,
+            ),
+            if (onClearFilters != null) ...[
+              const SizedBox(height: PokeBinderSpacing.sp3),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: onClearFilters,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: PokeBinderSpacing.sp3,
+                      vertical: PokeBinderSpacing.sp1,
+                    ),
+                    child: Text(clearFiltersLabel, style: PokeBinderText.backLink),
+                  ),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
-class PillButton extends StatelessWidget {
+class PillButton extends StatefulWidget {
   final String label;
   final VoidCallback onTap;
   final bool ghost;
@@ -382,58 +393,82 @@ class PillButton extends StatelessWidget {
   });
 
   @override
+  State<PillButton> createState() => _PillButtonState();
+}
+
+class _PillButtonState extends State<PillButton> {
+  // True while a finger is held down on the button. Drives the small
+  // "press in" scale below.
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final label = widget.label;
+    final ghost = widget.ghost;
+    final icon = widget.icon;
     final labelStyle =
         ghost ? PokeBinderText.buttonGhostLabel : PokeBinderText.buttonLabel;
 
     return Opacity(
-      opacity: enabled ? 1 : 0.45,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: enabled ? onTap : null,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: PokeBinderSpacing.sp3,
-            ),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: ghost ? PokeBinderColors.white : null,
-              gradient: ghost ? null : PokeBinderColors.redGradient,
-              border: ghost
-                  ? Border.all(
-                      color: PokeBinderColors.red.withValues(alpha: 0.35),
-                      width: 1.5,
-                    )
-                  : null,
-              boxShadow: [
-                BoxShadow(
-                  color: ghost
-                      ? PokeBinderColors.ink.withValues(alpha: 0.1)
-                      : PokeBinderColors.redDeep,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 14, color: labelStyle.color),
-                  const SizedBox(width: PokeBinderSpacing.sp1),
-                ],
-                Flexible(
-                  child: Text(
-                    label,
-                    style: labelStyle,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+      opacity: widget.enabled ? 1 : 0.45,
+      child: AnimatedScale(
+        scale: _pressed ? PokeBinderMotion.pressedScale : 1,
+        // Quick on the way down, slow and springy on the way back up.
+        duration: PokeBinderMotion.adapt(
+          context,
+          _pressed ? PokeBinderMotion.press : PokeBinderMotion.release,
+        ),
+        curve: _pressed ? PokeBinderMotion.curve : PokeBinderMotion.spring,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: widget.enabled ? widget.onTap : null,
+            onHighlightChanged: (value) {
+              if (mounted) setState(() => _pressed = value);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                vertical: PokeBinderSpacing.sp3,
+              ),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: ghost ? PokeBinderColors.white : null,
+                gradient: ghost ? null : PokeBinderColors.redGradient,
+                border: ghost
+                    ? Border.all(
+                        color: PokeBinderColors.red.withValues(alpha: 0.35),
+                        width: 1.5,
+                      )
+                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: ghost
+                        ? PokeBinderColors.ink.withValues(alpha: 0.1)
+                        : PokeBinderColors.redDeep,
+                    offset: const Offset(0, 3),
                   ),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 14, color: labelStyle.color),
+                    const SizedBox(width: PokeBinderSpacing.sp1),
+                  ],
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: labelStyle,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
