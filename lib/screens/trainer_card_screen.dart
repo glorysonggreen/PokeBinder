@@ -3,6 +3,7 @@ import '../models/binder_data.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/trainer_profile_data.dart';
+import '../services/card_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
@@ -78,11 +79,14 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
               if (index == -1) return;
               if (result.deleted) {
                 PokemonCardData.library.removeAt(index);
+                CardRepository.delete(oldCard.id);
                 if (_profile.favoriteCardId == oldCard.id) {
                   _profile = _profile.copyWith(favoriteCardId: null);
+                  widget.onProfileChanged?.call(_profile);
                 }
               } else {
                 PokemonCardData.library[index] = result.card!;
+                CardRepository.upsert(result.card!);
               }
             });
           },

@@ -60,6 +60,38 @@ class BinderData {
   int get cardCount =>
       PokemonCardData.library.where((c) => c.binderName == name).length;
 
+  /// Builds a binder from a row returned by the `binders` table.
+  factory BinderData.fromRow(Map<String, dynamic> row) {
+    return BinderData(
+      id: row['id'] as String,
+      name: row['name'] as String,
+      description: row['description'] as String? ?? '',
+      pageCount: (row['page_count'] as num?)?.toInt() ?? 1,
+      slotsPerPage: (row['slots_per_page'] as num?)?.toInt() ?? 9,
+      category: row['category'] as String? ?? kUncategorized,
+      isPinned: row['is_pinned'] as bool? ?? false,
+      createdAt: row['created_at'] == null
+          ? null
+          : DateTime.parse(row['created_at'] as String),
+    );
+  }
+
+  /// The row to upsert into the `binders` table. `user_id` is left out —
+  /// the column defaults to `auth.uid()` on insert and never changes on
+  /// update.
+  Map<String, dynamic> toRow() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'page_count': pageCount,
+      'slots_per_page': slotsPerPage,
+      'category': category,
+      'is_pinned': isPinned,
+      'created_at': createdAtOrEpoch.toIso8601String(),
+    };
+  }
+
   BinderData copyWith({
     String? name,
     String? description,
@@ -81,33 +113,11 @@ class BinderData {
     );
   }
 
-  /// The app's binders — id, name, pin state, page count and the like.
-  /// Every screen that lists or edits binders reads and writes this same
-  /// list, the same way screens share [PokemonCardData.library] and
-  /// [DeckData.library]. What's *inside* a binder isn't stored here at
-  /// all; see [pages].
-  static final List<BinderData> library = [
-    BinderData(
-      id: 'binder-kanto-starters',
-      name: 'Kanto Starters',
-      category: 'Sets',
-      isPinned: true,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      pageCount: 2,
-    ),
-    BinderData(
-      id: 'binder-rare-holos',
-      name: 'Rare Holos',
-      category: 'Value',
-      createdAt: DateTime.now().subtract(const Duration(days: 10)),
-      pageCount: 1,
-    ),
-    BinderData(
-      id: 'binder-trade-bait',
-      name: 'Trade Bait',
-      category: 'Value',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      pageCount: 1,
-    ),
-  ];
+  /// The signed-in user's binders — id, name, pin state, page count and
+  /// the like — loaded from the `binders` table by
+  /// [BinderRepository.loadAll]. Empty until then. Every screen that lists
+  /// or edits binders reads and writes this same list, the same way
+  /// screens share [PokemonCardData.library] and [DeckData.library].
+  /// What's *inside* a binder isn't stored here at all; see [pages].
+  static final List<BinderData> library = [];
 }

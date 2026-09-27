@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../services/card_repository.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -112,8 +113,10 @@ class _StatsScreenState extends State<StatsScreen> {
       if (index == -1) return;
       if (result.deleted) {
         PokemonCardData.library.removeAt(index);
+        CardRepository.delete(oldCard.id);
       } else {
         PokemonCardData.library[index] = result.card!;
+        CardRepository.upsert(result.card!);
       }
     });
   }

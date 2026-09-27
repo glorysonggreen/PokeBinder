@@ -12,6 +12,7 @@ class MoreScreen extends StatelessWidget {
   final VoidCallback? onOpenStats;
   final VoidCallback? onOpenWishlist;
   final ValueChanged<BinderData>? onOpenBinder;
+  final VoidCallback? onSignOut;
 
   const MoreScreen({
     super.key,
@@ -20,6 +21,7 @@ class MoreScreen extends StatelessWidget {
     this.onOpenStats,
     this.onOpenWishlist,
     this.onOpenBinder,
+    this.onSignOut,
   });
 
   void _openTrainerCard(BuildContext context) {
@@ -38,6 +40,27 @@ class MoreScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text("You'll need to log back in to see your collection."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) onSignOut?.call();
   }
 
   @override
@@ -80,6 +103,14 @@ class MoreScreen extends StatelessWidget {
           );
         },
       ),
+      if (onSignOut != null)
+        _MoreRowData(
+          icon: Icons.logout_rounded,
+          gradient: PokeBinderColors.slateGradient,
+          title: 'Sign Out',
+          subtitle: 'Log out of this account',
+          onTap: () => _confirmSignOut(context),
+        ),
     ];
 
     return Scaffold(

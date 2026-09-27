@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../services/deck_repository.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/min_tap_target.dart';
@@ -128,6 +129,7 @@ class _DecksScreenState extends State<DecksScreen> {
       if (index == -1) return;
       _decks[index] = _decks[index].copyWith(isPinned: !_decks[index].isPinned);
     });
+    DeckRepository.upsert(_decks.firstWhere((d) => d.id == deck.id));
   }
 
   void _clearFilters() {
@@ -147,6 +149,7 @@ class _DecksScreenState extends State<DecksScreen> {
       _decks.add(result.deck!);
       _viewingAllDecks = false;
     });
+    DeckRepository.upsert(result.deck!);
     if (!mounted) return;
     await _openDeckDetail(result.deck!);
   }
@@ -160,10 +163,13 @@ class _DecksScreenState extends State<DecksScreen> {
         builder: (_) => DeckDetailScreen(
           deck: deck,
           cardOf: _cardById,
-          onDeckChanged: (updated) => setState(() {
-            final index = _decks.indexWhere((d) => d.id == updated.id);
-            if (index != -1) _decks[index] = updated;
-          }),
+          onDeckChanged: (updated) {
+            setState(() {
+              final index = _decks.indexWhere((d) => d.id == updated.id);
+              if (index != -1) _decks[index] = updated;
+            });
+            DeckRepository.upsert(updated);
+          },
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../services/card_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -74,9 +75,11 @@ class _TrainerFavoriteCardScreenState
       if (index == -1) return;
       if (result.deleted) {
         PokemonCardData.library.removeAt(index);
+        CardRepository.delete(oldCard.id);
         if (_selectedCardId == oldCard.id) _selectedCardId = null;
       } else {
         PokemonCardData.library[index] = result.card!;
+        CardRepository.upsert(result.card!);
         if (_selectedCardId == oldCard.id && result.card!.quantityOwned <= 0) {
           _selectedCardId = null;
         }

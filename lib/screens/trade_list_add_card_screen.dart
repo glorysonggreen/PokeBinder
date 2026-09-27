@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/wishlist_entry.dart';
+import '../services/card_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -95,9 +96,11 @@ class _TradeListAddCardScreenState extends State<TradeListAddCardScreen> {
       if (index == -1) return;
       if (result.deleted) {
         PokemonCardData.library.removeAt(index);
+        CardRepository.delete(oldCard.id);
         _quantities.remove(oldCard.id);
       } else {
         PokemonCardData.library[index] = result.card!;
+        CardRepository.upsert(result.card!);
         final owned = result.card!.quantityOwned;
         final picked = _quantities[oldCard.id];
         if (picked != null && picked > owned) {

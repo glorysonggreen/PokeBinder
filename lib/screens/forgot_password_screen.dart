@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
@@ -13,6 +14,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
 
+  bool _submitting = false;
   String? _error;
   String? _sentToEmail;
 
@@ -22,7 +24,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _sendResetLink() {
+  Future<void> _sendResetLink() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
       setState(() => _error = 'Enter the email on your account to continue.');
@@ -31,8 +33,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     setState(() {
       _error = null;
-      _sentToEmail = email;
+      _submitting = true;
     });
+    try {
+      await AuthService.sendPasswordResetEmail(email);
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _sentToEmail = email;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = "Couldn't send that — check the email and try again.";
+      });
+    }
   }
 
   void _backToLogin() => Navigator.of(context).maybePop();
@@ -81,7 +97,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: Text(_error!, style: PokeBinderText.formError),
                   ),
                 const SizedBox(height: PokeBinderSpacing.sp1),
-                PillButton(label: 'Send Reset Link', onTap: _sendResetLink),
+                PillButton(
+                  label: _submitting ? 'Sending…' : 'Send Reset Link',
+                  enabled: !_submitting,
+                  onTap: _sendResetLink,
+                ),
               ] else ...[
                 Container(
                   width: double.infinity,

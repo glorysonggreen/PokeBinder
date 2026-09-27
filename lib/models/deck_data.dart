@@ -49,6 +49,19 @@ class DeckCardEntry {
 
   DeckCardEntry copyWith({int? quantity}) =>
       DeckCardEntry(cardId: cardId, quantity: quantity ?? this.quantity);
+
+  factory DeckCardEntry.fromRow(Map<String, dynamic> row) {
+    return DeckCardEntry(
+      cardId: row['card_id'] as String,
+      quantity: (row['quantity'] as num?)?.toInt() ?? 1,
+    );
+  }
+
+  /// The row to upsert into `deck_cards`. Needs [deckId] since a
+  /// [DeckCardEntry] doesn't know which deck it belongs to on its own.
+  Map<String, dynamic> toRow(String deckId) {
+    return {'deck_id': deckId, 'card_id': cardId, 'quantity': quantity};
+  }
 }
 
 @immutable
@@ -76,6 +89,42 @@ class DeckData {
 
   int get cardCount => cards.fold(0, (sum, c) => sum + c.quantity);
 
+  /// Builds a deck from a row returned by the `decks` table plus its
+  /// already-fetched rows from `deck_cards`.
+  factory DeckData.fromRow(
+    Map<String, dynamic> row, {
+    List<DeckCardEntry> cards = const [],
+  }) {
+    return DeckData(
+      id: row['id'] as String,
+      name: row['name'] as String,
+      format: DeckFormat.values.byName(row['format'] as String? ?? 'standard'),
+      targetSize: (row['target_size'] as num?)?.toInt() ?? 60,
+      description: row['description'] as String? ?? '',
+      cards: cards,
+      createdAt: row['created_at'] == null
+          ? null
+          : DateTime.parse(row['created_at'] as String),
+      isPinned: row['is_pinned'] as bool? ?? false,
+    );
+  }
+
+  /// The row to upsert into the `decks` table. Doesn't include [cards] —
+  /// those are synced separately into `deck_cards`. `user_id` is left out
+  /// too, since the column defaults to `auth.uid()` on insert and never
+  /// changes on update.
+  Map<String, dynamic> toRow() {
+    return {
+      'id': id,
+      'name': name,
+      'format': format.name,
+      'target_size': targetSize,
+      'description': description,
+      'is_pinned': isPinned,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+
   DeckData copyWith({
     String? name,
     DeckFormat? format,
@@ -96,36 +145,7 @@ class DeckData {
     );
   }
 
-  static final List<DeckData> library = [
-    DeckData(
-      id: 'deck-fire-starter-rush',
-      name: 'Fire Starter Rush',
-      format: DeckFormat.standard,
-      targetSize: 15,
-      description: 'Aggressive fire deck built around Charizard.',
-      createdAt: DateTime.now().subtract(const Duration(days: 12)),
-      isPinned: true,
-      cards: const [
-        DeckCardEntry(cardId: 'sample-charizard', quantity: 2),
-        DeckCardEntry(cardId: 'sample-fire-energy', quantity: 8),
-        DeckCardEntry(cardId: 'sample-potion', quantity: 3),
-        DeckCardEntry(cardId: 'sample-double-colorless-energy', quantity: 2),
-      ],
-    ),
-    DeckData(
-      id: 'deck-water-control',
-      name: 'Water Control',
-      format: DeckFormat.standard,
-      targetSize: 20,
-      description: 'Stall the game out with Blastoise and healing.',
-      createdAt: DateTime.now().subtract(const Duration(days: 4)),
-      cards: const [
-        DeckCardEntry(cardId: 'sample-squirtle', quantity: 3),
-        DeckCardEntry(cardId: 'sample-blastoise', quantity: 2),
-        DeckCardEntry(cardId: 'sample-potion', quantity: 4),
-        DeckCardEntry(cardId: 'sample-gyarados', quantity: 2),
-        DeckCardEntry(cardId: 'sample-vaporeon', quantity: 2),
-      ],
-    ),
-  ];
+  /// The signed-in user's decks, loaded from the `decks` and `deck_cards`
+  /// tables by [DeckRepository.loadAll]. Empty until then.
+  static final List<DeckData> library = [];
 }

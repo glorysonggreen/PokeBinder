@@ -3,6 +3,9 @@ import '../models/binder_data.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/trainer_profile_data.dart';
+import '../services/binder_repository.dart';
+import '../services/card_repository.dart';
+import '../services/deck_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
 import '../widgets/card_caption.dart';
@@ -106,8 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (index == -1) return;
       if (result.deleted) {
         _cards.removeAt(index);
+        CardRepository.delete(oldCard.id);
       } else {
         _cards[index] = result.card!;
+        CardRepository.upsert(result.card!);
       }
     });
   }
@@ -119,6 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final created = result?.binder;
     if (created == null) return;
     setState(() => _binders.add(created));
+    BinderRepository.upsert(created);
   }
 
   /// Quick action: go straight to the Create a Deck form. Once the deck is
@@ -131,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final created = result?.deck;
     if (created == null) return;
     DeckData.library.add(created);
+    DeckRepository.upsert(created);
     widget.onOpenDeck(created);
   }
 
