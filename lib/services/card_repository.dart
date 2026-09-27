@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/pokemon_card_data.dart';
+import 'sync_status.dart';
 
 /// Syncs [PokemonCardData.library] with the `cards` table. Screens keep
 /// mutating `library` directly (unchanged from before this file existed);
@@ -24,10 +25,10 @@ class CardRepository {
   /// already the source of truth for the UI, so callers don't need to wait
   /// on this to keep the screen responsive.
   static Future<void> upsert(PokemonCardData card) {
-    return _table.upsert(card.toRow());
+    return SyncStatus.track('save that card', () => _table.upsert(card.toRow()));
   }
 
   static Future<void> delete(String id) {
-    return _table.delete().eq('id', id);
+    return SyncStatus.track('delete that card', () => _table.delete().eq('id', id));
   }
 }

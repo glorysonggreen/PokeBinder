@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../services/binder_repository.dart';
 import '../services/card_repository.dart';
 import '../services/deck_repository.dart';
+import '../services/sync_status.dart';
 import '../services/trainer_profile_repository.dart';
 import '../services/wishlist_repository.dart';
 import '../theme/pokebinder_theme.dart';
@@ -35,6 +36,7 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
+  final _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
   late AppTab _tab = widget.initialTab;
   late TrainerProfileData _profile =
       TrainerProfileData(name: widget.trainerName);
@@ -50,6 +52,24 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _loadData();
+    // Every screen calls Repository.upsert/.delete without awaiting it, so
+    // this is the one place a failed background save gets surfaced instead
+    // of vanishing into an unhandled Future (see services/sync_status.dart).
+    SyncStatus.lastError.addListener(_showSyncError);
+  }
+
+  @override
+  void dispose() {
+    SyncStatus.lastError.removeListener(_showSyncError);
+    super.dispose();
+  }
+
+  void _showSyncError() {
+    final message = SyncStatus.lastError.value;
+    if (message == null) return;
+    _scaffoldKey.currentState
+      ?..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// Pulls everything the app's screens read from `*.library` out of
@@ -158,43 +178,46 @@ class _AppShellState extends State<AppShell> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
-      body: FadeIndexedStack(
-        index: AppTab.values.indexOf(_tab),
-        children: [
-          HomeScreen(
-            profile: _profile,
-            onProfileChanged: _handleProfileChanged,
-            onOpenAllCards: () => _openBinders(tabIndex: 1),
-            onOpenBinders: () => _openBinders(tabIndex: 0),
-            onOpenBinder: (BinderData binder) =>
-                _openBinders(tabIndex: 0, binderId: binder.id),
-            onOpenScan: () => _switchTab(AppTab.scan),
-            onOpenDeck: _openDeck,
-          ),
-          BindersScreen(
-            key: ValueKey(_bindersLinkToken),
-            initialTabIndex: _bindersInitialTabIndex,
-            initialBinderId: _bindersInitialBinderId,
-          ),
-          const ScannerScreen(),
-          DecksScreen(
-            key: ValueKey(_decksLinkToken),
-            initialDeckId: _decksInitialDeckId,
-          ),
-          MoreScreen(
-            profile: _profile,
-            onProfileChanged: _handleProfileChanged,
-            onOpenBinder: (BinderData binder) =>
-                _openBinders(tabIndex: 0, binderId: binder.id),
-            onSignOut: _signOut,
-          ),
-        ],
-      ),
-      bottomNavigationBar: AppNavBar(
-        current: _tab,
-        onChanged: (tab) => setState(() => _tab = tab),
+    return ScaffoldMessenger(
+      key: _scaffoldKey,
+      child: Scaffold(
+        backgroundColor: PokeBinderColors.cream,
+        body: FadeIndexedStack(
+          index: AppTab.values.indexOf(_tab),
+          children: [
+            HomeScreen(
+              profile: _profile,
+              onProfileChanged: _handleProfileChanged,
+              onOpenAllCards: () => _openBinders(tabIndex: 1),
+              onOpenBinders: () => _openBinders(tabIndex: 0),
+              onOpenBinder: (BinderData binder) =>
+                  _openBinders(tabIndex: 0, binderId: binder.id),
+              onOpenScan: () => _switchTab(AppTab.scan),
+              onOpenDeck: _openDeck,
+            ),
+            BindersScreen(
+              key: ValueKey(_bindersLinkToken),
+              initialTabIndex: _bindersInitialTabIndex,
+              initialBinderId: _bindersInitialBinderId,
+            ),
+            const ScannerScreen(),
+            DecksScreen(
+              key: ValueKey(_decksLinkToken),
+              initialDeckId: _decksInitialDeckId,
+            ),
+            MoreScreen(
+              profile: _profile,
+              onProfileChanged: _handleProfileChanged,
+              onOpenBinder: (BinderData binder) =>
+                  _openBinders(tabIndex: 0, binderId: binder.id),
+              onSignOut: _signOut,
+            ),
+          ],
+        ),
+        bottomNavigationBar: AppNavBar(
+          current: _tab,
+          onChanged: (tab) => setState(() => _tab = tab),
+        ),
       ),
     );
   }
