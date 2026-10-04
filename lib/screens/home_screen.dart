@@ -14,6 +14,7 @@ import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
+import 'add_card_screen.dart';
 import 'card_form_screen.dart';
 import 'deck_form_screen.dart';
 import 'stats_screen.dart';
@@ -25,7 +26,7 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onOpenAllCards;
   final VoidCallback onOpenBinders;
   final ValueChanged<BinderData> onOpenBinder;
-  final VoidCallback onOpenScan;
+  final VoidCallback onOpenAdd;
   final ValueChanged<DeckData> onOpenDeck;
 
   const HomeScreen({
@@ -35,7 +36,7 @@ class HomeScreen extends StatefulWidget {
     required this.onOpenAllCards,
     required this.onOpenBinders,
     required this.onOpenBinder,
-    required this.onOpenScan,
+    required this.onOpenAdd,
     required this.onOpenDeck,
   });
 
@@ -47,7 +48,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<BinderData> _binders = BinderData.library;
   final List<PokemonCardData> _cards = PokemonCardData.library;
 
-  BinderData get _continueBinder {
+  /// The binder to offer under "Continue", or null when there are no binders
+  /// yet (every new account starts that way).
+  BinderData? get _continueBinder {
+    if (_binders.isEmpty) return null;
     final pinned = _binders.where((b) => b.isPinned).toList()
       ..sort((a, b) => b.createdAtOrEpoch.compareTo(a.createdAtOrEpoch));
     if (pinned.isNotEmpty) return pinned.first;
@@ -150,8 +154,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-    if (result == null || result.card == null) return;
-    setState(() => _cards.add(result.card!));
+    if (result == null || result.deleted || result.card == null) return;
+    // Previously this only added the card to the in-memory list, so a card
+    // added from Home was never saved to the database (and was gone after a
+    // reload). saveNewCard also grows the binder if the page is past its end.
+    setState(() => saveNewCard(result));
   }
 
   @override
@@ -275,14 +282,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
 
-                FadeSlideIn(
-                  index: 4,
-                  child: _ContinueBinderPanel(
-                    binder: continueBinder,
-                    onTap: () => widget.onOpenBinder(continueBinder),
+                if (continueBinder != null) ...[
+                  FadeSlideIn(
+                    index: 4,
+                    child: _ContinueBinderPanel(
+                      binder: continueBinder,
+                      onTap: () => widget.onOpenBinder(continueBinder),
+                    ),
                   ),
-                ),
-                const SizedBox(height: PokeBinderSpacing.sp4),
+                  const SizedBox(height: PokeBinderSpacing.sp4),
+                ],
 
                 Row(
                   children: [
@@ -332,9 +341,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 FadeSlideIn(
                   index: 6,
                   child: PillButton(
-                    label: 'Scan a New Card',
-                    icon: Icons.center_focus_strong_rounded,
-                    onTap: widget.onOpenScan,
+                    label: 'Add a New Card',
+                    icon: Icons.add_rounded,
+                    onTap: widget.onOpenAdd,
                   ),
                 ),
               ],

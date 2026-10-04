@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/binder_data.dart';
+import '../models/catalog_card.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
+import '../widgets/pokemon_card_widget.dart';
 
 class CardFormResult {
   final PokemonCardData? card;
@@ -29,7 +31,10 @@ class CardFormResult {
 
 class CardFormScreen extends StatefulWidget {
   final PokemonCardData? existingCard;
-  final PokemonCardData? scannedCard;
+  /// A card picked from the catalog. Its name, set, number, rarity, type and
+  /// artwork are filled in and locked; only the person's own copy details
+  /// (condition, quantity, value, binder, page, notes) can be changed.
+  final CatalogCard? catalogCard;
   final List<BinderData> binders;
   final String defaultBinderId;
   final int defaultPageNumber;
@@ -37,7 +42,7 @@ class CardFormScreen extends StatefulWidget {
   const CardFormScreen({
     super.key,
     this.existingCard,
-    this.scannedCard,
+    this.catalogCard,
     required this.binders,
     required this.defaultBinderId,
     this.defaultPageNumber = 1,
@@ -48,32 +53,51 @@ class CardFormScreen extends StatefulWidget {
 }
 
 class _CardFormScreenState extends State<CardFormScreen> {
-  /// The card to prefill the form from: the card actually being edited
-  /// takes priority, otherwise the card detected by the scanner (if any).
-  PokemonCardData? get _prefillCard => widget.existingCard ?? widget.scannedCard;
+  /// The catalog row this card is (or will be) linked to, if any.
+  String? get _catalogId => widget.existingCard?.catalogId ?? widget.catalogCard?.id;
 
-  late final _nameController =
-      TextEditingController(text: _prefillCard?.name ?? '');
-  late final _setController =
-      TextEditingController(text: _prefillCard?.setName ?? '');
-  late final _cardNumberController =
-      TextEditingController(text: _prefillCard?.cardNumber ?? '');
+  /// True when the card's identity comes from the catalog, so it is shown as
+  /// read-only text instead of editable fields. That is what keeps the name,
+  /// set, number, rarity and artwork correct.
+  bool get _isLocked => _catalogId != null;
+
+  late final _nameController = TextEditingController(
+      text: widget.existingCard?.name ?? widget.catalogCard?.name ?? '');
+  late final _setController = TextEditingController(
+      text: widget.existingCard?.setName ?? widget.catalogCard?.setName ?? '');
+  late final _cardNumberController = TextEditingController(
+      text: widget.existingCard?.cardNumber ??
+          widget.catalogCard?.displayNumber ??
+          '');
   late final _quantityController = TextEditingController(
     text: '${widget.existingCard?.quantityOwned ?? 1}',
   );
   late final _valueController = TextEditingController(
-    text: _prefillCard != null
-        ? _prefillCard!.estimatedValue.toStringAsFixed(0)
-        : '',
+    text: widget.existingCard != null
+        ? widget.existingCard!.estimatedValue.toStringAsFixed(0)
+        : widget.catalogCard?.marketPricePhp?.toStringAsFixed(0) ?? '',
   );
   late final _pageController =
       TextEditingController(text: '${widget.defaultPageNumber}');
+  // Shown (empty) in place of the page number while no binder is chosen, so a
+  // stale "1" doesn't sit greyed-out in the field.
+  final _noPageController = TextEditingController();
   late final _notesController =
       TextEditingController(text: widget.existingCard?.notes ?? '');
 
-  late String _rarity = _prefillCard?.rarity ?? kRarityOptions.first;
+  late String _rarity = widget.existingCard?.rarity ??
+      widget.catalogCard?.rarity ??
+      kRarityOptions.first;
+  late CardSupertype _supertype = widget.existingCard?.supertype ??
+      widget.catalogCard?.supertype ??
+      CardSupertype.pokemon;
+  late PokemonCardType _type = widget.existingCard?.type ??
+      widget.catalogCard?.type ??
+      PokemonCardType.colorless;
+  late String? _subtype =
+      widget.existingCard?.subtype ?? widget.catalogCard?.subtype;
   late String _conditionCode = kConditionOptions.firstWhere(
-    (option) => option.$2 == _prefillCard?.condition,
+    (option) => option.$2 == widget.existingCard?.condition,
     orElse: () => kConditionOptions.first,
   ).$2;
   late String _binderId = widget.existingCard == null
@@ -94,10 +118,28 @@ class _CardFormScreenState extends State<CardFormScreen> {
 
   bool get _isEditing => widget.existingCard != null;
 
-  /// True when this screen is confirming a freshly scanned card rather
-  /// than adding one from scratch or editing one already in the
-  /// collection — same form, different heading/copy/button label.
-  bool get _isReviewingScan => !_isEditing && widget.scannedCard != null;
+  /// Subtype choices the manual form offers for each supertype. They match
+  /// the values the collection's filter chips look for.
+  static const _trainerSubtypes = ['Item', 'Supporter', 'Stadium'];
+  static const _energySubtypes = ['Basic', 'Special'];
+
+  List<String> get _subtypeChoices => switch (_supertype) {
+        CardSupertype.trainer => _trainerSubtypes,
+        CardSupertype.energy => _energySubtypes,
+        CardSupertype.pokemon => const [],
+      };
+
+  String get _title => _isEditing
+      ? 'Edit Card'
+      : _isLocked
+          ? 'Add to Collection'
+          : 'Add a Card Manually';
+
+  String get _subtitle => _isEditing
+      ? 'Update the details below.'
+      : _isLocked
+          ? 'Confirm the details of your copy.'
+          : "Can't find it in the card database? Enter the details yourself.";
 
   @override
   void dispose() {
@@ -107,13 +149,14 @@ class _CardFormScreenState extends State<CardFormScreen> {
     _quantityController.dispose();
     _valueController.dispose();
     _pageController.dispose();
+    _noPageController.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
   void _submit() {
     final name = _nameController.text.trim();
-    if (name.isEmpty) {
+    if (!_isLocked && name.isEmpty) {
       setState(() => _nameError = 'Give the card a name first.');
       return;
     }
@@ -133,20 +176,38 @@ class _CardFormScreenState extends State<CardFormScreen> {
     final page = int.tryParse(_pageController.text) ?? widget.defaultPageNumber;
     final pageNumber = unassigned ? 0 : (page < 1 ? 1 : page);
 
+    // A linked card keeps the catalog's type and subtype untouched. A manual
+    // card gets the ones picked in the form; trainers have no energy type,
+    // and the subtype must be one the chosen kind actually offers.
+    final type = !_isLocked && _supertype == CardSupertype.trainer
+        ? PokemonCardType.colorless
+        : _type;
+    String? subtype = _subtype;
+    if (!_isLocked) {
+      final choices = _subtypeChoices;
+      subtype = choices.isEmpty
+          ? null
+          : (choices.contains(subtype) ? subtype : choices.first);
+    }
+
     final card = PokemonCardData(
       id: widget.existingCard?.id ?? 'card-${DateTime.now().microsecondsSinceEpoch}',
       name: name,
       setName: _setController.text.trim(),
       cardNumber: _cardNumberController.text.trim(),
       rarity: _rarity,
-      type: _prefillCard?.type ?? PokemonCardType.colorless,
+      type: type,
+      supertype: _supertype,
+      subtype: subtype,
       quantityOwned: quantity,
       condition: _conditionCode,
       binderName: binder?.name ?? kUnassignedBinderName,
       page: pageNumber,
       estimatedValue: value < 0 ? 0 : value,
       notes: _notesController.text.trim(),
-      imageAssetPath: _prefillCard?.imageAssetPath,
+      imageAssetPath:
+          widget.existingCard?.imageAssetPath ?? widget.catalogCard?.collectionImage,
+      catalogId: _catalogId,
       dateAdded: widget.existingCard?.dateAdded ?? DateTime.now(),
     );
 
@@ -195,246 +256,868 @@ class _CardFormScreenState extends State<CardFormScreen> {
     }
   }
 
+  static String _typeLabel(PokemonCardType t) =>
+      t.name[0].toUpperCase() + t.name.substring(1);
+
+  Widget _typeDropdown() => LabeledFormField(
+        label: 'Type',
+        child: PokeDropdownField<PokemonCardType>(
+          value: _type,
+          icon: Icons.bolt_rounded,
+          options: [
+            for (final t in PokemonCardType.values)
+              PokeDropdownOption(t, _typeLabel(t), icon: t.typeIcon),
+          ],
+          onChanged: (value) => setState(() => _type = value),
+        ),
+      );
+
+  Widget _subtypeDropdown() => LabeledFormField(
+        label: 'Subtype',
+        child: PokeDropdownField<String>(
+          value: _subtypeChoices.contains(_subtype)
+              ? _subtype!
+              : _subtypeChoices.first,
+          icon: Icons.label_outline_rounded,
+          options: [
+            for (final o in _subtypeChoices) PokeDropdownOption(o, o),
+          ],
+          onChanged: (value) => setState(() => _subtype = value),
+        ),
+      );
+
+  /// The identity fields for a card that is not in the catalog. For a
+  /// catalog card these are replaced by the read-only [_CatalogSummary].
+  List<Widget> _manualIdentityFields() {
+    return [
+      LabeledFormField(
+        label: 'Card name',
+        child: TextField(
+          controller: _nameController,
+          decoration: pokeInputDecoration(
+            hint: 'e.g. Charizard',
+            icon: Icons.badge_outlined,
+          ),
+          onChanged: (_) {
+            if (_nameError != null) setState(() => _nameError = null);
+          },
+        ),
+      ),
+      if (_nameError != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+          child: Text(_nameError!, style: PokeBinderText.formError),
+        ),
+      FormFieldRow(
+        left: LabeledFormField(
+          label: 'Set',
+          child: TextField(
+            controller: _setController,
+            decoration: pokeInputDecoration(
+              hint: 'Base Set',
+              icon: Icons.collections_bookmark_outlined,
+            ),
+          ),
+        ),
+        right: LabeledFormField(
+          label: 'Card number',
+          child: TextField(
+            controller: _cardNumberController,
+            decoration: pokeInputDecoration(
+              hint: '4/102',
+              icon: Icons.tag_rounded,
+            ),
+          ),
+        ),
+      ),
+      FormFieldRow(
+        left: LabeledFormField(
+          label: 'Card kind',
+          child: PokeDropdownField<CardSupertype>(
+            value: _supertype,
+            icon: Icons.category_outlined,
+            options: const [
+              PokeDropdownOption(CardSupertype.pokemon, 'Pokémon'),
+              PokeDropdownOption(CardSupertype.trainer, 'Trainer'),
+              PokeDropdownOption(CardSupertype.energy, 'Energy'),
+            ],
+            onChanged: (value) => setState(() {
+              _supertype = value;
+              _subtype = null;
+            }),
+          ),
+        ),
+        right: LabeledFormField(
+          label: 'Rarity',
+          child: PokeDropdownField<String>(
+            value: kRarityOptions.contains(_rarity)
+                ? _rarity
+                : kRarityOptions.first,
+            icon: Icons.diamond_rounded,
+            options: [
+              for (final r in kRarityOptions)
+                PokeDropdownOption(r, r, icon: rarityIconFor(r)),
+            ],
+            onChanged: (value) => setState(() => _rarity = value),
+          ),
+        ),
+      ),
+      if (_supertype == CardSupertype.trainer)
+        _subtypeDropdown()
+      else if (_supertype == CardSupertype.energy)
+        FormFieldRow(left: _typeDropdown(), right: _subtypeDropdown())
+      else
+        _typeDropdown(),
+    ];
+  }
+
+  /// The peso value the catalog suggests for this card, if it has a price.
+  double? get _suggestedValue =>
+      _isEditing ? null : widget.catalogCard?.marketPricePhp;
+
+  void _setQuantity(int value) {
+    setState(() {
+      _quantityController.text = '$value';
+      _quantityError = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final unassigned = _binderId == kUnassignedBinderId;
+    final suggested = _suggestedValue;
+    final valueDiffers = suggested != null &&
+        _valueController.text.trim() != suggested.toStringAsFixed(0);
+
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: PokeBinderSpacing.page,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              BackLink(
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-              const SizedBox(height: PokeBinderSpacing.sp2),
-              Text(
-                _isEditing
-                    ? 'Edit Card'
-                    : _isReviewingScan
-                        ? 'Review Scanned Card'
-                        : 'Add a Card',
-                style: PokeBinderText.heading,
-              ),
-              const SizedBox(height: PokeBinderSpacing.sp1),
-              Text(
-                _isEditing
-                    ? 'Update the details below.'
-                    : _isReviewingScan
-                        ? "Here's what we found — confirm the details "
-                            'before adding it to your collection.'
-                        : 'No scanner handy? Enter the details yourself.',
-                style: PokeBinderText.subtitle,
-              ),
-              const SizedBox(height: PokeBinderSpacing.sp3),
-
-              LabeledFormField(
-                label: 'Card name',
-                child: TextField(
-                  controller: _nameController,
-                  decoration: pokeInputDecoration(
-                    hint: 'e.g. Charizard',
-                    icon: Icons.badge_outlined,
-                  ),
-                  onChanged: (_) {
-                    if (_nameError != null) setState(() => _nameError = null);
-                  },
-                ),
-              ),
-              if (_nameError != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
-                  child: Text(_nameError!, style: PokeBinderText.formError),
-                ),
-
-              FormFieldRow(
-                left: LabeledFormField(
-                  label: 'Set',
-                  child: TextField(
-                    controller: _setController,
-                    decoration: pokeInputDecoration(
-                      hint: 'Base Set',
-                      icon: Icons.collections_bookmark_outlined,
-                    ),
-                  ),
-                ),
-                right: LabeledFormField(
-                  label: 'Card number',
-                  child: TextField(
-                    controller: _cardNumberController,
-                    decoration: pokeInputDecoration(
-                      hint: '4/102',
-                      icon: Icons.tag_rounded,
-                    ),
-                  ),
-                ),
-              ),
-
-              FormFieldRow(
-                left: LabeledFormField(
-                  label: 'Rarity',
-                  child: PokeDropdownField<String>(
-                    value: _rarity,
-                    icon: Icons.diamond_rounded,
-                    options: [
-                      for (final r in kRarityOptions)
-                        PokeDropdownOption(r, r, icon: rarityIconFor(r)),
-                    ],
-                    onChanged: (value) => setState(() => _rarity = value),
-                  ),
-                ),
-                right: LabeledFormField(
-                  label: 'Condition',
-                  child: PokeDropdownField<String>(
-                    value: _conditionCode,
-                    icon: Icons.health_and_safety_outlined,
-                    options: [
-                      for (final c in kConditionOptions)
-                        PokeDropdownOption(c.$2, c.$1,
-                            icon: conditionIconFor(c.$2)),
-                    ],
-                    onChanged: (value) => setState(() => _conditionCode = value),
-                  ),
-                ),
-              ),
-
-              FormFieldRow(
-                left: Column(
+        bottom: false,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: PokeBinderSpacing.page,
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    LabeledFormField(
-                      label: 'Quantity',
-                      child: TextField(
-                        controller: _quantityController,
-                        keyboardType: TextInputType.number,
-                        decoration: pokeInputDecoration(icon: Icons.style_outlined),
-                        onChanged: (_) {
-                          if (_quantityError != null) {
-                            setState(() => _quantityError = null);
-                          }
-                        },
+                    BackLink(onTap: () => Navigator.of(context).maybePop()),
+                    const SizedBox(height: PokeBinderSpacing.sp2),
+                    Text(_title, style: PokeBinderText.heading),
+                    const SizedBox(height: PokeBinderSpacing.sp1),
+                    Text(_subtitle, style: PokeBinderText.subtitle),
+                    const SizedBox(height: PokeBinderSpacing.sp4),
+
+                    if (_isLocked)
+                      _CatalogSummary(
+                        name: _nameController.text,
+                        setName: _setController.text,
+                        number: _cardNumberController.text,
+                        rarity: _rarity,
+                        type: _type,
+                        supertype: _supertype,
+                        subtype: _subtype,
+                        imagePath: widget.existingCard?.imageAssetPath ??
+                            widget.catalogCard?.collectionImage,
+                        // Only a freshly picked catalog card has a market
+                        // price to show; an owned copy has its own value.
+                        showPrice: !_isEditing && widget.catalogCard != null,
+                        priceUsd: widget.catalogCard?.marketPriceUsd,
+                        pricePhp: widget.catalogCard?.marketPricePhp,
+                        priceUpdatedAt: widget.catalogCard?.priceUpdatedAt,
+                      )
+                    else ...[
+                      const _SectionTitle(
+                        icon: Icons.badge_outlined,
+                        label: 'Card details',
+                      ),
+                      ..._manualIdentityFields(),
+                    ],
+
+                    const _SectionTitle(
+                      icon: Icons.style_outlined,
+                      label: 'Your copy',
+                    ),
+                    FormFieldRow(
+                      left: LabeledFormField(
+                        label: 'Condition',
+                        child: PokeDropdownField<String>(
+                          height: _kPairedFieldHeight,
+                          value: _conditionCode,
+                          icon: Icons.health_and_safety_outlined,
+                          options: [
+                            for (final c in kConditionOptions)
+                              PokeDropdownOption(c.$2, c.$1,
+                                  icon: conditionIconFor(c.$2)),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => _conditionCode = value),
+                        ),
+                      ),
+                      right: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          LabeledFormField(
+                            label: 'Quantity',
+                            child: _QuantityStepper(
+                              value: int.tryParse(_quantityController.text) ?? 1,
+                              onChanged: _setQuantity,
+                            ),
+                          ),
+                          if (_quantityError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  bottom: PokeBinderSpacing.sp2),
+                              child: Text(_quantityError!,
+                                  style: PokeBinderText.formError),
+                            ),
+                        ],
                       ),
                     ),
-                    if (_quantityError != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
-                        child:
-                            Text(_quantityError!, style: PokeBinderText.formError),
+
+                    LabeledFormField(
+                      label: 'Estimated value',
+                      child: TextField(
+                        controller: _valueController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        style: PokeBinderText.input,
+                        onChanged: (_) => setState(() {}),
+                        decoration: pokeInputDecoration(
+                          hint: '0',
+                          icon: Icons.payments_outlined,
+                        ).copyWith(
+                          prefixText: '₱ ',
+                          prefixStyle: PokeBinderText.selectValue,
+                        ),
                       ),
+                    ),
+                    if (suggested != null)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: PokeBinderSpacing.sp3),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Suggested from the market price. Adjust it '
+                                'for the condition of your copy.',
+                                style: PokeBinderText.listRowSubtitle,
+                              ),
+                            ),
+                            if (valueDiffers) ...[
+                              const SizedBox(width: PokeBinderSpacing.sp2),
+                              _MiniAction(
+                                label: 'Use ₱${_money(suggested)}',
+                                icon: Icons.refresh_rounded,
+                                onTap: () => setState(() {
+                                  _valueController.text =
+                                      suggested.toStringAsFixed(0);
+                                }),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+
+                    const _SectionTitle(
+                      icon: Icons.menu_book_outlined,
+                      label: 'Where it lives',
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: LabeledFormField(
+                            label: 'Binder',
+                            child: PokeDropdownField<String>(
+                              value: _binderId,
+                              icon: Icons.menu_book_outlined,
+                              options: [
+                                for (final b in widget.binders)
+                                  PokeDropdownOption(b.id, b.name),
+                                const PokeDropdownOption(
+                                    kUnassignedBinderId, 'No binder'),
+                              ],
+                              onChanged: (value) =>
+                                  setState(() => _binderId = value),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: PokeBinderSpacing.sp2),
+                        Expanded(
+                          flex: 3,
+                          child: LabeledFormField(
+                            label: 'Page',
+                            child: Opacity(
+                              opacity: unassigned ? 0.5 : 1,
+                              child: TextField(
+                                controller: unassigned
+                                    ? _noPageController
+                                    : _pageController,
+                                enabled: !unassigned,
+                                keyboardType: TextInputType.number,
+                                style: PokeBinderText.input,
+                                decoration: pokeInputDecoration(
+                                  hint: unassigned ? '—' : '1',
+                                  icon: Icons.bookmark_outline_rounded,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    LabeledFormField(
+                      label: 'Notes (optional)',
+                      child: TextField(
+                        controller: _notesController,
+                        minLines: 3,
+                        maxLines: 8,
+                        keyboardType: TextInputType.multiline,
+                        textAlignVertical: TextAlignVertical.top,
+                        style: PokeBinderText.input,
+                        decoration: pokeInputDecoration(
+                          hint: 'Condition details, top loader, etc.',
+                        ),
+                      ),
+                    ),
+
+                    if (_isEditing) ...[
+                      const SizedBox(height: PokeBinderSpacing.sp2),
+                      Center(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: _confirmDelete,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: PokeBinderSpacing.sp3,
+                                vertical: PokeBinderSpacing.sp2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: PokeBinderColors.danger
+                                    .withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const PokeDangerLabel('Delete Card'),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-                right: LabeledFormField(
-                  label: 'Est. value (₱)',
-                  child: TextField(
-                    controller: _valueController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: pokeInputDecoration(
-                      hint: '0.00',
-                      icon: Icons.payments_outlined,
-                    ),
-                  ),
-                ),
               ),
+            ),
 
-              FormFieldRow(
-                left: LabeledFormField(
-                  label: 'Binder',
-                  child: PokeDropdownField<String>(
-                    value: _binderId,
-                    icon: Icons.menu_book_outlined,
-                    options: [
-                      for (final b in widget.binders)
-                        PokeDropdownOption(b.id, b.name),
-                      const PokeDropdownOption(
-                          kUnassignedBinderId, 'No Binder (Unassigned)'),
-                    ],
-                    onChanged: (value) => setState(() => _binderId = value),
+            // The buttons stay put while the form scrolls, so "Add Card" is
+            // always in reach instead of at the very bottom of a long page.
+            Container(
+              decoration: BoxDecoration(
+                color: PokeBinderColors.cream,
+                border: Border(
+                  top: BorderSide(
+                    color: PokeBinderColors.ink.withValues(alpha: 0.08),
                   ),
                 ),
-                right: LabeledFormField(
-                  label: 'Page',
-                  child: TextField(
-                    controller: _pageController,
-                    enabled: _binderId != kUnassignedBinderId,
-                    keyboardType: TextInputType.number,
-                    decoration: pokeInputDecoration(
-                      hint: _binderId == kUnassignedBinderId ? '—' : '4',
-                      icon: Icons.bookmark_outline_rounded,
-                    ),
-                  ),
-                ),
-              ),
-
-              LabeledFormField(
-                label: 'Notes (optional)',
-                child: TextField(
-                  controller: _notesController,
-                  minLines: 3,
-                  maxLines: 8,
-                  keyboardType: TextInputType.multiline,
-                  textAlignVertical: TextAlignVertical.top,
-                  decoration: pokeInputDecoration(
-                    hint: 'Condition details, top loader, etc.',
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: PokeBinderSpacing.sp2),
-              Row(
-                children: [
-                  Expanded(
-                    child: PillButton(
-                      label: 'Cancel',
-                      ghost: true,
-                      onTap: () => Navigator.of(context).maybePop(),
-                    ),
-                  ),
-                  const SizedBox(width: PokeBinderSpacing.sp2),
-                  Expanded(
-                    child: PillButton(
-                      label: _isEditing
-                          ? 'Save Changes'
-                          : _isReviewingScan
-                              ? 'Confirm & Add'
-                              : 'Add to Binder',
-                      icon: _isEditing || _isReviewingScan
-                          ? Icons.check
-                          : Icons.add,
-                      onTap: _submit,
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: PokeBinderColors.ink.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, -3),
                   ),
                 ],
               ),
-
-              if (_isEditing) ...[
-                const SizedBox(height: PokeBinderSpacing.sp4),
-                Center(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: _confirmDelete,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: PokeBinderSpacing.sp3,
-                          vertical: PokeBinderSpacing.sp2,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    PokeBinderSpacing.sp4,
+                    PokeBinderSpacing.sp3,
+                    PokeBinderSpacing.sp4,
+                    PokeBinderSpacing.sp3,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: PillButton(
+                          label: 'Cancel',
+                          ghost: true,
+                          onTap: () => Navigator.of(context).maybePop(),
                         ),
-                        decoration: BoxDecoration(
-                          color: PokeBinderColors.danger.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const PokeDangerLabel('Delete Card'),
                       ),
-                    ),
+                      const SizedBox(width: PokeBinderSpacing.sp2),
+                      Expanded(
+                        flex: 3,
+                        child: PillButton(
+                          label: _isEditing ? 'Save Changes' : 'Add Card',
+                          icon: _isEditing ? Icons.check : Icons.add,
+                          onTap: _submit,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Height shared by the condition dropdown and the quantity stepper, so the
+/// two sit level side by side.
+const double _kPairedFieldHeight = 52;
+
+/// 4815 -> "4,815".
+String _money(double value) => value
+    .round()
+    .toString()
+    .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+
+/// 2026-10-04 -> "Oct 4, 2026".
+String _shortDate(DateTime d) {
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  return '${months[d.month - 1]} ${d.day}, ${d.year}';
+}
+
+String _capitalize(String s) =>
+    s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
+/// A small heading that groups related fields.
+class _SectionTitle extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _SectionTitle({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: PokeBinderSpacing.sp2,
+        bottom: PokeBinderSpacing.sp3,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: PokeBinderColors.redDeep),
+          const SizedBox(width: PokeBinderSpacing.sp2),
+          Text(label.toUpperCase(), style: PokeBinderText.eyebrow),
+          const SizedBox(width: PokeBinderSpacing.sp2),
+          Expanded(
+            child: Container(
+              height: 1,
+              color: PokeBinderColors.ink.withValues(alpha: 0.08),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// − 1 + control for the number of copies owned.
+class _QuantityStepper extends StatelessWidget {
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  static const _min = 1;
+  static const _max = 999;
+
+  const _QuantityStepper({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final canDecrease = value > _min;
+    final canIncrease = value < _max;
+
+    return Container(
+      height: _kPairedFieldHeight,
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _StepButton(
+            icon: Icons.remove_rounded,
+            label: 'Decrease quantity',
+            enabled: canDecrease,
+            onTap: () => onChanged(value - 1),
+          ),
+          Expanded(
+            child: Text(
+              '$value',
+              textAlign: TextAlign.center,
+              style: PokeBinderText.selectValue,
+            ),
+          ),
+          _StepButton(
+            icon: Icons.add_rounded,
+            label: 'Increase quantity',
+            enabled: canIncrease,
+            onTap: () => onChanged(value + 1),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _StepButton({
+    required this.icon,
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      enabled: enabled,
+      child: Material(
+        color: enabled
+            ? PokeBinderColors.red.withValues(alpha: 0.1)
+            : PokeBinderColors.ink.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(9),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(9),
+          onTap: enabled ? onTap : null,
+          child: SizedBox(
+            width: _kPairedFieldHeight - 10,
+            height: _kPairedFieldHeight - 10,
+            child: Icon(
+              icon,
+              size: 20,
+              color: enabled ? PokeBinderColors.redDeep : PokeBinderColors.hint,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A small tappable pill for a quick action beside a field.
+class _MiniAction extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _MiniAction({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: PokeBinderColors.red.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: PokeBinderSpacing.sp3,
+            vertical: PokeBinderSpacing.sp2,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: PokeBinderColors.redDeep),
+              const SizedBox(width: PokeBinderSpacing.sp1),
+              Text(label, style: PokeBinderText.tagLabel(PokeBinderColors.redDeep)),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A rounded label for a card trait (rarity, type, subtype).
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool highlight;
+
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    this.highlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: PokeBinderSpacing.chip,
+      decoration: BoxDecoration(
+        color: highlight
+            ? PokeBinderColors.gold.withValues(alpha: 0.2)
+            : PokeBinderColors.ink.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 12,
+            color: highlight
+                ? PokeBinderColors.goldDeep
+                : PokeBinderColors.inkSoft,
+          ),
+          const SizedBox(width: PokeBinderSpacing.sp1),
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: PokeBinderText.tagLabel(
+                highlight ? PokeBinderColors.ink : PokeBinderColors.inkSoft,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The read-only identity of a catalog card: artwork, name, set and number,
+/// traits, and the market price. Shown instead of editable fields so none of
+/// it can be mistyped.
+class _CatalogSummary extends StatelessWidget {
+  final String name;
+  final String setName;
+  final String number;
+  final String rarity;
+  final PokemonCardType type;
+  final CardSupertype supertype;
+  final String? subtype;
+  final String? imagePath;
+  final bool showPrice;
+  final double? priceUsd;
+  final double? pricePhp;
+  final DateTime? priceUpdatedAt;
+
+  const _CatalogSummary({
+    required this.name,
+    required this.setName,
+    required this.number,
+    required this.rarity,
+    required this.type,
+    required this.supertype,
+    required this.subtype,
+    required this.imagePath,
+    required this.showPrice,
+    required this.priceUsd,
+    required this.pricePhp,
+    required this.priceUpdatedAt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: PokeBinderSpacing.sp5),
+      padding: const EdgeInsets.all(PokeBinderSpacing.sp4),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.09)),
+        boxShadow: kCardElevation,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: PokeBinderColors.ink.withValues(alpha: 0.22),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: CardThumbnail(
+                  card: null,
+                  imageAssetPath: imagePath,
+                  width: 128,
+                  height: 179,
+                  borderRadius: 8,
+                ),
+              ),
+              const SizedBox(width: PokeBinderSpacing.sp4),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: PokeBinderText.headingSm,
+                    ),
+                    if (setName.isNotEmpty) ...[
+                      const SizedBox(height: PokeBinderSpacing.sp1),
+                      Text(setName, style: PokeBinderText.subtitle),
+                    ],
+                    if (number.isNotEmpty) ...[
+                      const SizedBox(height: PokeBinderSpacing.sp0),
+                      Text('Card #$number', style: PokeBinderText.listRowSubtitle),
+                    ],
+                    const SizedBox(height: PokeBinderSpacing.sp3),
+                    Wrap(
+                      spacing: PokeBinderSpacing.sp2,
+                      runSpacing: PokeBinderSpacing.sp2,
+                      children: [
+                        _InfoChip(
+                          icon: rarityIconFor(rarity),
+                          label: rarity,
+                          highlight: true,
+                        ),
+                        if (supertype != CardSupertype.trainer)
+                          _InfoChip(
+                            icon: type.typeIcon,
+                            label: _capitalize(type.name),
+                          ),
+                        if (subtype != null && subtype!.isNotEmpty)
+                          _InfoChip(
+                            icon: Icons.label_outline_rounded,
+                            label: subtype!,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (showPrice) ...[
+            const SizedBox(height: PokeBinderSpacing.sp4),
+            _PricePanel(
+              usd: priceUsd,
+              php: pricePhp,
+              updatedAt: priceUpdatedAt,
+            ),
+          ],
+          const SizedBox(height: PokeBinderSpacing.sp3),
+          Row(
+            children: [
+              const Icon(Icons.lock_outline_rounded,
+                  size: 12, color: PokeBinderColors.inkSoft),
+              const SizedBox(width: PokeBinderSpacing.sp1),
+              Flexible(
+                child: Text(
+                  'Details come from the card database',
+                  style: PokeBinderText.listRowSubtitle,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The market price as a headline figure, with the dollar price and the date
+/// it was last updated alongside.
+class _PricePanel extends StatelessWidget {
+  final double? usd;
+  final double? php;
+  final DateTime? updatedAt;
+
+  const _PricePanel({
+    required this.usd,
+    required this.php,
+    required this.updatedAt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPrice = usd != null && php != null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: PokeBinderSpacing.sp4,
+        vertical: PokeBinderSpacing.sp3,
+      ),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.cream,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: PokeBinderColors.gold.withValues(alpha: 0.4),
+        ),
+      ),
+      child: hasPrice
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('MARKET PRICE', style: PokeBinderText.sectionLabel),
+                      const SizedBox(height: PokeBinderSpacing.sp0),
+                      Text('₱${_money(php!)}', style: PokeBinderText.statNumber),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('US\$${usd!.toStringAsFixed(2)}',
+                        style: PokeBinderText.rowTitle),
+                    if (updatedAt != null) ...[
+                      const SizedBox(height: PokeBinderSpacing.sp0),
+                      Text('Updated ${_shortDate(updatedAt!)}',
+                          style: PokeBinderText.listRowSubtitle),
+                    ],
+                  ],
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                const Icon(Icons.info_outline_rounded,
+                    size: 16, color: PokeBinderColors.inkSoft),
+                const SizedBox(width: PokeBinderSpacing.sp2),
+                Expanded(
+                  child: Text(
+                    'No market price on file for this card. '
+                    'Enter a value below.',
+                    style: PokeBinderText.listRowSubtitle,
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

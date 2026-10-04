@@ -3,7 +3,7 @@ import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import 'motion_widgets.dart';
 
-enum AppTab { home, binders, scan, decks, more }
+enum AppTab { home, binders, add, decks, more }
 
 extension AppTabMeta on AppTab {
   String get label {
@@ -12,8 +12,8 @@ extension AppTabMeta on AppTab {
         return 'Home';
       case AppTab.binders:
         return 'Binders';
-      case AppTab.scan:
-        return 'Scan';
+      case AppTab.add:
+        return 'Add';
       case AppTab.decks:
         return 'Decks';
       case AppTab.more:
@@ -27,8 +27,8 @@ extension AppTabMeta on AppTab {
         return Icons.home_outlined;
       case AppTab.binders:
         return Icons.menu_book_outlined;
-      case AppTab.scan:
-        return Icons.center_focus_strong_rounded;
+      case AppTab.add:
+        return Icons.add_rounded;
       case AppTab.decks:
         return Icons.style_outlined;
       case AppTab.more:
@@ -42,8 +42,8 @@ extension AppTabMeta on AppTab {
         return Icons.home_rounded;
       case AppTab.binders:
         return Icons.menu_book_rounded;
-      case AppTab.scan:
-        return Icons.center_focus_strong_rounded;
+      case AppTab.add:
+        return Icons.add_rounded;
       case AppTab.decks:
         return Icons.style_rounded;
       case AppTab.more:
@@ -82,8 +82,8 @@ class AppNavBar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               for (final tab in AppTab.values)
-                tab == AppTab.scan
-                    ? _ScanNavButton(
+                tab == AppTab.add
+                    ? _AddNavButton(
                         active: current == tab,
                         onTap: () => onChanged(tab),
                       )
@@ -164,17 +164,17 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-class _ScanNavButton extends StatefulWidget {
+class _AddNavButton extends StatefulWidget {
   final bool active;
   final VoidCallback onTap;
 
-  const _ScanNavButton({required this.active, required this.onTap});
+  const _AddNavButton({required this.active, required this.onTap});
 
   @override
-  State<_ScanNavButton> createState() => _ScanNavButtonState();
+  State<_AddNavButton> createState() => _AddNavButtonState();
 }
 
-class _ScanNavButtonState extends State<_ScanNavButton> {
+class _AddNavButtonState extends State<_AddNavButton> {
   bool _pressed = false;
 
   // Every tap adds one full turn, so the icon spins like a Poke Ball being
@@ -241,9 +241,9 @@ class _ScanNavButtonState extends State<_ScanNavButton> {
                       ),
                       curve: PokeBinderMotion.bounce,
                       child: const Icon(
-                        Icons.center_focus_strong_rounded,
+                        Icons.add_rounded,
                         color: PokeBinderColors.white,
-                        size: 26,
+                        size: 30,
                       ),
                     ),
                   ),
@@ -252,7 +252,7 @@ class _ScanNavButtonState extends State<_ScanNavButton> {
             ),
             const SizedBox(height: PokeBinderSpacing.sp1),
             Text(
-              'Scan',
+              'Add',
               style: PokeBinderText.chipLabel.copyWith(
                 color: PokeBinderColors.redDeep,
                 fontWeight: FontWeight.bold,

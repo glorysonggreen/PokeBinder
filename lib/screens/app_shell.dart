@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/binder_data.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
@@ -17,9 +20,9 @@ import '../widgets/app_nav_bar.dart';
 import 'binders_screen.dart';
 import 'decks_screen.dart';
 import 'home_screen.dart';
+import 'add_card_screen.dart';
 import 'login_screen.dart';
 import 'more_screen.dart';
-import 'scanner_screen.dart';
 
 class AppShell extends StatefulWidget {
   final AppTab initialTab;
@@ -39,7 +42,9 @@ class _AppShellState extends State<AppShell> {
   final _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
   late AppTab _tab = widget.initialTab;
   late TrainerProfileData _profile =
-      TrainerProfileData(name: widget.trainerName);
+      TrainerProfileData(name: _startingTrainerName);
+  StreamSubscription<AuthState>? _authSubscription;
+  bool _signingOut = false;
   bool _loading = true;
   String? _loadError;
   int _bindersLinkToken = 0;
@@ -48,10 +53,26 @@ class _AppShellState extends State<AppShell> {
   int _decksLinkToken = 0;
   String? _decksInitialDeckId;
 
+  /// Name to give a brand-new profile. Prefers the name saved with the
+  /// account at sign-up: when email confirmation is on, the profile doesn't
+  /// exist until the *first log in*, and that path builds AppShell with the
+  /// default trainerName, so everyone used to be renamed "Ash".
+  String get _startingTrainerName =>
+      AuthService.trainerNameFromMetadata ?? widget.trainerName;
+
   @override
   void initState() {
     super.initState();
     _loadData();
+    // The session can end without the person asking: a refresh token that
+    // was revoked or expired, or signing out in another tab. Without this
+    // the app sat on a "check your connection" error forever.
+    _authSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((state) {
+      if (state.event == AuthChangeEvent.signedOut && !_signingOut) {
+        _leaveToLogin();
+      }
+    });
     // Every screen calls Repository.upsert/.delete without awaiting it, so
     // this is the one place a failed background save gets surfaced instead
     // of vanishing into an unhandled Future (see services/sync_status.dart).
@@ -60,6 +81,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     SyncStatus.lastError.removeListener(_showSyncError);
     super.dispose();
   }
@@ -79,7 +101,7 @@ class _AppShellState extends State<AppShell> {
   Future<void> _loadData() async {
     try {
       final profile =
-          await TrainerProfileRepository.load(fallbackName: widget.trainerName);
+          await TrainerProfileRepository.load(fallbackName: _startingTrainerName);
       await Future.wait([
         BinderRepository.loadAll(),
         CardRepository.loadAll(),
@@ -102,13 +124,23 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _signOut() async {
+    _signingOut = true;
+    // Let saves that are still on their way finish first, so they aren't
+    // sent after the session is gone (or under the next account).
+    await SyncStatus.flush();
     await AuthService.signOut();
+    _leaveToLogin();
+  }
+
+  /// Clears the cached collection and returns to the login screen.
+  void _leaveToLogin() {
     // Clear cached data so the next person to sign in on this device
     // doesn't briefly see the previous account's collection.
     BinderData.library.clear();
     PokemonCardData.library.clear();
     DeckData.library.clear();
     WishlistEntry.library.clear();
+    SyncStatus.lastError.value = null;
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -192,7 +224,7 @@ class _AppShellState extends State<AppShell> {
               onOpenBinders: () => _openBinders(tabIndex: 0),
               onOpenBinder: (BinderData binder) =>
                   _openBinders(tabIndex: 0, binderId: binder.id),
-              onOpenScan: () => _switchTab(AppTab.scan),
+              onOpenAdd: () => _switchTab(AppTab.add),
               onOpenDeck: _openDeck,
             ),
             BindersScreen(
@@ -200,7 +232,9 @@ class _AppShellState extends State<AppShell> {
               initialTabIndex: _bindersInitialTabIndex,
               initialBinderId: _bindersInitialBinderId,
             ),
-            const ScannerScreen(),
+            // Rebuilding the shell (setState) refreshes Home/Binders, which read
+            // PokemonCardData.library live, so a card added here shows up there.
+            AddCardScreen(onCardAdded: () => setState(() {})),
             DecksScreen(
               key: ValueKey(_decksLinkToken),
               initialDeckId: _decksInitialDeckId,

@@ -500,12 +500,10 @@ class _TopValuePanel extends StatelessWidget {
   }
 }
 
-/// Card row for a top-value card, styled to match [_ScanRow] on the
-/// Scanner screen: same thumbnail size/frame, chakraPetch bold name,
+/// Card row for a top-value card: thumbnail with frame, chakraPetch bold name,
 /// `set · #number` subtitle line, and a [Wrap] of small icon+label tags
-/// (rarity, condition). The rank badge overlays the thumbnail corner in
-/// place of the scan row's "newest" dot, and the estimated value replaces
-/// the relative-time badge. Tapping the row opens [CardDetailsScreen] for
+/// (rarity, condition). The rank badge overlays the thumbnail corner and
+/// the estimated value sits at the trailing edge. Tapping the row opens [CardDetailsScreen] for
 /// the card, and any saved notes are shown below the tags as an italic
 /// description line, matching the notes line on the Wishlist screen's
 /// card rows.
@@ -622,7 +620,7 @@ class _TopValueRow extends StatelessWidget {
 }
 
 /// Small icon + label pairing for a card's rarity, matching the tag used
-/// on the Scanner screen's recent-scan rows.
+/// elsewhere in the app.
 class _RarityTag extends StatelessWidget {
   final String rarity;
 
@@ -642,7 +640,7 @@ class _RarityTag extends StatelessWidget {
 }
 
 /// Small icon + label pairing for a card's condition, matching the tag
-/// used on the Scanner screen's recent-scan rows.
+/// elsewhere in the app.
 class _ConditionTag extends StatelessWidget {
   final String code;
 

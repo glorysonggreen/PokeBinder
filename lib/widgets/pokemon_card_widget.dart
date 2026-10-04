@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import 'card_image.dart';
 
 class PokemonCard extends StatelessWidget {
   final PokemonCardData card;
@@ -68,7 +69,7 @@ class CardThumbnail extends StatelessWidget {
               )
             : null,
       ),
-      child: path != null ? Image.asset(path, fit: BoxFit.contain) : null,
+      child: path != null ? CardImage(path: path, fit: BoxFit.contain) : null,
     );
   }
 }
@@ -161,7 +162,7 @@ class _CardImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(assetPath, fit: BoxFit.contain);
+    return CardImage(path: assetPath, fit: BoxFit.contain);
   }
 }
 

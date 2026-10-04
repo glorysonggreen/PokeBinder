@@ -221,13 +221,18 @@ class _BindersScreenState extends State<BindersScreen> {
   void _renameCardsBinder(String oldName, String newName,
       {bool resetPage = false}) {
     final library = PokemonCardData.library;
+    var changed = false;
     for (var i = 0; i < library.length; i++) {
       if (library[i].binderName != oldName) continue;
       library[i] = library[i].copyWith(
         binderName: newName,
         page: resetPage ? 0 : null,
       );
-      CardRepository.upsert(library[i]);
+      changed = true;
+    }
+    // One request for the whole binder, not one upsert per card.
+    if (changed) {
+      CardRepository.renameBinder(oldName, newName, resetPage: resetPage);
     }
   }
 

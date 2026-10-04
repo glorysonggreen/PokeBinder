@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'enum_parsing.dart';
+
 enum DeckFormat { standard, expanded, casual }
 
 extension DeckFormatMeta on DeckFormat {
@@ -98,13 +100,14 @@ class DeckData {
     return DeckData(
       id: row['id'] as String,
       name: row['name'] as String,
-      format: DeckFormat.values.byName(row['format'] as String? ?? 'standard'),
+      format: enumByNameOr(
+          DeckFormat.values, row['format'] as String?, DeckFormat.standard),
       targetSize: (row['target_size'] as num?)?.toInt() ?? 60,
       description: row['description'] as String? ?? '',
       cards: cards,
       createdAt: row['created_at'] == null
           ? null
-          : DateTime.parse(row['created_at'] as String),
+          : DateTime.parse(row['created_at'] as String).toLocal(),
       isPinned: row['is_pinned'] as bool? ?? false,
     );
   }
@@ -121,7 +124,7 @@ class DeckData {
       'target_size': targetSize,
       'description': description,
       'is_pinned': isPinned,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt.toUtc().toIso8601String(),
     };
   }
 

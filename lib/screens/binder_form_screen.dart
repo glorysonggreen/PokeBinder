@@ -61,6 +61,21 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
     }
 
     final existing = widget.existingBinder;
+    // A card finds its binder by name, so two binders with one name would
+    // merge their cards, and a binder called "Unassigned" would swallow every
+    // unplaced card. The database rejects duplicates too (unique(user_id,
+    // name)), but by then the binder was already added to the screen.
+    if (name.toLowerCase() == kUnassignedBinderName.toLowerCase()) {
+      setState(() => _nameError = '"$name" is reserved — pick another name.');
+      return;
+    }
+    final nameTaken = BinderData.library.any(
+      (b) => b.id != existing?.id && b.name.toLowerCase() == name.toLowerCase(),
+    );
+    if (nameTaken) {
+      setState(() => _nameError = 'You already have a binder called "$name".');
+      return;
+    }
     final minPages = existing?.pageCount ?? 1;
     final requestedPages = int.tryParse(_pagesController.text);
     if (requestedPages == null || requestedPages < 1) {

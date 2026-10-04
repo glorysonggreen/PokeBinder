@@ -109,12 +109,17 @@ class PokeDropdownField<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
   final IconData? icon;
 
+  /// Fixes the field's height (instead of sizing to its text) so it lines up
+  /// exactly with a neighbouring control such as a quantity stepper.
+  final double? height;
+
   const PokeDropdownField({
     super.key,
     required this.value,
     required this.options,
     required this.onChanged,
     this.icon,
+    this.height,
   });
 
   @override
@@ -168,9 +173,11 @@ class PokeDropdownField<T> extends StatelessWidget {
             ],
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
+              height: height,
+              alignment: height == null ? null : Alignment.center,
+              padding: EdgeInsets.symmetric(
                 horizontal: PokeBinderSpacing.sp3,
-                vertical: PokeBinderSpacing.sp4,
+                vertical: height == null ? PokeBinderSpacing.sp4 : 0,
               ),
               decoration: BoxDecoration(
                 color: PokeBinderColors.white,

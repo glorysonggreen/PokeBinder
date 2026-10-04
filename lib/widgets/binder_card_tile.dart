@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import 'card_image.dart';
 import 'motion_widgets.dart';
 import 'pokemon_card_widget.dart';
 
@@ -34,8 +35,8 @@ class BinderCardTile extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(5),
-                  child: Image.asset(
-                    card.imageAssetPath!,
+                  child: CardImage(
+                    path: card.imageAssetPath!,
                     fit: BoxFit.contain,
                   ),
                 ),

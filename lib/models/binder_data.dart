@@ -72,13 +72,19 @@ class BinderData {
       isPinned: row['is_pinned'] as bool? ?? false,
       createdAt: row['created_at'] == null
           ? null
-          : DateTime.parse(row['created_at'] as String),
+          : DateTime.parse(row['created_at'] as String).toLocal(),
     );
   }
 
   /// The row to upsert into the `binders` table. `user_id` is left out —
   /// the column defaults to `auth.uid()` on insert and never changes on
   /// update.
+  ///
+  /// Timestamps are sent as UTC. A local [DateTime]'s ISO string has no
+  /// offset, which Postgres reads as UTC, so every save used to shift the
+  /// stored time by the device's UTC offset. `created_at` is omitted when
+  /// unknown so the column's `now()` default applies, instead of storing
+  /// 1970-01-01.
   Map<String, dynamic> toRow() {
     return {
       'id': id,
@@ -88,7 +94,7 @@ class BinderData {
       'slots_per_page': slotsPerPage,
       'category': category,
       'is_pinned': isPinned,
-      'created_at': createdAtOrEpoch.toIso8601String(),
+      if (createdAt != null) 'created_at': createdAt!.toUtc().toIso8601String(),
     };
   }
 

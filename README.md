@@ -19,7 +19,7 @@
 | --- | --- |
 | Framework | Flutter (Dart) |
 | State | `setState` (local, per-screen) |
-| Storage | none yet — in-memory / sample data only |
+| Backend | Supabase (email/password auth + Postgres with Row Level Security) — see [SUPABASE_SETUP.md](SUPABASE_SETUP.md) |
 | Other packages | `device_preview` — lets the app be judged at phone size on a desktop browser |
 
 ## Running it yourself
@@ -31,16 +31,20 @@ flutter run -d chrome
 
 ### Environment variables
 
-This project does not currently call any external service, so `.env` is not
-required yet. If that changes (e.g. a card-pricing API), copy `.env.example`
-to `.env`, fill in your own values, and never commit the result.
+The app talks to Supabase. Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md) once
+to create the tables and configure sign-in. The project URL and anon
+(publishable) key are in `lib/config/supabase_config.dart`; they are safe to
+publish. Any secret or billable key (e.g. a future card-pricing API) belongs in
+`.env` — copy `.env.example`, fill in your own values, and never commit the
+result.
 
 ## Privacy and secrets
 
-- This app does not currently store any personal data — collection data is
-  local, in-memory sample data only.
-- No secrets are compiled into the web build at this stage.
-- All sample data (e.g. "Charizard, Base Set") is publicly available card
+- The app stores an email address, a trainer name, and each user's collection
+  data in Supabase. Row Level Security limits every row to its owner.
+- Only the Supabase URL and anon key are compiled into the web build; both are
+  designed to be public. The `service_role` key must never be added.
+- Card names and sets (e.g. "Charizard, Base Set") are publicly available card
   information, not personal information.
 
 See `docs/06-security-and-privacy.md` for the full, dated checklist.
@@ -53,8 +57,8 @@ interactive 3D card (drag to tilt, tap for a flourish, smooth release).
 **Half done / not started:** Binders list, Search, Add Card form, Wishlist and
 Trade list, Deck builder, Trainer profile.
 
-**Next:** wire up navigation between screens, replace sample data with real
-local storage.
+**Next:** offline support (writes are currently online-only; a failed save
+shows a message but is not retried), and a card-pricing source.
 
 ## Licence
 

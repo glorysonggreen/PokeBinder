@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/wishlist_entry.dart';
+import 'paged_select.dart';
 import 'sync_status.dart';
 
 /// Syncs [WishlistEntry.library] with the `wishlist_entries` table.
@@ -14,10 +15,15 @@ class WishlistRepository {
   /// Replaces [WishlistEntry.library] with everything the signed-in user
   /// owns. Called once by AppShell on load.
   static Future<void> loadAll() async {
-    final rows = await _table.select();
+    final rows = await fetchAllRows(
+      'wishlist_entries',
+      orderBy: 'date_added',
+      thenBy: 'id',
+    );
+    final entries = rows.map(WishlistEntry.fromRow).toList();
     WishlistEntry.library
       ..clear()
-      ..addAll(rows.map(WishlistEntry.fromRow));
+      ..addAll(entries);
   }
 
   static Future<void> upsert(WishlistEntry entry) {

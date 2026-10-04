@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/pokebinder_theme.dart';
+import 'enum_parsing.dart';
 
 enum PokemonCardType {
   colorless,
@@ -147,7 +148,14 @@ class PokemonCardData {
   final int page;
   final double estimatedValue;
   final String notes;
+  /// Artwork for the card: a bundled asset path, or an `https://` URL for a
+  /// card picked from the catalog (see CardImage, which handles both).
   final String? imageAssetPath;
+
+  /// The `card_catalog` row this card was picked from, or null for a card the
+  /// user typed in by hand. A linked card's name, set, number, rarity, type
+  /// and artwork come from the catalog and are not editable.
+  final String? catalogId;
   final DateTime dateAdded;
 
   PokemonCardData({
@@ -166,6 +174,7 @@ class PokemonCardData {
     required this.estimatedValue,
     this.notes = '',
     this.imageAssetPath,
+    this.catalogId,
     DateTime? dateAdded,
   }) : dateAdded = dateAdded ?? DateTime.now();
 
@@ -177,10 +186,10 @@ class PokemonCardData {
       setName: row['set_name'] as String? ?? '',
       cardNumber: row['card_number'] as String? ?? '',
       rarity: row['rarity'] as String? ?? '',
-      type:
-          PokemonCardType.values.byName(row['type'] as String? ?? 'colorless'),
-      supertype: CardSupertype.values
-          .byName(row['supertype'] as String? ?? 'pokemon'),
+      type: enumByNameOr(PokemonCardType.values, row['type'] as String?,
+          PokemonCardType.colorless),
+      supertype: enumByNameOr(CardSupertype.values,
+          row['supertype'] as String?, CardSupertype.pokemon),
       subtype: row['subtype'] as String?,
       quantityOwned: (row['quantity_owned'] as num?)?.toInt() ?? 0,
       condition: row['condition'] as String? ?? 'NM',
@@ -189,7 +198,8 @@ class PokemonCardData {
       estimatedValue: (row['estimated_value'] as num?)?.toDouble() ?? 0,
       notes: row['notes'] as String? ?? '',
       imageAssetPath: row['image_asset_path'] as String?,
-      dateAdded: DateTime.parse(row['date_added'] as String),
+      catalogId: row['catalog_id'] as String?,
+      dateAdded: DateTime.parse(row['date_added'] as String).toLocal(),
     );
   }
 
@@ -212,7 +222,8 @@ class PokemonCardData {
       'estimated_value': estimatedValue,
       'notes': notes,
       'image_asset_path': imageAssetPath,
-      'date_added': dateAdded.toIso8601String(),
+      'catalog_id': catalogId,
+      'date_added': dateAdded.toUtc().toIso8601String(),
     };
   }
 
@@ -232,6 +243,7 @@ class PokemonCardData {
     double? estimatedValue,
     String? notes,
     String? imageAssetPath,
+    String? catalogId,
     DateTime? dateAdded,
   }) {
     return PokemonCardData(
@@ -250,6 +262,7 @@ class PokemonCardData {
       estimatedValue: estimatedValue ?? this.estimatedValue,
       notes: notes ?? this.notes,
       imageAssetPath: imageAssetPath ?? this.imageAssetPath,
+      catalogId: catalogId ?? this.catalogId,
       dateAdded: dateAdded ?? this.dateAdded,
     );
   }

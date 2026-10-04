@@ -33,7 +33,13 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   Future<void> _editCard() async {
     final currentBinder = widget.binders.firstWhere(
       (b) => b.name == _card.binderName,
-      orElse: () => widget.binders.first,
+      orElse: () => widget.binders.isEmpty
+          ? const BinderData(
+              id: kUnassignedBinderId,
+              name: kUnassignedBinderName,
+              pageCount: 0,
+            )
+          : widget.binders.first,
     );
 
     final result = await Navigator.of(context).push<CardFormResult>(

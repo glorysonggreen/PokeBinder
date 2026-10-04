@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'enum_parsing.dart';
 import 'pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 
@@ -131,14 +132,15 @@ class WishlistEntry {
       condition: row['condition'] as String? ?? 'NM',
       quantity: (row['quantity'] as num?)?.toInt() ?? 1,
       notes: row['notes'] as String? ?? '',
-      kind: WishlistEntryKind.values.byName(row['kind'] as String? ?? 'wishlist'),
-      priority: WishlistPriority.values
-          .byName(row['priority'] as String? ?? 'medium'),
+      kind: enumByNameOr(WishlistEntryKind.values, row['kind'] as String?,
+          WishlistEntryKind.wishlist),
+      priority: enumByNameOr(WishlistPriority.values,
+          row['priority'] as String?, WishlistPriority.medium),
       estimatedValue: (row['estimated_value'] as num?)?.toDouble() ?? 0,
       askingFor: row['asking_for'] as String? ?? '',
       sourceCardId: row['source_card_id'] as String?,
       imageAssetPath: row['image_asset_path'] as String?,
-      dateAdded: DateTime.parse(row['date_added'] as String),
+      dateAdded: DateTime.parse(row['date_added'] as String).toLocal(),
     );
   }
 
@@ -161,7 +163,7 @@ class WishlistEntry {
       'asking_for': askingFor,
       'source_card_id': sourceCardId,
       'image_asset_path': imageAssetPath,
-      'date_added': dateAdded.toIso8601String(),
+      'date_added': dateAdded.toUtc().toIso8601String(),
     };
   }
 

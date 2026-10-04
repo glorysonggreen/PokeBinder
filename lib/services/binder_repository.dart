@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/binder_data.dart';
+import 'paged_select.dart';
 import 'sync_status.dart';
 
 /// Syncs [BinderData.library] with the `binders` table. Screens keep
@@ -14,10 +15,12 @@ class BinderRepository {
   /// Replaces [BinderData.library] with everything the signed-in user
   /// owns. Called once by AppShell on load.
   static Future<void> loadAll() async {
-    final rows = await _table.select();
+    final rows =
+        await fetchAllRows('binders', orderBy: 'created_at', thenBy: 'id');
+    final binders = rows.map(BinderData.fromRow).toList();
     BinderData.library
       ..clear()
-      ..addAll(rows.map(BinderData.fromRow));
+      ..addAll(binders);
   }
 
   static Future<void> upsert(BinderData binder) {
