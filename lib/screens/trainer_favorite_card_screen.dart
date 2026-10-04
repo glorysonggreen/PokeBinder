@@ -42,6 +42,14 @@ class _TrainerFavoriteCardScreenState
   List<PokemonCardData> get _ownedCards =>
       PokemonCardData.library.where((c) => c.quantityOwned > 0).toList();
 
+  /// Empties the search box and every chip filter (the sort stays).
+  void _clearFilters() {
+    setState(() {
+      _query = '';
+      _resetSubFilters();
+    });
+  }
+
   void _resetSubFilters() {
     _typeFilter = null;
     _subtypeFilter = null;
@@ -152,6 +160,7 @@ class _TrainerFavoriteCardScreenState
 
               CollectionSearchBar(
                 hint: 'Search your binders for a card…',
+                text: _query,
                 onChanged: (value) => setState(() => _query = value),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
@@ -182,7 +191,14 @@ class _TrainerFavoriteCardScreenState
 
               Expanded(
                 child: filtered.isEmpty
-                    ? const _EmptyResults()
+                    ? SingleChildScrollView(
+                        child: EmptyFilterState(
+                          title: 'No cards match your search.',
+                          subtitle:
+                              'Try a different name or filter to find your favorite card.',
+                          onClearFilters: _clearFilters,
+                        ),
+                      )
                     : Container(
                         decoration: BoxDecoration(
                           color: PokeBinderColors.white,
@@ -395,32 +411,6 @@ class _CardMetaRow extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _EmptyResults extends StatelessWidget {
-  const _EmptyResults();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.search_off_rounded,
-            size: 26,
-            color: PokeBinderColors.inkSoft.withValues(alpha: 0.4),
-          ),
-          const SizedBox(height: PokeBinderSpacing.sp2),
-          Text(
-            'No cards match your search.',
-            textAlign: TextAlign.center,
-            style: PokeBinderText.subtitle,
-          ),
-        ],
-      ),
     );
   }
 }

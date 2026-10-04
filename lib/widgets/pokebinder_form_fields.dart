@@ -252,8 +252,14 @@ class PokeSearchableDropdownField<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
   final IconData? icon;
 
-  /// Heading of the picker sheet, e.g. "Choose a set".
+  /// Heading of the picker sheet, e.g. "Choose a Set".
   final String title;
+
+  /// Placeholder in the sheet's search box, e.g. "Search sets…".
+  final String searchHint;
+
+  /// Shown when the search matches nothing, e.g. "No sets match your search.".
+  final String noMatchesTitle;
 
   const PokeSearchableDropdownField({
     super.key,
@@ -261,6 +267,8 @@ class PokeSearchableDropdownField<T> extends StatelessWidget {
     required this.options,
     required this.onChanged,
     required this.title,
+    this.searchHint = 'Search',
+    this.noMatchesTitle = 'No matches found.',
     this.icon,
   });
 
@@ -282,6 +290,8 @@ class PokeSearchableDropdownField<T> extends StatelessWidget {
       ),
       builder: (_) => _SearchableOptionsSheet<T>(
         title: title,
+        searchHint: searchHint,
+        noMatchesTitle: noMatchesTitle,
         options: options,
         value: value,
       ),
@@ -303,11 +313,15 @@ class PokeSearchableDropdownField<T> extends StatelessWidget {
 
 class _SearchableOptionsSheet<T> extends StatefulWidget {
   final String title;
+  final String searchHint;
+  final String noMatchesTitle;
   final List<PokeDropdownOption<T>> options;
   final T value;
 
   const _SearchableOptionsSheet({
     required this.title,
+    required this.searchHint,
+    required this.noMatchesTitle,
     required this.options,
     required this.value,
   });
@@ -325,8 +339,6 @@ class _SearchableOptionsSheetState<T> extends State<_SearchableOptionsSheet<T>> 
     _controller.dispose();
     super.dispose();
   }
-
-  void _clear() => setState(_controller.clear);
 
   /// Options matching the search (by label or group), in order.
   List<PokeDropdownOption<T>> _matches() {
@@ -388,22 +400,11 @@ class _SearchableOptionsSheetState<T> extends State<_SearchableOptionsSheet<T>> 
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: PokeBinderSpacing.sp4),
-            child: TextField(
+            // Same search bar as every other screen, clear button included.
+            child: CollectionSearchBar(
+              hint: widget.searchHint,
               controller: _controller,
               onChanged: (_) => setState(() {}),
-              style: PokeBinderText.input,
-              decoration: pokeInputDecoration(
-                hint: 'Search',
-                icon: Icons.search_rounded,
-                suffixIcon: searching
-                    ? InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: _clear,
-                        child: const Icon(Icons.close_rounded,
-                            size: 16, color: PokeBinderColors.inkSoft),
-                      )
-                    : null,
-              ),
             ),
           ),
           if (searching)
@@ -425,7 +426,17 @@ class _SearchableOptionsSheetState<T> extends State<_SearchableOptionsSheet<T>> 
           const SizedBox(height: PokeBinderSpacing.sp2),
           Expanded(
             child: matches.isEmpty
-                ? const _NoMatches()
+                ? SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: PokeBinderSpacing.sp4,
+                    ),
+                    child: EmptyFilterState(
+                      title: widget.noMatchesTitle,
+                      subtitle: 'Check the spelling or try a shorter search.',
+                      clearFiltersLabel: 'Clear search',
+                      onClearFilters: () => setState(_controller.clear),
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(
                       PokeBinderSpacing.sp2,
@@ -467,25 +478,6 @@ class _SearchableOptionsSheetState<T> extends State<_SearchableOptionsSheet<T>> 
                     },
                   ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NoMatches extends StatelessWidget {
-  const _NoMatches();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.search_off_rounded,
-              size: 28, color: PokeBinderColors.hint),
-          const SizedBox(height: PokeBinderSpacing.sp2),
-          Text('No matches', style: PokeBinderText.subtitle),
         ],
       ),
     );

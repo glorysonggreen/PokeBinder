@@ -177,6 +177,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
     _debounce = Timer(const Duration(milliseconds: 350), _runSearch);
   }
 
+  /// Empties the search box and goes back to all sets.
+  void _clearSearch() {
+    _debounce?.cancel();
+    setState(() => _query = '');
+    _onSetChanged(_allSets);
+  }
+
   void _onSetChanged(String id) {
     setState(() {
       _setId = id;
@@ -244,18 +251,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
       MaterialPageRoute(
         builder: (_) => CardFormScreen(
           catalogCard: card,
-          binders: BinderData.library,
-          defaultBinderId: kUnassignedBinderId,
-        ),
-      ),
-    );
-    _handleResult(result);
-  }
-
-  Future<void> _addManually() async {
-    final result = await Navigator.of(context).push<CardFormResult>(
-      MaterialPageRoute(
-        builder: (_) => CardFormScreen(
           binders: BinderData.library,
           defaultBinderId: kUnassignedBinderId,
         ),
@@ -333,21 +328,24 @@ class _AddCardScreenState extends State<AddCardScreen> {
             Text('ADD A CARD', style: PokeBinderText.eyebrow),
             const SizedBox(height: PokeBinderSpacing.sp2),
             Text('Find Your Card', style: PokeBinderText.heading),
-            const SizedBox(height: PokeBinderSpacing.sp2),
+            const SizedBox(height: PokeBinderSpacing.sp1),
             Text(
               'Pick it from the card database so the name, set, artwork and '
               'price are always correct.',
               style: PokeBinderText.subtitle,
             ),
-            const SizedBox(height: PokeBinderSpacing.sp4),
+            const SizedBox(height: PokeBinderSpacing.sp3),
             CollectionSearchBar(
               hint: 'Search by name or number (e.g. 4/102)',
+              text: _query,
               onChanged: _onQueryChanged,
             ),
             if (_sets.isNotEmpty) ...[
-              const SizedBox(height: PokeBinderSpacing.sp2),
+              const SizedBox(height: PokeBinderSpacing.sp3),
               PokeSearchableDropdownField<String>(
-                title: 'Choose a set',
+                title: 'Choose a Set',
+                searchHint: 'Search sets…',
+                noMatchesTitle: 'No sets match your search.',
                 value: _setId,
                 icon: Icons.collections_bookmark_outlined,
                 options: [
@@ -364,34 +362,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 onChanged: _onSetChanged,
               ),
             ],
-            const SizedBox(height: PokeBinderSpacing.sp4),
-            ..._body(),
-            const SizedBox(height: PokeBinderSpacing.sp5),
-            Row(
-              children: [
-                Text('NOT IN THE DATABASE?', style: PokeBinderText.sectionLabel),
-                const SizedBox(width: PokeBinderSpacing.sp2),
-                Expanded(
-                  child: Divider(
-                    color: PokeBinderColors.ink.withValues(alpha: 0.08),
-                    height: 1,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: PokeBinderSpacing.sp2),
-            Text(
-              'Promos, custom cards and brand-new sets may be missing. You '
-              'can enter those yourself.',
-              style: PokeBinderText.subtitle,
-            ),
             const SizedBox(height: PokeBinderSpacing.sp3),
-            PillButton(
-              label: 'Add a Card Manually',
-              icon: Icons.edit_outlined,
-              ghost: true,
-              onTap: _addManually,
-            ),
+            ..._body(),
           ],
         ),
       ),
@@ -437,11 +409,11 @@ class _AddCardScreenState extends State<AddCardScreen> {
       ];
     }
     if (_results.isEmpty) {
-      return const [
-        _Hint(
-          icon: Icons.search_off_rounded,
-          text: 'No cards matched. Check the spelling, try another set, or '
-              'add the card manually below.',
+      return [
+        EmptyFilterState(
+          title: 'No cards matched your search.',
+          subtitle: 'Check the spelling or try another set.',
+          onClearFilters: _clearSearch,
         ),
       ];
     }
@@ -465,7 +437,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
     final remaining = cards.length - _visibleCount;
     final nextBatch = remaining < _kVisibleChunk ? remaining : _kVisibleChunk;
     return [
-      if (sorted.subOptionRow != null) sorted.subOptionRow!,
+      if (sorted.subOptionRow != null) ...[
+        sorted.subOptionRow!,
+        const SizedBox(height: PokeBinderSpacing.sp2),
+      ],
       Row(
         children: [
           Expanded(
@@ -495,10 +470,12 @@ class _AddCardScreenState extends State<AddCardScreen> {
       ),
       const SizedBox(height: PokeBinderSpacing.sp2),
       if (cards.isEmpty)
-        const _Hint(
-          icon: Icons.filter_alt_off_outlined,
-          text: 'No cards match this filter. Pick "All" above or change the '
-              'sort.',
+        EmptyFilterState(
+          title: 'No cards match this filter.',
+          subtitle: 'Try a different filter or sort.',
+          onClearFilters: () => _update(
+            () => _typeFilter = _subtypeFilter = _rarityFilter = null,
+          ),
         ),
       for (final card in cards.take(_visibleCount)) ...[
         _CatalogRow(

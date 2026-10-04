@@ -334,6 +334,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 hint: isWishlist
                     ? 'Search cards to wishlist…'
                     : 'Search cards to trade…',
+                text: _query,
                 onChanged: (value) => setState(() {
                   _query = value;
                   _pageIndex = 0;

@@ -298,7 +298,9 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                             CardCaption(card: card),
                           ],
                         ),
-                      if (!removing)
+                      // Only real binders can have cards added; the
+                      // Unassigned bucket just holds cards taken out of them.
+                      if (!removing && !_isUnassigned)
                         Column(
                           children: [
                             SizedBox(
@@ -307,9 +309,7 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                             ),
                             const SizedBox(height: PokeBinderSpacing.sp1),
                             Text(
-                              // Real binders open the collection picker; the
-                              // Unassigned bucket still uses manual entry.
-                              _isUnassigned ? 'Add Card Manually' : 'Add Cards',
+                              'Add Cards',
                               style: PokeBinderText.cardName,
                               textAlign: TextAlign.center,
                               maxLines: 2,

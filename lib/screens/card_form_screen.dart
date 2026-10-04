@@ -41,6 +41,8 @@ class CardFormScreen extends StatefulWidget {
   final String defaultBinderId;
   final int defaultPageNumber;
 
+  /// New cards always come from the catalog. [existingCard] is for editing a
+  /// card already in the collection.
   const CardFormScreen({
     super.key,
     this.existingCard,
@@ -48,7 +50,8 @@ class CardFormScreen extends StatefulWidget {
     required this.binders,
     required this.defaultBinderId,
     this.defaultPageNumber = 1,
-  });
+  }) : assert(existingCard != null || catalogCard != null,
+            'Pass a catalogCard to add a card, or an existingCard to edit one.');
 
   @override
   State<CardFormScreen> createState() => _CardFormScreenState();
@@ -63,11 +66,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
 
   /// The catalog row this card is (or will be) linked to, if any.
   String? get _catalogId => widget.existingCard?.catalogId ?? widget.catalogCard?.id;
-
-  /// True when the card's identity comes from the catalog, so it is shown as
-  /// read-only text instead of editable fields. That is what keeps the name,
-  /// set, number, rarity and artwork correct.
-  bool get _isLocked => _catalogId != null;
 
   late final _nameController = TextEditingController(
       text: widget.existingCard?.name ?? widget.catalogCard?.name ?? '');
@@ -137,7 +135,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
           )
           .id;
 
-  String? _nameError;
   String? _quantityError;
 
   /// True once the person has typed a value that differs from the automatic
@@ -146,28 +143,11 @@ class _CardFormScreenState extends State<CardFormScreen> {
 
   bool get _isEditing => widget.existingCard != null;
 
-  /// Subtype choices the manual form offers for each supertype. They match
-  /// the values the collection's filter chips look for.
-  static const _trainerSubtypes = ['Item', 'Supporter', 'Stadium'];
-  static const _energySubtypes = ['Basic', 'Special'];
-
-  List<String> get _subtypeChoices => switch (_supertype) {
-        CardSupertype.trainer => _trainerSubtypes,
-        CardSupertype.energy => _energySubtypes,
-        CardSupertype.pokemon => const [],
-      };
-
-  String get _title => _isEditing
-      ? 'Edit Card'
-      : _isLocked
-          ? 'Add to Collection'
-          : 'Add a Card Manually';
+  String get _title => _isEditing ? 'Edit Card' : 'Add to Collection';
 
   String get _subtitle => _isEditing
       ? 'Update the details below.'
-      : _isLocked
-          ? 'Confirm the details of your copy.'
-          : "Can't find it in the card database? Enter the details yourself.";
+      : 'Confirm the details of your copy.';
 
   @override
   void dispose() {
@@ -184,10 +164,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
 
   void _submit() {
     final name = _nameController.text.trim();
-    if (!_isLocked && name.isEmpty) {
-      setState(() => _nameError = 'Give the card a name first.');
-      return;
-    }
 
     final quantity = int.tryParse(_quantityController.text);
     if (quantity == null || quantity < 1) {
@@ -211,29 +187,15 @@ class _CardFormScreenState extends State<CardFormScreen> {
     final page = int.tryParse(_pageController.text) ?? widget.defaultPageNumber;
     final pageNumber = unassigned ? 0 : (page < 1 ? 1 : page);
 
-    // A linked card keeps the catalog's type and subtype untouched. A manual
-    // card gets the ones picked in the form; trainers have no energy type,
-    // and the subtype must be one the chosen kind actually offers.
-    final type = !_isLocked && _supertype == CardSupertype.trainer
-        ? PokemonCardType.colorless
-        : _type;
-    String? subtype = _subtype;
-    if (!_isLocked) {
-      final choices = _subtypeChoices;
-      subtype = choices.isEmpty
-          ? null
-          : (choices.contains(subtype) ? subtype : choices.first);
-    }
-
     final card = PokemonCardData(
       id: widget.existingCard?.id ?? 'card-${DateTime.now().microsecondsSinceEpoch}',
       name: name,
       setName: _setController.text.trim(),
       cardNumber: _cardNumberController.text.trim(),
       rarity: _rarity,
-      type: type,
+      type: _type,
       supertype: _supertype,
-      subtype: subtype,
+      subtype: _subtype,
       quantityOwned: quantity,
       condition: _conditionCode,
       binderName: binder?.name ?? kUnassignedBinderName,
@@ -297,121 +259,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
     if (confirmed == true && mounted) {
       Navigator.of(context).pop(const CardFormResult.deleted());
     }
-  }
-
-  static String _typeLabel(PokemonCardType t) =>
-      t.name[0].toUpperCase() + t.name.substring(1);
-
-  Widget _typeDropdown() => LabeledFormField(
-        label: 'Type',
-        child: PokeDropdownField<PokemonCardType>(
-          value: _type,
-          icon: Icons.bolt_rounded,
-          options: [
-            for (final t in PokemonCardType.values)
-              PokeDropdownOption(t, _typeLabel(t), icon: t.typeIcon),
-          ],
-          onChanged: (value) => setState(() => _type = value),
-        ),
-      );
-
-  Widget _subtypeDropdown() => LabeledFormField(
-        label: 'Subtype',
-        child: PokeDropdownField<String>(
-          value: _subtypeChoices.contains(_subtype)
-              ? _subtype!
-              : _subtypeChoices.first,
-          icon: Icons.label_outline_rounded,
-          options: [
-            for (final o in _subtypeChoices) PokeDropdownOption(o, o),
-          ],
-          onChanged: (value) => setState(() => _subtype = value),
-        ),
-      );
-
-  /// The identity fields for a card that is not in the catalog. For a
-  /// catalog card these are replaced by the read-only [_CatalogSummary].
-  List<Widget> _manualIdentityFields() {
-    return [
-      LabeledFormField(
-        label: 'Card name',
-        child: TextField(
-          controller: _nameController,
-          decoration: pokeInputDecoration(
-            hint: 'e.g. Charizard',
-            icon: Icons.badge_outlined,
-          ),
-          onChanged: (_) {
-            if (_nameError != null) setState(() => _nameError = null);
-          },
-        ),
-      ),
-      if (_nameError != null)
-        Padding(
-          padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
-          child: Text(_nameError!, style: PokeBinderText.formError),
-        ),
-      FormFieldRow(
-        left: LabeledFormField(
-          label: 'Set',
-          child: TextField(
-            controller: _setController,
-            decoration: pokeInputDecoration(
-              hint: 'Base Set',
-              icon: Icons.collections_bookmark_outlined,
-            ),
-          ),
-        ),
-        right: LabeledFormField(
-          label: 'Card number',
-          child: TextField(
-            controller: _cardNumberController,
-            decoration: pokeInputDecoration(
-              hint: '4/102',
-              icon: Icons.tag_rounded,
-            ),
-          ),
-        ),
-      ),
-      FormFieldRow(
-        left: LabeledFormField(
-          label: 'Card kind',
-          child: PokeDropdownField<CardSupertype>(
-            value: _supertype,
-            icon: Icons.category_outlined,
-            options: const [
-              PokeDropdownOption(CardSupertype.pokemon, 'Pokémon'),
-              PokeDropdownOption(CardSupertype.trainer, 'Trainer'),
-              PokeDropdownOption(CardSupertype.energy, 'Energy'),
-            ],
-            onChanged: (value) => setState(() {
-              _supertype = value;
-              _subtype = null;
-            }),
-          ),
-        ),
-        right: LabeledFormField(
-          label: 'Rarity',
-          child: PokeDropdownField<String>(
-            value: kRarityOptions.contains(_rarity)
-                ? _rarity
-                : kRarityOptions.first,
-            icon: Icons.diamond_rounded,
-            options: [
-              for (final r in kRarityOptions)
-                PokeDropdownOption(r, r, icon: rarityIconFor(r)),
-            ],
-            onChanged: (value) => setState(() => _rarity = value),
-          ),
-        ),
-      ),
-      if (_supertype == CardSupertype.trainer)
-        _subtypeDropdown()
-      else if (_supertype == CardSupertype.energy)
-        FormFieldRow(left: _typeDropdown(), right: _subtypeDropdown())
-      else
-        _typeDropdown(),
-    ];
   }
 
   /// Near Mint market price in US dollars for the chosen printing.
@@ -586,39 +433,31 @@ class _CardFormScreenState extends State<CardFormScreen> {
                     Text(_subtitle, style: PokeBinderText.subtitle),
                     const SizedBox(height: PokeBinderSpacing.sp4),
 
-                    if (_isLocked)
-                      _CatalogSummary(
-                        name: _nameController.text,
-                        setName: _setController.text,
-                        number: _cardNumberController.text,
-                        rarity: _rarity,
-                        type: _type,
-                        supertype: _supertype,
-                        subtype: _subtype,
-                        imagePath: widget.existingCard?.imageAssetPath ??
-                            widget.catalogCard?.collectionImage,
-                        // Only a freshly picked catalog card has a market
-                        // price to show; an owned copy has its own value.
-                        showPrice: !_isEditing && widget.catalogCard != null,
-                        priceUsd: _marketUsd,
-                        pricePhp: _marketPhp,
-                        priceUpdatedAt: widget.catalogCard?.priceUpdatedAt,
-                        priceCaption: _finishes.length > 1 && _finish != null
-                            ? finishLabel(_finish!)
-                            : null,
-                        // An owned copy shows its printing as a chip; a card
-                        // being added picks it below instead.
-                        finishChip: _isEditing && _finish != null
-                            ? finishLabel(_finish!)
-                            : null,
-                      )
-                    else ...[
-                      const _SectionTitle(
-                        icon: Icons.badge_outlined,
-                        label: 'Card details',
-                      ),
-                      ..._manualIdentityFields(),
-                    ],
+                    _CatalogSummary(
+                      name: _nameController.text,
+                      setName: _setController.text,
+                      number: _cardNumberController.text,
+                      rarity: _rarity,
+                      type: _type,
+                      supertype: _supertype,
+                      subtype: _subtype,
+                      imagePath: widget.existingCard?.imageAssetPath ??
+                          widget.catalogCard?.collectionImage,
+                      // Only a freshly picked catalog card has a market
+                      // price to show; an owned copy has its own value.
+                      showPrice: !_isEditing && widget.catalogCard != null,
+                      priceUsd: _marketUsd,
+                      pricePhp: _marketPhp,
+                      priceUpdatedAt: widget.catalogCard?.priceUpdatedAt,
+                      priceCaption: _finishes.length > 1 && _finish != null
+                          ? finishLabel(_finish!)
+                          : null,
+                      // An owned copy shows its printing as a chip; a card
+                      // being added picks it below instead.
+                      finishChip: _isEditing && _finish != null
+                          ? finishLabel(_finish!)
+                          : null,
+                    ),
 
                     const _SectionTitle(
                       icon: Icons.style_outlined,

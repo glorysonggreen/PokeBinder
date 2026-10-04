@@ -203,6 +203,7 @@ class _DecksScreenState extends State<DecksScreen> {
 
               CollectionSearchBar(
                 hint: 'Search decks...',
+                text: _deckSearch,
                 onChanged: (v) => setState(() => _deckSearch = v),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
@@ -264,8 +265,11 @@ class _DecksScreenState extends State<DecksScreen> {
               const SizedBox(height: PokeBinderSpacing.sp4),
 
               if (_decks.isEmpty)
-                const _EmptyPanel(
-                  message: 'No decks yet — create one to get started.',
+                const EmptyFilterState(
+                  icon: Icons.style_rounded,
+                  title: 'No decks yet.',
+                  subtitle: 'Create a deck to plan a list and track what you '
+                      'still need to pull.',
                 )
               else if (visibleDecks.isEmpty)
                 EmptyFilterState(
@@ -831,31 +835,6 @@ class _StatusTag extends StatelessWidget {
         style: PokeBinderText.tagLabel(
           ok ? _kTagOkFg : PokeBinderColors.danger,
         ),
-      ),
-    );
-  }
-}
-
-class _EmptyPanel extends StatelessWidget {
-  final String message;
-
-  const _EmptyPanel({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(PokeBinderSpacing.sp5),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: PokeBinderColors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-      ),
-      child: Text(
-        message,
-        textAlign: TextAlign.center,
-        style: PokeBinderText.subtitle,
       ),
     );
   }

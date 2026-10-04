@@ -68,6 +68,14 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
 
   int get _totalSelected => _quantities.values.fold(0, (sum, q) => sum + q);
 
+  /// Empties the search box and every chip filter (the sort stays).
+  void _clearFilters() {
+    setState(() {
+      _query = '';
+      _resetSubFilters();
+    });
+  }
+
   void _resetSubFilters() {
     _typeFilter = null;
     _subtypeFilter = null;
@@ -176,6 +184,7 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
 
               CollectionSearchBar(
                 hint: 'Search your binders for a card to add…',
+                text: _query,
                 onChanged: (value) => setState(() => _query = value),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
@@ -207,11 +216,19 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
 
               Expanded(
                 child: filtered.isEmpty
-                    ? _EmptyResults(
-                        message: candidates.isEmpty
-                            ? 'Every card in your collection is already in '
-                                'this binder.'
-                            : 'No cards match your search.',
+                    ? SingleChildScrollView(
+                        child: candidates.isEmpty
+                            ? const EmptyFilterState(
+                                icon: Icons.collections_bookmark_outlined,
+                                title: 'Every card is already in this binder.',
+                                subtitle: 'There is nothing left to add.',
+                              )
+                            : EmptyFilterState(
+                                title: 'No cards match your search.',
+                                subtitle: 'Try a different name or filter to '
+                                    'find a card for this binder.',
+                                onClearFilters: _clearFilters,
+                              ),
                       )
                     : Container(
                         decoration: BoxDecoration(
@@ -490,37 +507,6 @@ class _StepperButton extends StatelessWidget {
                 ? PokeBinderColors.redDeep
                 : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyResults extends StatelessWidget {
-  final String message;
-
-  const _EmptyResults({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: PokeBinderSpacing.sp4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.search_off_rounded,
-              size: 26,
-              color: PokeBinderColors.inkSoft.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: PokeBinderSpacing.sp2),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: PokeBinderText.subtitle,
-            ),
-          ],
         ),
       ),
     );

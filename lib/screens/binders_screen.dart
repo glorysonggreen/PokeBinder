@@ -262,15 +262,12 @@ class _BindersScreenState extends State<BindersScreen> {
 
   /// "Add card" from a binder page opens the collection picker (the same
   /// layout as the Deck Planner's Add Cards screen). The Unassigned bucket
-  /// isn't a binder, so it keeps the plain manual-entry form.
+  /// isn't a binder, so there is nothing to add to.
   Future<void> _openAddCardFor({
     required String? binderId,
     required int pageIndex,
   }) async {
-    if (binderId == null) {
-      await _openManualCardForm(binderId: null, pageIndex: pageIndex);
-      return;
-    }
+    if (binderId == null) return;
 
     final binderIndex = _binders.indexWhere((b) => b.id == binderId);
     if (binderIndex == -1) return;
@@ -289,27 +286,6 @@ class _BindersScreenState extends State<BindersScreen> {
     if (picks == null || picks.isEmpty) return;
 
     setState(() => _moveCardsToBinder(picks, binder.id, pageIndex));
-  }
-
-  Future<void> _openManualCardForm({
-    required String? binderId,
-    required int pageIndex,
-  }) async {
-    final result = await Navigator.of(context).push<CardFormResult>(
-      MaterialPageRoute(
-        builder: (_) => CardFormScreen(
-          binders: _binders,
-          defaultBinderId: binderId ?? kUnassignedBinderId,
-          defaultPageNumber: pageIndex + 1,
-        ),
-      ),
-    );
-    if (result == null || result.deleted) return;
-    setState(() {
-      _growBinderIfNeeded(result.binderId!, result.pageIndex!);
-      PokemonCardData.library.add(result.card!);
-    });
-    CardRepository.upsert(result.card!);
   }
 
   /// Every card in the collection that isn't already in [binderId] — the
@@ -614,6 +590,7 @@ class _BindersTab extends StatelessWidget {
         children: [
           CollectionSearchBar(
             hint: 'Search binders…',
+            text: search,
             onChanged: onSearchChanged,
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
@@ -726,6 +703,7 @@ class _AllCardsTab extends StatelessWidget {
         children: [
           CollectionSearchBar(
             hint: 'Search all ${cards.length} cards by name…',
+            text: search,
             onChanged: onSearchChanged,
           ),
           const SizedBox(height: PokeBinderSpacing.sp3),
@@ -1038,45 +1016,51 @@ class _BinderGridTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    gradient: muted ? null : PokeBinderColors.redGradient,
-                    color: muted ? PokeBinderColors.cream2 : null,
-                    border: muted
-                        ? Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.12))
-                        : null,
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 16,
-                    color: muted ? PokeBinderColors.inkSoft : PokeBinderColors.white,
-                  ),
-                ),
-                const Spacer(),
-                if (onTogglePin != null)
-                  MinTapTarget(
-                    onTap: onTogglePin,
-                    semanticLabel: isPinned ? 'Unpin binder' : 'Pin binder',
-                    // The pin pops between outlined and filled with a little bounce.
-                    child: BouncySwitcher(
-                      child: Icon(
-                        isPinned
-                            ? Icons.push_pin_rounded
-                            : Icons.push_pin_outlined,
-                        key: ValueKey(isPinned),
-                        size: 14,
-                        color: isPinned
-                            ? PokeBinderColors.red
-                            : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
-                      ),
+            // The pin button sits in a 44pt tap area. Fixing the row to that
+            // height keeps tiles without a pin (Unassigned) the same size as
+            // the ones with it.
+            SizedBox(
+              height: kMinTapTarget,
+              child: Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: muted ? null : PokeBinderColors.redGradient,
+                      color: muted ? PokeBinderColors.cream2 : null,
+                      border: muted
+                          ? Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.12))
+                          : null,
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 16,
+                      color: muted ? PokeBinderColors.inkSoft : PokeBinderColors.white,
                     ),
                   ),
-              ],
+                  const Spacer(),
+                  if (onTogglePin != null)
+                    MinTapTarget(
+                      onTap: onTogglePin,
+                      semanticLabel: isPinned ? 'Unpin binder' : 'Pin binder',
+                      // The pin pops between outlined and filled with a little bounce.
+                      child: BouncySwitcher(
+                        child: Icon(
+                          isPinned
+                              ? Icons.push_pin_rounded
+                              : Icons.push_pin_outlined,
+                          key: ValueKey(isPinned),
+                          size: 14,
+                          color: isPinned
+                              ? PokeBinderColors.red
+                              : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: PokeBinderSpacing.sp2),
             Text(

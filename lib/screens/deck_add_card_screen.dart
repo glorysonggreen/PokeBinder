@@ -45,6 +45,14 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
 
   int get _totalSelected => _quantities.values.fold(0, (sum, q) => sum + q);
 
+  /// Empties the search box and every chip filter (the sort stays).
+  void _clearFilters() {
+    setState(() {
+      _query = '';
+      _resetSubFilters();
+    });
+  }
+
   void _resetSubFilters() {
     _typeFilter = null;
     _subtypeFilter = null;
@@ -163,6 +171,7 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
 
               CollectionSearchBar(
                 hint: 'Search your binders for a card to add…',
+                text: _query,
                 onChanged: (value) => setState(() => _query = value),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
@@ -194,7 +203,14 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
 
               Expanded(
                 child: filtered.isEmpty
-                    ? const _EmptyResults()
+                    ? SingleChildScrollView(
+                        child: EmptyFilterState(
+                          title: 'No cards match your search.',
+                          subtitle:
+                              'Only cards you own can be added to a deck. Try a different name or filter.',
+                          onClearFilters: _clearFilters,
+                        ),
+                      )
                     : Container(
                         decoration: BoxDecoration(
                           color: PokeBinderColors.white,
@@ -472,32 +488,6 @@ class _StepperButton extends StatelessWidget {
                 : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _EmptyResults extends StatelessWidget {
-  const _EmptyResults();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.search_off_rounded,
-            size: 26,
-            color: PokeBinderColors.inkSoft.withValues(alpha: 0.4),
-          ),
-          const SizedBox(height: PokeBinderSpacing.sp2),
-          Text(
-            'No cards match your search.',
-            textAlign: TextAlign.center,
-            style: PokeBinderText.subtitle,
-          ),
-        ],
       ),
     );
   }

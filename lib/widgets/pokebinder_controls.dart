@@ -22,8 +22,17 @@ class BackLink extends StatelessWidget {
   }
 }
 
-class CollectionSearchBar extends StatelessWidget {
+class CollectionSearchBar extends StatefulWidget {
   final String hint;
+
+  /// Optional. Pass one when the caller needs to read or change the text.
+  /// Without it the bar manages its own.
+  final TextEditingController? controller;
+
+  /// Optional. The query the screen currently holds. The bar follows it, so
+  /// when the screen resets its query (e.g. "Clear filters") the text in the
+  /// box is emptied too, and a bar rebuilt later (a tab switch) starts with it.
+  final String? text;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
   final bool enabled;
@@ -32,6 +41,8 @@ class CollectionSearchBar extends StatelessWidget {
   const CollectionSearchBar({
     super.key,
     required this.hint,
+    this.controller,
+    this.text,
     this.onChanged,
     this.onTap,
     this.enabled = true,
@@ -39,7 +50,60 @@ class CollectionSearchBar extends StatelessWidget {
   });
 
   @override
+  State<CollectionSearchBar> createState() => _CollectionSearchBarState();
+}
+
+class _CollectionSearchBarState extends State<CollectionSearchBar> {
+  TextEditingController? _ownController;
+
+  TextEditingController get _controller =>
+      widget.controller ??
+      (_ownController ??= TextEditingController(text: widget.text));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(CollectionSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      (oldWidget.controller ?? _ownController)?.removeListener(_onTextChanged);
+      _controller.addListener(_onTextChanged);
+    }
+    final text = widget.text;
+    if (text != null && text != _controller.text) {
+      _controller.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _ownController?.dispose();
+    super.dispose();
+  }
+
+  // Rebuilds so the clear button appears and disappears with the text.
+  void _onTextChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _clear() {
+    _controller.clear();
+    // clear() doesn't fire onChanged, so tell the owner the query is empty.
+    widget.onChanged?.call('');
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final showClear = widget.enabled && _controller.text.isNotEmpty;
+
     final field = Container(
       padding: const EdgeInsets.symmetric(
         horizontal: PokeBinderSpacing.sp3,
@@ -60,36 +124,55 @@ class CollectionSearchBar extends StatelessWidget {
           const SizedBox(width: PokeBinderSpacing.sp2),
           Expanded(
             child: IgnorePointer(
-              ignoring: !enabled,
+              ignoring: !widget.enabled,
               child: TextField(
-                enabled: enabled,
-                onChanged: onChanged,
+                controller: _controller,
+                enabled: widget.enabled,
+                onChanged: widget.onChanged,
                 style: PokeBinderText.input,
                 decoration: InputDecoration(
                   isDense: true,
                   border: InputBorder.none,
-                  hintText: hint,
+                  hintText: widget.hint,
                   hintStyle: PokeBinderText.hint,
                 ),
               ),
             ),
           ),
-          if (trailing != null) ...[
+          if (showClear) ...[
             const SizedBox(width: PokeBinderSpacing.sp2),
-            trailing!,
+            Tooltip(
+              message: 'Clear search',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _clear,
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.backspace_outlined,
+                    size: 18,
+                    color: PokeBinderColors.inkSoft,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (widget.trailing != null) ...[
+            const SizedBox(width: PokeBinderSpacing.sp2),
+            widget.trailing!,
           ],
         ],
       ),
     );
 
-    if (onTap == null) return field;
+    if (widget.onTap == null) return field;
 
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
+        onTap: widget.onTap,
         child: field,
       ),
     );

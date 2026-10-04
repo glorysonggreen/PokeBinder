@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<PokemonCardData> get _recentlyAdded {
     final sorted = [..._cards]
       ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
-    return sorted.take(2).toList();
+    return sorted.take(3).toList();
   }
 
   int get _totalCardCount =>
@@ -145,24 +145,6 @@ class _HomeScreenState extends State<HomeScreen> {
     widget.onOpenDeck(created);
   }
 
-  Future<void> _openAddCardManually() async {
-    final result = await Navigator.of(context).push<CardFormResult>(
-      MaterialPageRoute(
-        builder: (_) => CardFormScreen(
-          binders: _binders,
-          defaultBinderId: kUnassignedBinderId,
-        ),
-      ),
-    );
-    if (result == null || result.deleted || result.card == null) return;
-    // Previously this only added the card to the in-memory list, so a card
-    // added from Home was never saved to the database (and was gone after a
-    // reload). saveNewCard also grows the binder if the page is past its end.
-    setState(() {
-      saveNewCard(result);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final continueBinder = _continueBinder;
@@ -219,7 +201,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     hint: 'Search your whole collection…',
                     enabled: false,
                     onTap: widget.onOpenAllCards,
-                    trailing: _CardCountBadge(count: _totalCardCount),
                   ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp3),
@@ -330,11 +311,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ],
-                      if (recentCards.isNotEmpty)
-                        const SizedBox(width: PokeBinderSpacing.sp2),
-                      Expanded(
-                        child: _AddCardManuallyTile(onTap: _openAddCardManually),
-                      ),
+                      // Keep three equal columns so one or two cards don't
+                      // stretch across the whole row.
+                      for (var i = recentCards.length; i < 3; i++) ...[
+                        if (i != 0) const SizedBox(width: PokeBinderSpacing.sp2),
+                        const Expanded(child: SizedBox.shrink()),
+                      ],
                     ],
                   ),
                 ),
@@ -400,30 +382,6 @@ class _TrainerAvatar extends StatelessWidget {
             color: PokeBinderColors.white,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CardCountBadge extends StatelessWidget {
-  final int count;
-
-  const _CardCountBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: PokeBinderSpacing.sp1,
-        vertical: PokeBinderSpacing.sp1,
-      ),
-      decoration: BoxDecoration(
-        color: PokeBinderColors.cream2,
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Text(
-        '$count cards',
-        style: PokeBinderText.cardName,
       ),
     );
   }
@@ -584,29 +542,6 @@ class _RecentCardTile extends StatelessWidget {
         BinderCardTile(card: card, onTap: onTap),
         const SizedBox(height: PokeBinderSpacing.sp1),
         CardCaption(card: card),
-      ],
-    );
-  }
-}
-
-class _AddCardManuallyTile extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _AddCardManuallyTile({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AddCardTile(onTap: onTap),
-        const SizedBox(height: PokeBinderSpacing.sp1),
-        Text(
-          'Add Card Manually',
-          style: PokeBinderText.cardName,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
       ],
     );
   }
