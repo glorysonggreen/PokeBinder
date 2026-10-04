@@ -18,11 +18,21 @@ import 'card_form_screen.dart';
 /// grows the binder if the card sits on a page past its end, adds it to
 /// [PokemonCardData.library] and saves it to the database.
 ///
+/// If the form returned a card that is already in the library (the "add to
+/// your existing copy" shortcut), that entry is updated instead of adding a
+/// second one.
+///
 /// Shared by every "add a new card" entry point so they all behave the same.
 void saveNewCard(CardFormResult result) {
   final card = result.card!;
-  _growBinderIfNeeded(result.binderId!, result.pageIndex!);
-  PokemonCardData.library.add(card);
+  final library = PokemonCardData.library;
+  final index = library.indexWhere((c) => c.id == card.id);
+  if (index == -1) {
+    _growBinderIfNeeded(result.binderId!, result.pageIndex!);
+    library.add(card);
+  } else {
+    library[index] = card;
+  }
   CardRepository.upsert(card);
 }
 

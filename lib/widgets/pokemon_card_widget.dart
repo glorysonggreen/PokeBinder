@@ -30,6 +30,23 @@ class PokemonCard extends StatelessWidget {
   }
 }
 
+/// A card image shown exactly as it is, for an image that isn't part of an
+/// owned card yet (for example a printing picked from the catalog).
+///
+/// Deliberately has no frame, shine or shadow: the artwork has its own rounded,
+/// transparent corners, and [PokemonCard]'s frame would paint a pale rim
+/// outside the printed edge.
+class PokemonCardArt extends StatelessWidget {
+  final String imagePath;
+
+  const PokemonCardArt({super.key, required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    return CardImage(path: imagePath, fit: BoxFit.contain);
+  }
+}
+
 /// A small rectangular thumbnail used in compact list rows (deck lists,
 /// card pickers, etc.). Shows the card's artwork when available, otherwise
 /// falls back to a type-colored gradient swatch.

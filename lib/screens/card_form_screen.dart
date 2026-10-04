@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../config/pricing.dart';
 import '../models/binder_data.dart';
 import '../models/catalog_card.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/card_viewer.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import '../widgets/pokemon_card_widget.dart';
@@ -115,6 +117,10 @@ class _CardFormScreenState extends State<CardFormScreen> {
 
   String? _nameError;
   String? _quantityError;
+
+  /// True once the person has typed a value that differs from the automatic
+  /// price. From then on, changing the condition leaves their value alone.
+  bool _valueEdited = false;
 
   bool get _isEditing => widget.existingCard != null;
 
@@ -371,9 +377,22 @@ class _CardFormScreenState extends State<CardFormScreen> {
     ];
   }
 
-  /// The peso value the catalog suggests for this card, if it has a price.
-  double? get _suggestedValue =>
-      _isEditing ? null : widget.catalogCard?.marketPricePhp;
+  /// The peso value suggested for this copy: the catalog's Near Mint price
+  /// scaled for the chosen condition. Null when there is no catalog price.
+  double? get _suggestedValue {
+    final nearMint = _isEditing ? null : widget.catalogCard?.marketPricePhp;
+    return nearMint == null ? null : priceForCondition(nearMint, _conditionCode);
+  }
+
+  void _setCondition(String code) {
+    setState(() {
+      _conditionCode = code;
+      final suggested = _suggestedValue;
+      if (!_valueEdited && suggested != null) {
+        _valueController.text = suggested.toStringAsFixed(0);
+      }
+    });
+  }
 
   void _setQuantity(int value) {
     setState(() {
@@ -382,12 +401,44 @@ class _CardFormScreenState extends State<CardFormScreen> {
     });
   }
 
+  /// Copies of this catalog card already in the collection. Only a card being
+  /// newly added from the catalog can be a duplicate.
+  List<PokemonCardData> get _ownedCopies {
+    final id = widget.catalogCard?.id;
+    if (_isEditing || id == null) return const [];
+    int rank(PokemonCardData c) =>
+        kConditionOptions.indexWhere((o) => o.$2 == c.condition);
+    return PokemonCardData.library
+        .where((c) => c.catalogId == id && c.quantityOwned > 0)
+        .toList()
+      ..sort((a, b) => rank(a).compareTo(rank(b)));
+  }
+
+  /// Adds the chosen quantity to an entry the person already has, instead of
+  /// creating a second entry. Everything else on that entry stays as it is.
+  void _addToExisting(PokemonCardData existing) {
+    final quantity = int.tryParse(_quantityController.text) ?? 1;
+    final binderIndex =
+        widget.binders.indexWhere((b) => b.name == existing.binderName);
+    Navigator.of(context).pop(
+      CardFormResult.saved(
+        card: existing.copyWith(
+            quantityOwned: existing.quantityOwned + quantity),
+        binderId: binderIndex == -1
+            ? kUnassignedBinderId
+            : widget.binders[binderIndex].id,
+        pageIndex: existing.page < 1 ? 0 : existing.page - 1,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final unassigned = _binderId == kUnassignedBinderId;
     final suggested = _suggestedValue;
     final valueDiffers = suggested != null &&
         _valueController.text.trim() != suggested.toStringAsFixed(0);
+    final owned = _ownedCopies;
 
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
@@ -438,6 +489,13 @@ class _CardFormScreenState extends State<CardFormScreen> {
                       icon: Icons.style_outlined,
                       label: 'Your copy',
                     ),
+                    if (owned.isNotEmpty)
+                      _OwnedNote(
+                        copies: owned,
+                        selectedCondition: _conditionCode,
+                        addQuantity: int.tryParse(_quantityController.text) ?? 1,
+                        onAdd: _addToExisting,
+                      ),
                     FormFieldRow(
                       left: LabeledFormField(
                         label: 'Condition',
@@ -450,8 +508,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                               PokeDropdownOption(c.$2, c.$1,
                                   icon: conditionIconFor(c.$2)),
                           ],
-                          onChanged: (value) =>
-                              setState(() => _conditionCode = value),
+                          onChanged: _setCondition,
                         ),
                       ),
                       right: Column(
@@ -482,7 +539,10 @@ class _CardFormScreenState extends State<CardFormScreen> {
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                         style: PokeBinderText.input,
-                        onChanged: (_) => setState(() {}),
+                        // Typing counts as an override only if it differs from
+                        // the automatic price; typing it back re-enables auto.
+                        onChanged: (text) => setState(() => _valueEdited =
+                            text.trim() != _suggestedValue?.toStringAsFixed(0)),
                         decoration: pokeInputDecoration(
                           hint: '0',
                           icon: Icons.payments_outlined,
@@ -500,8 +560,10 @@ class _CardFormScreenState extends State<CardFormScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'Suggested from the market price. Adjust it '
-                                'for the condition of your copy.',
+                                _valueEdited
+                                    ? 'Using your own value.'
+                                    : 'Adjusts with the condition. Type your '
+                                        'own value to override it.',
                                 style: PokeBinderText.listRowSubtitle,
                               ),
                             ),
@@ -513,6 +575,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                                 onTap: () => setState(() {
                                   _valueController.text =
                                       suggested.toStringAsFixed(0);
+                                  _valueEdited = false;
                                 }),
                               ),
                             ],
@@ -671,6 +734,13 @@ class _CardFormScreenState extends State<CardFormScreen> {
     );
   }
 }
+
+/// Emphasis for the button names quoted in the duplicate note's instruction.
+const TextStyle _kOwnedKeyword =
+    TextStyle(fontWeight: FontWeight.bold, color: PokeBinderColors.ink);
+
+/// How many owned copies the duplicate note lists before it offers "Show all".
+const int _kOwnedCopiesPreview = 3;
 
 /// Height shared by the condition dropdown and the quantity stepper, so the
 /// two sit level side by side.
@@ -856,6 +926,240 @@ class _MiniAction extends StatelessWidget {
   }
 }
 
+/// A heads-up that the card is already in the collection. Lists the copies
+/// the person owns, each with a shortcut to add to it instead of making a
+/// second entry. Long lists show a few copies and expand on request.
+///
+/// Styled like the app's other list cards: white, hairline border, soft
+/// shadow and thin dividers between rows.
+class _OwnedNote extends StatefulWidget {
+  final List<PokemonCardData> copies;
+  final String selectedCondition;
+  final int addQuantity;
+  final ValueChanged<PokemonCardData> onAdd;
+
+  const _OwnedNote({
+    required this.copies,
+    required this.selectedCondition,
+    required this.addQuantity,
+    required this.onAdd,
+  });
+
+  @override
+  State<_OwnedNote> createState() => _OwnedNoteState();
+}
+
+class _OwnedNoteState extends State<_OwnedNote> {
+  bool _showAll = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = widget.copies.fold(0, (sum, c) => sum + c.quantityOwned);
+    bool matches(PokemonCardData c) => c.condition == widget.selectedCondition;
+    // Copies in the condition being added come first, so they are never
+    // hidden behind "Show all".
+    final ordered = [
+      ...widget.copies.where(matches),
+      ...widget.copies.where((c) => !matches(c)),
+    ];
+    final collapsible = ordered.length > _kOwnedCopiesPreview;
+    final visible = collapsible && !_showAll
+        ? ordered.take(_kOwnedCopiesPreview).toList()
+        : ordered;
+    final divider = Divider(
+      height: 1,
+      thickness: 1,
+      color: PokeBinderColors.ink.withValues(alpha: 0.06),
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        boxShadow: kCardElevation,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
+              child: Row(
+                children: [
+                  const Icon(Icons.inventory_2_outlined,
+                      size: 20, color: PokeBinderColors.goldDeep),
+                  const SizedBox(width: PokeBinderSpacing.sp3),
+                  Expanded(
+                    child: Text('You own $count of this card.',
+                        style: PokeBinderText.rowTitle),
+                  ),
+                ],
+              ),
+            ),
+            divider,
+            // The instruction sits on its own cream band, so it reads as a
+            // separate step rather than a caption under the title.
+            Container(
+              color: PokeBinderColors.cream,
+              padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
+              child: Row(
+                children: [
+                  const Icon(Icons.touch_app_outlined,
+                      size: 20, color: PokeBinderColors.goldDeep),
+                  const SizedBox(width: PokeBinderSpacing.sp3),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        style: PokeBinderText.listRowSubtitle,
+                        children: const [
+                          TextSpan(text: 'Tap '),
+                          TextSpan(text: 'Add', style: _kOwnedKeyword),
+                          TextSpan(
+                              text: ' to increase a copy you own, or use '),
+                          TextSpan(text: 'Add Card', style: _kOwnedKeyword),
+                          TextSpan(text: ' to save a new entry.'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            for (final copy in visible) ...[
+              divider,
+              _OwnedCopyRow(
+                copy: copy,
+                selected: matches(copy),
+                addQuantity: widget.addQuantity,
+                onAdd: () => widget.onAdd(copy),
+              ),
+            ],
+            if (collapsible) ...[
+              divider,
+              Material(
+                color: PokeBinderColors.white,
+                child: InkWell(
+                  onTap: () => setState(() => _showAll = !_showAll),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: PokeBinderSpacing.sp3),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _showAll
+                              ? 'Show fewer'
+                              : 'Show all ${ordered.length} entries',
+                          style: PokeBinderText.backLink,
+                        ),
+                        const SizedBox(width: PokeBinderSpacing.sp1),
+                        Icon(
+                          _showAll
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 18,
+                          color: PokeBinderColors.redDeep,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One owned entry: its condition, how many, and the binder, plus an add
+/// button. The entry matching the condition picked in the form gets a gold
+/// edge and a faint gold wash.
+class _OwnedCopyRow extends StatelessWidget {
+  final PokemonCardData copy;
+  final bool selected;
+  final int addQuantity;
+  final VoidCallback onAdd;
+
+  const _OwnedCopyRow({
+    required this.copy,
+    required this.selected,
+    required this.addQuantity,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final condition = kConditionOptions
+        .firstWhere((o) => o.$2 == copy.condition,
+            orElse: () => (copy.condition, copy.condition))
+        .$1;
+    final binder = copy.binderName == kUnassignedBinderName
+        ? 'No binder'
+        : copy.binderName;
+    final metaStyle = PokeBinderText.listRowSubtitle;
+
+    return Container(
+      padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
+      decoration: BoxDecoration(
+        color: selected ? PokeBinderColors.gold.withValues(alpha: 0.08) : null,
+        border: Border(
+          left: BorderSide(
+            color: selected ? PokeBinderColors.gold : Colors.transparent,
+            width: 3,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(conditionIconFor(copy.condition),
+              size: 18, color: PokeBinderColors.teal),
+          const SizedBox(width: PokeBinderSpacing.sp3),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(condition, style: PokeBinderText.rowTitle),
+                const SizedBox(height: PokeBinderSpacing.sp0),
+                Wrap(
+                  spacing: PokeBinderSpacing.sp2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text('${copy.quantityOwned} owned',
+                        style: metaStyle.copyWith(fontWeight: FontWeight.w600)),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.folder_outlined,
+                            size: 11, color: PokeBinderColors.inkSoft),
+                        const SizedBox(width: PokeBinderSpacing.sp1),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 90),
+                          child: Text(binder,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: metaStyle),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: PokeBinderSpacing.sp2),
+          _MiniAction(
+              label: 'Add $addQuantity', icon: Icons.add_rounded, onTap: onAdd),
+        ],
+      ),
+    );
+  }
+}
+
 /// A rounded label for a card trait (rarity, type, subtype).
 class _InfoChip extends StatelessWidget {
   final IconData icon;
@@ -953,23 +1257,34 @@ class _CatalogSummary extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: PokeBinderColors.ink.withValues(alpha: 0.22),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
+              // Tapping the artwork opens it full size, so the printing can be
+              // checked. There is no ripple or hint: nothing changes visually.
+              Semantics(
+                button: true,
+                label: 'View $name full size',
+                child: GestureDetector(
+                  onTap: imagePath == null
+                      ? null
+                      : () => showCardViewer(context, imagePath: imagePath!),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: PokeBinderColors.ink.withValues(alpha: 0.22),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: CardThumbnail(
-                  card: null,
-                  imageAssetPath: imagePath,
-                  width: 128,
-                  height: 179,
-                  borderRadius: 8,
+                    child: CardThumbnail(
+                      card: null,
+                      imageAssetPath: imagePath,
+                      width: 128,
+                      height: 179,
+                      borderRadius: 8,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: PokeBinderSpacing.sp4),
