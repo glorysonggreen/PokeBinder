@@ -27,7 +27,7 @@ extension _DeckFormatAccent on DeckFormat {
   }
 }
 
-enum DeckSortOption { name, newest, oldest, cardCount }
+enum DeckSortOption { name, newest, oldest, cardCount, value }
 
 extension DeckSortOptionLabel on DeckSortOption {
   String get label {
@@ -40,6 +40,8 @@ extension DeckSortOptionLabel on DeckSortOption {
         return 'Oldest';
       case DeckSortOption.cardCount:
         return 'Most Cards';
+      case DeckSortOption.value:
+        return 'Highest Value';
     }
   }
 
@@ -53,6 +55,8 @@ extension DeckSortOptionLabel on DeckSortOption {
         return Icons.history_rounded;
       case DeckSortOption.cardCount:
         return Icons.style_rounded;
+      case DeckSortOption.value:
+        return Icons.payments_rounded;
     }
   }
 }
@@ -454,6 +458,8 @@ class _DeckListPanel extends StatelessWidget {
         return a.createdAt.compareTo(b.createdAt);
       case DeckSortOption.cardCount:
         return b.cardCount.compareTo(a.cardCount);
+      case DeckSortOption.value:
+        return b.totalValue.compareTo(a.totalValue);
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'enum_parsing.dart';
+import 'pokemon_card_data.dart';
 
 enum DeckFormat { standard, expanded, casual }
 
@@ -90,6 +91,18 @@ class DeckData {
         createdAt = createdAt ?? DateTime.now();
 
   int get cardCount => cards.fold(0, (sum, c) => sum + c.quantity);
+
+  /// What the deck's cards are worth together, using the values of the cards
+  /// in the collection (a card no longer in the collection counts as zero).
+  double get totalValue {
+    final values = {
+      for (final c in PokemonCardData.library) c.id: c.estimatedValue,
+    };
+    return cards.fold(
+      0.0,
+      (sum, entry) => sum + (values[entry.cardId] ?? 0) * entry.quantity,
+    );
+  }
 
   /// Builds a deck from a row returned by the `decks` table plus its
   /// already-fetched rows from `deck_cards`.

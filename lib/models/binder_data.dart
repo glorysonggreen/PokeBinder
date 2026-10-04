@@ -60,6 +60,11 @@ class BinderData {
   int get cardCount =>
       PokemonCardData.library.where((c) => c.binderName == name).length;
 
+  /// What the cards in this binder are worth together, one copy per card.
+  double get totalValue => PokemonCardData.library
+      .where((c) => c.binderName == name)
+      .fold(0.0, (sum, c) => sum + c.estimatedValue);
+
   /// Builds a binder from a row returned by the `binders` table.
   factory BinderData.fromRow(Map<String, dynamic> row) {
     return BinderData(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/catalog_card.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 
@@ -14,6 +15,7 @@ enum CardSortOption {
   set,
   cardNumber,
   rarity,
+  price,
   condition,
   quantity,
 }
@@ -37,6 +39,8 @@ extension CardSortOptionLabel on CardSortOption {
         return 'Card Number';
       case CardSortOption.rarity:
         return 'Rarity';
+      case CardSortOption.price:
+        return 'Price';
       case CardSortOption.condition:
         return 'Condition';
       case CardSortOption.quantity:
@@ -62,6 +66,8 @@ extension CardSortOptionLabel on CardSortOption {
         return Icons.tag_rounded;
       case CardSortOption.rarity:
         return Icons.diamond_rounded;
+      case CardSortOption.price:
+        return Icons.payments_rounded;
       case CardSortOption.condition:
         return Icons.health_and_safety_outlined;
       case CardSortOption.quantity:
@@ -89,10 +95,14 @@ class CardSortSelector extends StatelessWidget {
   final CardSortOption selected;
   final ValueChanged<CardSortOption> onChanged;
 
+  /// The options offered, in order. Defaults to every [CardSortOption].
+  final List<CardSortOption> options;
+
   const CardSortSelector({
     super.key,
     required this.selected,
     required this.onChanged,
+    this.options = CardSortOption.values,
   });
 
   @override
@@ -118,7 +128,7 @@ class CardSortSelector extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: 190),
         padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
         itemBuilder: (context) => [
-          for (final option in CardSortOption.values)
+          for (final option in options)
             PopupMenuItem(
               value: option,
               height: 38,
@@ -509,6 +519,7 @@ CardSortResult applyCardSort({
     CardSortOption.set ||
     CardSortOption.cardNumber ||
     CardSortOption.rarity ||
+    CardSortOption.price ||
     CardSortOption.condition ||
     CardSortOption.quantity =>
       cards,
@@ -533,6 +544,7 @@ CardSortResult applyCardSort({
     CardSortOption.time ||
     CardSortOption.alphabetical ||
     CardSortOption.cardNumber ||
+    CardSortOption.price ||
     CardSortOption.quantity =>
       bySupertype,
   };
@@ -573,6 +585,14 @@ CardSortResult applyCardSort({
             : a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
       break;
+    case CardSortOption.price:
+      filtered.sort((a, b) {
+        final byValue = b.estimatedValue.compareTo(a.estimatedValue);
+        return byValue != 0
+            ? byValue
+            : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+      break;
     case CardSortOption.condition:
       int conditionRankOf(PokemonCardData c) =>
           kConditionOrder.indexOf(c.condition);
@@ -605,34 +625,20 @@ CardSortResult applyCardSort({
   Widget? subOptionRow;
   switch (sortOption) {
     case CardSortOption.time:
-      subOptionRow = FilterChipRow(
-        options: const {'newest': 'Newest', 'oldest': 'Oldest'},
-        selected: timeDirection.name,
-        iconFor: (key) => key == 'oldest'
-            ? Icons.arrow_upward_rounded
-            : Icons.arrow_downward_rounded,
-        onChanged: (value) => onTimeDirectionChanged(
-          value == 'oldest' ? TimeSortDirection.oldest : TimeSortDirection.newest,
-        ),
-      );
-      break;
     case CardSortOption.pokemon:
-      subOptionRow = TypeChipRow(selected: typeFilter, onChanged: onTypeFilterChanged);
-      break;
     case CardSortOption.trainer:
-      subOptionRow = FilterChipRow(
-        options: kTrainerSubtypeChips,
-        selected: subtypeFilter,
-        iconFor: trainerSubtypeIcon,
-        onChanged: onSubtypeFilterChanged,
-      );
-      break;
     case CardSortOption.energy:
-      subOptionRow = FilterChipRow(
-        options: kEnergySubtypeChips,
-        selected: subtypeFilter,
-        iconFor: energySubtypeIcon,
-        onChanged: onSubtypeFilterChanged,
+    case CardSortOption.rarity:
+      subOptionRow = sortSubOptionRow(
+        sortOption: sortOption,
+        typeFilter: typeFilter,
+        subtypeFilter: subtypeFilter,
+        rarityFilter: rarityFilter,
+        timeDirection: timeDirection,
+        onTypeFilterChanged: onTypeFilterChanged,
+        onSubtypeFilterChanged: onSubtypeFilterChanged,
+        onRarityFilterChanged: onRarityFilterChanged,
+        onTimeDirectionChanged: onTimeDirectionChanged,
       );
       break;
     case CardSortOption.set:
@@ -646,18 +652,6 @@ CardSortResult applyCardSort({
         iconFor: (key) =>
             key == null ? Icons.apps_rounded : Icons.collections_bookmark_outlined,
         onChanged: onSetFilterChanged,
-      );
-      break;
-    case CardSortOption.rarity:
-      final rarityOptions = <String?, String>{
-        null: 'All',
-        for (final tier in kRarityTiers) tier: kRarityTierLabels[tier]!,
-      };
-      subOptionRow = FilterChipRow(
-        options: rarityOptions,
-        selected: rarityFilter,
-        iconFor: (key) => key == null ? Icons.apps_rounded : rarityIconFor(key),
-        onChanged: onRarityFilterChanged,
       );
       break;
     case CardSortOption.condition:
@@ -674,11 +668,191 @@ CardSortResult applyCardSort({
       break;
     case CardSortOption.alphabetical:
     case CardSortOption.cardNumber:
+    case CardSortOption.price:
     case CardSortOption.quantity:
       subOptionRow = null;
   }
 
   return CardSortResult(cards: filtered, subOptionRow: subOptionRow);
+}
+
+/// The chip row under the sort dropdown for the options that owned and
+/// catalog cards share: Newest / Oldest for [CardSortOption.time], Pokémon
+/// types, trainer and energy subtypes, and rarity tiers. Null for the rest.
+Widget? sortSubOptionRow({
+  required CardSortOption sortOption,
+  required PokemonCardType? typeFilter,
+  required String? subtypeFilter,
+  required String? rarityFilter,
+  required TimeSortDirection timeDirection,
+  required ValueChanged<PokemonCardType?> onTypeFilterChanged,
+  required ValueChanged<String?> onSubtypeFilterChanged,
+  required ValueChanged<String?> onRarityFilterChanged,
+  required ValueChanged<TimeSortDirection> onTimeDirectionChanged,
+}) {
+  switch (sortOption) {
+    case CardSortOption.time:
+      return FilterChipRow(
+        options: const {'newest': 'Newest', 'oldest': 'Oldest'},
+        selected: timeDirection.name,
+        iconFor: (key) => key == 'oldest'
+            ? Icons.arrow_upward_rounded
+            : Icons.arrow_downward_rounded,
+        onChanged: (value) => onTimeDirectionChanged(
+          value == 'oldest' ? TimeSortDirection.oldest : TimeSortDirection.newest,
+        ),
+      );
+    case CardSortOption.pokemon:
+      return TypeChipRow(selected: typeFilter, onChanged: onTypeFilterChanged);
+    case CardSortOption.trainer:
+      return FilterChipRow(
+        options: kTrainerSubtypeChips,
+        selected: subtypeFilter,
+        iconFor: trainerSubtypeIcon,
+        onChanged: onSubtypeFilterChanged,
+      );
+    case CardSortOption.energy:
+      return FilterChipRow(
+        options: kEnergySubtypeChips,
+        selected: subtypeFilter,
+        iconFor: energySubtypeIcon,
+        onChanged: onSubtypeFilterChanged,
+      );
+    case CardSortOption.rarity:
+      return FilterChipRow(
+        options: <String?, String>{
+          null: 'All',
+          for (final tier in kRarityTiers) tier: kRarityTierLabels[tier]!,
+        },
+        selected: rarityFilter,
+        iconFor: (key) => key == null ? Icons.apps_rounded : rarityIconFor(key),
+        onChanged: onRarityFilterChanged,
+      );
+    case CardSortOption.alphabetical:
+    case CardSortOption.set:
+    case CardSortOption.cardNumber:
+    case CardSortOption.price:
+    case CardSortOption.condition:
+    case CardSortOption.quantity:
+      return null;
+  }
+}
+
+/// The sort options that make sense for catalog cards. Condition and quantity
+/// belong to a copy the person owns, and the set has its own picker.
+const kCatalogSortOptions = <CardSortOption>[
+  CardSortOption.alphabetical,
+  CardSortOption.time,
+  CardSortOption.pokemon,
+  CardSortOption.trainer,
+  CardSortOption.energy,
+  CardSortOption.cardNumber,
+  CardSortOption.rarity,
+  CardSortOption.price,
+];
+
+/// The result of [applyCatalogSort].
+class CatalogSortResult {
+  final List<CatalogCard> cards;
+  final Widget? subOptionRow;
+
+  const CatalogSortResult({required this.cards, this.subOptionRow});
+}
+
+/// [applyCardSort] for cards from the catalog. For [CardSortOption.time],
+/// "newest" means the most recently released set ([releaseDateOf]).
+CatalogSortResult applyCatalogSort({
+  required List<CatalogCard> cards,
+  required CardSortOption sortOption,
+  required PokemonCardType? typeFilter,
+  required String? subtypeFilter,
+  required String? rarityFilter,
+  required TimeSortDirection timeDirection,
+  required DateTime? Function(CatalogCard card) releaseDateOf,
+  required ValueChanged<PokemonCardType?> onTypeFilterChanged,
+  required ValueChanged<String?> onSubtypeFilterChanged,
+  required ValueChanged<String?> onRarityFilterChanged,
+  required ValueChanged<TimeSortDirection> onTimeDirectionChanged,
+}) {
+  bool keep(CatalogCard c) => switch (sortOption) {
+        CardSortOption.pokemon => c.supertype == CardSupertype.pokemon &&
+            (typeFilter == null || c.type == typeFilter),
+        CardSortOption.trainer => c.supertype == CardSupertype.trainer &&
+            (subtypeFilter == null || c.subtype == subtypeFilter),
+        CardSortOption.energy => c.supertype == CardSupertype.energy &&
+            (subtypeFilter == null ||
+                c.subtype == subtypeFilter ||
+                c.type.name == subtypeFilter),
+        CardSortOption.rarity =>
+          rarityFilter == null || rarityTierOf(c.rarity) == rarityFilter,
+        _ => true,
+      };
+  final filtered = cards.where(keep).toList();
+
+  // List.sort is not stable, so every order ends in a tie-break.
+  int inSetOrder(CatalogCard a, CatalogCard b) {
+    final bySet = a.setId.compareTo(b.setId);
+    return bySet != 0 ? bySet : compareByPrintedNumber(a, b);
+  }
+
+  int byName(CatalogCard a, CatalogCard b) {
+    final r = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    return r != 0 ? r : inSetOrder(a, b);
+  }
+
+  switch (sortOption) {
+    case CardSortOption.time:
+      filtered.sort((a, b) {
+        final da = releaseDateOf(a);
+        final db = releaseDateOf(b);
+        final byDate = da == null || db == null ? 0 : da.compareTo(db);
+        if (byDate != 0) {
+          return timeDirection == TimeSortDirection.newest ? -byDate : byDate;
+        }
+        return inSetOrder(a, b);
+      });
+    case CardSortOption.cardNumber:
+      filtered.sort((a, b) {
+        final byNumber = compareByPrintedNumber(a, b);
+        return byNumber != 0 ? byNumber : a.setId.compareTo(b.setId);
+      });
+    case CardSortOption.rarity:
+      int rankOf(CatalogCard c) => kRarityTiers.indexOf(rarityTierOf(c.rarity));
+
+      filtered.sort((a, b) {
+        final byRank = rankOf(a).compareTo(rankOf(b));
+        return byRank != 0 ? byRank : byName(a, b);
+      });
+    case CardSortOption.price:
+      // Most expensive first; cards without a price go last.
+      filtered.sort((a, b) {
+        final byPrice = (b.marketPricePhp ?? -1).compareTo(a.marketPricePhp ?? -1);
+        return byPrice != 0 ? byPrice : byName(a, b);
+      });
+    case CardSortOption.pokemon:
+      filtered.sort((a, b) {
+        final byType =
+            typeFilter == null ? a.type.index.compareTo(b.type.index) : 0;
+        return byType != 0 ? byType : byName(a, b);
+      });
+    default:
+      filtered.sort(byName);
+  }
+
+  return CatalogSortResult(
+    cards: filtered,
+    subOptionRow: sortSubOptionRow(
+      sortOption: sortOption,
+      typeFilter: typeFilter,
+      subtypeFilter: subtypeFilter,
+      rarityFilter: rarityFilter,
+      timeDirection: timeDirection,
+      onTypeFilterChanged: onTypeFilterChanged,
+      onSubtypeFilterChanged: onSubtypeFilterChanged,
+      onRarityFilterChanged: onRarityFilterChanged,
+      onTimeDirectionChanged: onTimeDirectionChanged,
+    ),
+  );
 }
 
 /// A generic horizontally-scrolling row of chips keyed by an arbitrary

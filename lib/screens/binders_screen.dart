@@ -19,7 +19,7 @@ import 'card_form_screen.dart';
 
 export '../widgets/card_sort_controls.dart' show CardSortOption, TimeSortDirection;
 
-enum BinderSortOption { name, newest, oldest, cardCount }
+enum BinderSortOption { name, newest, oldest, cardCount, value }
 
 extension BinderSortOptionLabel on BinderSortOption {
   String get label {
@@ -32,6 +32,8 @@ extension BinderSortOptionLabel on BinderSortOption {
         return 'Oldest';
       case BinderSortOption.cardCount:
         return 'Most Cards';
+      case BinderSortOption.value:
+        return 'Highest Value';
     }
   }
 
@@ -45,6 +47,8 @@ extension BinderSortOptionLabel on BinderSortOption {
         return Icons.history_rounded;
       case BinderSortOption.cardCount:
         return Icons.style_rounded;
+      case BinderSortOption.value:
+        return Icons.payments_rounded;
     }
   }
 }
@@ -845,6 +849,8 @@ class _BinderListPanel extends StatelessWidget {
         return a.createdAtOrEpoch.compareTo(b.createdAtOrEpoch);
       case BinderSortOption.cardCount:
         return b.cardCount.compareTo(a.cardCount);
+      case BinderSortOption.value:
+        return b.totalValue.compareTo(a.totalValue);
     }
   }
 

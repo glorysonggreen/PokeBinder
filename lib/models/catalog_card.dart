@@ -180,3 +180,18 @@ Map<String, double> _parseFinishPrices(Object? raw) {
   });
   return out;
 }
+
+/// Splits a printed number into its letters and digits, so `SWSH001` sorts
+/// after `99` and `10` after `9`.
+final _numberParts = RegExp(r'^(\D*)(\d*)');
+
+/// Orders cards by printed number: 1, 2, ... 10, then lettered ones (SWSH001).
+int compareByPrintedNumber(CatalogCard a, CatalogCard b) {
+  final pa = _numberParts.firstMatch(a.number)!;
+  final pb = _numberParts.firstMatch(b.number)!;
+  final byPrefix = pa.group(1)!.compareTo(pb.group(1)!);
+  if (byPrefix != 0) return byPrefix;
+  final byDigits = (int.tryParse(pa.group(2)!) ?? 0)
+      .compareTo(int.tryParse(pb.group(2)!) ?? 0);
+  return byDigits != 0 ? byDigits : a.number.compareTo(b.number);
+}

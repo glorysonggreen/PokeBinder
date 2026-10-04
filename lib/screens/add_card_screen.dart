@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/pricing.dart';
 import '../models/binder_data.dart';
 import '../models/catalog_card.dart';
 import '../models/pokemon_card_data.dart';
@@ -9,6 +10,7 @@ import '../services/binder_repository.dart';
 import '../services/card_repository.dart';
 import '../services/catalog_repository.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import '../widgets/pokemon_card_widget.dart';
@@ -76,6 +78,14 @@ String _catalogErrorMessage(Object error) {
       'again.';
 }
 
+/// How many results are drawn before "Show more" reveals the next batch.
+const int _kVisibleChunk = 30;
+
+/// How far the list scrolls before the back-to-top button appears.
+const double _kBackToTopOffset = 600;
+
+const Duration _kBackToTopDuration = Duration(milliseconds: 300);
+
 /// The "Add" tab. The person searches the card database, taps a card, and
 /// confirms the details of their own copy (condition, quantity, binder…).
 /// The card's name, set, number, rarity, artwork and suggested price come from
@@ -102,9 +112,26 @@ class _AddCardScreenState extends State<AddCardScreen> {
   String _setId = _allSets;
   List<CatalogSet> _sets = const [];
   List<CatalogCard> _results = [];
+  Map<String, DateTime?> _releaseDates = const {};
   bool _loading = false;
-  bool _hasMore = false;
+
+  /// True when a name search hit [CatalogRepository.searchCap], so more cards
+  /// match than are listed.
+  bool _truncated = false;
   String? _error;
+
+  // Sort and filter of the results (applied on the device).
+  CardSortOption _sortOption = CardSortOption.alphabetical;
+  TimeSortDirection _timeDirection = TimeSortDirection.newest;
+  PokemonCardType? _typeFilter;
+  String? _subtypeFilter;
+  String? _rarityFilter;
+
+  /// How many of the sorted results are drawn.
+  int _visibleCount = _kVisibleChunk;
+
+  final _scroll = ScrollController();
+  bool _showBackToTop = false;
 
   /// Bumped for every new search so a slow, older response can't overwrite
   /// the results of a newer one.
@@ -115,20 +142,30 @@ class _AddCardScreenState extends State<AddCardScreen> {
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_onScroll);
     _loadSets();
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _scroll.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final show = _scroll.offset > _kBackToTopOffset;
+    if (show != _showBackToTop) setState(() => _showBackToTop = show);
   }
 
   Future<void> _loadSets() async {
     try {
       final sets = await CatalogRepository.loadSets();
       if (!mounted) return;
-      setState(() => _sets = sets);
+      setState(() {
+        _sets = sets;
+        _releaseDates = {for (final set in sets) set.id: set.releaseDate};
+      });
     } catch (_) {
       // The set filter simply stays hidden; searching by name still works.
     }
@@ -141,7 +178,14 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   void _onSetChanged(String id) {
-    setState(() => _setId = id);
+    setState(() {
+      _setId = id;
+      _results = [];
+      // A set reads best in printed order; a name search, alphabetically.
+      _sortOption =
+          id == _allSets ? CardSortOption.alphabetical : CardSortOption.cardNumber;
+      _typeFilter = _subtypeFilter = _rarityFilter = null;
+    });
     _runSearch();
   }
 
@@ -152,7 +196,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
     if (!_hasCriteria) {
       setState(() {
         _results = [];
-        _hasMore = false;
+        _truncated = false;
         _loading = false;
         _error = null;
       });
@@ -163,14 +207,21 @@ class _AddCardScreenState extends State<AddCardScreen> {
       _error = null;
     });
     try {
-      final cards = await CatalogRepository.search(
-        query: _query,
-        setId: _activeSetId,
-      );
+      final setId = _activeSetId;
+      final List<CatalogCard> cards;
+      if (setId == null) {
+        cards = await CatalogRepository.search(query: _query);
+      } else {
+        // The whole set, in printed order — no paging, instant filtering.
+        final all = await CatalogRepository.loadSet(setId);
+        cards = CatalogRepository.filterCards(all, _query);
+      }
       if (!mounted || token != _searchToken) return;
       setState(() {
         _results = cards;
-        _hasMore = cards.length == CatalogRepository.pageSize;
+        _truncated =
+            setId == null && cards.length == CatalogRepository.searchCap;
+        _visibleCount = _kVisibleChunk;
         _loading = false;
       });
     } catch (e) {
@@ -182,29 +233,11 @@ class _AddCardScreenState extends State<AddCardScreen> {
     }
   }
 
-  Future<void> _loadMore() async {
-    final token = _searchToken;
-    setState(() => _loading = true);
-    try {
-      final more = await CatalogRepository.search(
-        query: _query,
-        setId: _activeSetId,
-        offset: _results.length,
-      );
-      if (!mounted || token != _searchToken) return;
-      setState(() {
-        _results = [..._results, ...more];
-        _hasMore = more.length == CatalogRepository.pageSize;
-        _loading = false;
+  /// Applies a sort / filter change and starts again from the first batch.
+  void _update(VoidCallback change) => setState(() {
+        change();
+        _visibleCount = _kVisibleChunk;
       });
-    } catch (e) {
-      if (!mounted || token != _searchToken) return;
-      setState(() {
-        _loading = false;
-        _error = _catalogErrorMessage(e);
-      });
-    }
-  }
 
   Future<void> _pick(CatalogCard card) async {
     final result = await Navigator.of(context).push<CardFormResult>(
@@ -237,6 +270,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
     }
     final card = result.card!;
     final replaced = saveNewCard(result);
+    setState(() {});
     widget.onCardAdded();
 
     final messenger = ScaffoldMessenger.of(context);
@@ -268,20 +302,37 @@ class _AddCardScreenState extends State<AddCardScreen> {
       if (index != -1) library[index] = replaced;
       CardRepository.upsert(replaced);
     }
-    if (mounted) widget.onCardAdded();
+    if (mounted) {
+      setState(() {});
+      widget.onCardAdded();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
+      floatingActionButton: _showBackToTop
+          ? FloatingActionButton.small(
+              tooltip: 'Back to top',
+              backgroundColor: PokeBinderColors.white,
+              foregroundColor: PokeBinderColors.redDeep,
+              onPressed: () => _scroll.animateTo(
+                0,
+                duration: _kBackToTopDuration,
+                curve: Curves.easeOut,
+              ),
+              child: const Icon(Icons.keyboard_arrow_up_rounded),
+            )
+          : null,
       body: SafeArea(
         child: ListView(
+          controller: _scroll,
           padding: PokeBinderSpacing.page,
           children: [
             Text('ADD A CARD', style: PokeBinderText.eyebrow),
             const SizedBox(height: PokeBinderSpacing.sp2),
-            Text('Find your card', style: PokeBinderText.heading),
+            Text('Find Your Card', style: PokeBinderText.heading),
             const SizedBox(height: PokeBinderSpacing.sp2),
             Text(
               'Pick it from the card database so the name, set, artwork and '
@@ -295,13 +346,20 @@ class _AddCardScreenState extends State<AddCardScreen> {
             ),
             if (_sets.isNotEmpty) ...[
               const SizedBox(height: PokeBinderSpacing.sp2),
-              PokeDropdownField<String>(
+              PokeSearchableDropdownField<String>(
+                title: 'Choose a set',
                 value: _setId,
                 icon: Icons.collections_bookmark_outlined,
                 options: [
                   const PokeDropdownOption(_allSets, 'All sets',
                       icon: Icons.layers_outlined),
-                  for (final set in _sets) PokeDropdownOption(set.id, set.name),
+                  for (final set in _sets)
+                    PokeDropdownOption(
+                      set.id,
+                      set.name,
+                      subtitle: set.releaseDate?.year.toString(),
+                      group: set.series.isEmpty ? null : set.series,
+                    ),
                 ],
                 onChanged: _onSetChanged,
               ),
@@ -340,6 +398,16 @@ class _AddCardScreenState extends State<AddCardScreen> {
     );
   }
 
+  /// How many copies of each catalog card the person already owns.
+  Map<String, int> _ownedByCatalogId() {
+    final owned = <String, int>{};
+    for (final card in PokemonCardData.library) {
+      final id = card.catalogId;
+      if (id != null) owned[id] = (owned[id] ?? 0) + card.quantityOwned;
+    }
+    return owned;
+  }
+
   List<Widget> _body() {
     if (!_hasCriteria) {
       return [
@@ -356,7 +424,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
         PillButton(
           label: 'Try Again',
           ghost: true,
-          onTap: _results.isEmpty ? _runSearch : _loadMore,
+          onTap: _runSearch,
         ),
       ];
     }
@@ -377,18 +445,85 @@ class _AddCardScreenState extends State<AddCardScreen> {
         ),
       ];
     }
+    final owned = _ownedByCatalogId();
+    final sorted = applyCatalogSort(
+      cards: _results,
+      sortOption: _sortOption,
+      typeFilter: _typeFilter,
+      subtypeFilter: _subtypeFilter,
+      rarityFilter: _rarityFilter,
+      timeDirection: _timeDirection,
+      releaseDateOf: (card) => _releaseDates[card.setId],
+      onTypeFilterChanged: (value) => _update(() => _typeFilter = value),
+      onSubtypeFilterChanged: (value) => _update(() => _subtypeFilter = value),
+      onRarityFilterChanged: (value) => _update(() => _rarityFilter = value),
+      onTimeDirectionChanged: (value) => _update(() => _timeDirection = value),
+    );
+    final cards = sorted.cards;
+    final ownedCards = cards.where((c) => owned.containsKey(c.id)).length;
+    final inSet = _activeSetId != null;
+    final remaining = cards.length - _visibleCount;
+    final nextBatch = remaining < _kVisibleChunk ? remaining : _kVisibleChunk;
     return [
-      for (final card in _results) ...[
-        _CatalogRow(card: card, onTap: () => _pick(card)),
+      if (sorted.subOptionRow != null) sorted.subOptionRow!,
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              'SHOWING ${cards.length} ${cards.length == 1 ? 'CARD' : 'CARDS'}'
+              '${ownedCards > 0 ? ' · $ownedCards OWNED' : ''}',
+              style: PokeBinderText.resultCount,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          CardSortSelector(
+            selected: _sortOption,
+            // Time orders by set release date, so it means nothing inside one set.
+            options: inSet
+                ? [
+                    for (final option in kCatalogSortOptions)
+                      if (option != CardSortOption.time) option,
+                  ]
+                : kCatalogSortOptions,
+            onChanged: (option) => _update(() {
+              _sortOption = option;
+              _typeFilter = _subtypeFilter = _rarityFilter = null;
+            }),
+          ),
+        ],
+      ),
+      const SizedBox(height: PokeBinderSpacing.sp2),
+      if (cards.isEmpty)
+        const _Hint(
+          icon: Icons.filter_alt_off_outlined,
+          text: 'No cards match this filter. Pick "All" above or change the '
+              'sort.',
+        ),
+      for (final card in cards.take(_visibleCount)) ...[
+        _CatalogRow(
+          card: card,
+          showSet: !inSet,
+          owned: owned[card.id] ?? 0,
+          onTap: () => _pick(card),
+        ),
         const SizedBox(height: PokeBinderSpacing.sp2),
       ],
-      if (_hasMore)
-        _loading
-            ? const Padding(
-                padding: EdgeInsets.all(PokeBinderSpacing.sp3),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            : PillButton(label: 'Show More', ghost: true, onTap: _loadMore),
+      if (remaining > 0)
+        PillButton(
+          label: 'Show $nextBatch More · $remaining Left',
+          ghost: true,
+          onTap: () => setState(() => _visibleCount += _kVisibleChunk),
+        ),
+      if (_truncated)
+        Padding(
+          padding: const EdgeInsets.only(top: PokeBinderSpacing.sp2),
+          child: Text(
+            'Only the first ${CatalogRepository.searchCap} matches are listed. '
+            'Search more specifically or pick a set to see the rest.',
+            style: PokeBinderText.subtitle,
+          ),
+        ),
     ];
   }
 }
@@ -420,12 +555,20 @@ class _Hint extends StatelessWidget {
 }
 
 /// One search result: small artwork, name, `set · #number`, rarity, and the
-/// suggested price.
+/// suggested price. [showSet] is off when the list is already one set's, and
+/// [owned] is how many copies the person has (0 hides the tag).
 class _CatalogRow extends StatelessWidget {
   final CatalogCard card;
+  final bool showSet;
+  final int owned;
   final VoidCallback onTap;
 
-  const _CatalogRow({required this.card, required this.onTap});
+  const _CatalogRow({
+    required this.card,
+    required this.showSet,
+    required this.owned,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -456,15 +599,27 @@ class _CatalogRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      card.name,
-                      style: PokeBinderText.rowTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            card.name,
+                            style: PokeBinderText.rowTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (owned > 0) ...[
+                          const SizedBox(width: PokeBinderSpacing.sp2),
+                          _OwnedTag(count: owned),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: PokeBinderSpacing.sp0),
                     Text(
-                      '${card.setName} · #${card.displayNumber}',
+                      showSet
+                          ? '${card.setName} · #${card.displayNumber}'
+                          : '#${card.displayNumber}',
                       style: PokeBinderText.listRowSubtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -494,7 +649,7 @@ class _CatalogRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    price == null ? '—' : '₱${price.toStringAsFixed(0)}',
+                    price == null ? '—' : formatPeso(price),
                     style: PokeBinderText.chipLabel,
                   ),
                   const SizedBox(height: PokeBinderSpacing.sp1),
@@ -505,6 +660,28 @@ class _CatalogRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "OWNED ×2" next to a card's name.
+class _OwnedTag extends StatelessWidget {
+  final int count;
+
+  const _OwnedTag({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: PokeBinderSpacing.chip,
+      decoration: BoxDecoration(
+        color: PokeBinderColors.teal.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        'OWNED ×$count',
+        style: PokeBinderText.tagLabel(PokeBinderColors.teal),
       ),
     );
   }

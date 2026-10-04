@@ -640,7 +640,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                             for (final finish in _finishes)
                               _FinishChip(
                                 label: finishLabel(finish),
-                                price: '₱${_money(roundPeso(widget.catalogCard!.finishPrices[finish]! * kUsdToPhpRate))}',
+                                price: formatPeso(roundPeso(widget.catalogCard!.finishPrices[finish]! * kUsdToPhpRate)),
                                 selected: finish == _finish,
                                 onTap: () => _setFinish(finish),
                               ),
@@ -731,7 +731,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                             if (valueDiffers) ...[
                               const SizedBox(width: PokeBinderSpacing.sp2),
                               _MiniAction(
-                                label: 'Use ₱${_money(suggested)}',
+                                label: 'Use ${formatPeso(suggested)}',
                                 icon: Icons.refresh_rounded,
                                 onTap: () => setState(() {
                                   _valueController.text =
@@ -923,12 +923,6 @@ const int _kOwnedCopiesPreview = 3;
 /// Height shared by the condition dropdown and the quantity stepper, so the
 /// two sit level side by side.
 const double _kPairedFieldHeight = 52;
-
-/// 4815 -> "4,815".
-String _money(double value) => value
-    .round()
-    .toString()
-    .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
 
 /// 2026-10-04 -> "Oct 4, 2026".
 String _shortDate(DateTime d) {
@@ -1795,7 +1789,7 @@ class _PricePanel extends StatelessWidget {
                         style: PokeBinderText.sectionLabel,
                       ),
                       const SizedBox(height: PokeBinderSpacing.sp0),
-                      Text('₱${_money(php!)}', style: PokeBinderText.statNumber),
+                      Text(formatPeso(php!), style: PokeBinderText.statNumber),
                     ],
                   ),
                 ),

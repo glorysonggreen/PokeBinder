@@ -10,6 +10,15 @@ const double kUsdToPhpRate = 58.0;
 /// Rounds a peso amount to something sensible to show and store.
 double roundPeso(double value) => value.roundToDouble();
 
+/// 4815 -> "₱4,815".
+String formatPeso(double value) {
+  final digits = value
+      .round()
+      .toString()
+      .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+  return '₱$digits';
+}
+
 /// What a copy is worth compared with the Near Mint market price, keyed by the
 /// condition codes in [kConditionOptions]. Edit the numbers here to tune the
 /// automatic price; a condition missing from the map counts as full price.
