@@ -55,6 +55,12 @@ class CardFormScreen extends StatefulWidget {
 }
 
 class _CardFormScreenState extends State<CardFormScreen> {
+  // What the person chose on the last card they added, kept for the rest of
+  // the session so adding a run of cards to one binder takes fewer taps.
+  static String? _lastBinderId;
+  static int? _lastPage;
+  static String? _lastCondition;
+
   /// The catalog row this card is (or will be) linked to, if any.
   String? get _catalogId => widget.existingCard?.catalogId ?? widget.catalogCard?.id;
 
@@ -77,10 +83,13 @@ class _CardFormScreenState extends State<CardFormScreen> {
   late final _valueController = TextEditingController(
     text: widget.existingCard != null
         ? widget.existingCard!.estimatedValue.toStringAsFixed(0)
-        : widget.catalogCard?.marketPricePhp?.toStringAsFixed(0) ?? '',
+        : _suggestedValue?.toStringAsFixed(0) ?? '',
   );
-  late final _pageController =
-      TextEditingController(text: '${widget.defaultPageNumber}');
+  late final _pageController = TextEditingController(
+    text: _restoredPlacement
+        ? '${_lastPage ?? widget.defaultPageNumber}'
+        : '${widget.defaultPageNumber}',
+  );
   // Shown (empty) in place of the page number while no binder is chosen, so a
   // stale "1" doesn't sit greyed-out in the field.
   final _noPageController = TextEditingController();
@@ -99,10 +108,23 @@ class _CardFormScreenState extends State<CardFormScreen> {
   late String? _subtype =
       widget.existingCard?.subtype ?? widget.catalogCard?.subtype;
   late String _conditionCode = kConditionOptions.firstWhere(
-    (option) => option.$2 == widget.existingCard?.condition,
+    (option) => option.$2 == (widget.existingCard?.condition ?? _lastCondition),
     orElse: () => kConditionOptions.first,
   ).$2;
-  late String _binderId = widget.existingCard == null
+
+  /// The printing (holofoil, reverse holo ...) of the copy.
+  late String? _finish =
+      widget.existingCard?.finish ?? widget.catalogCard?.defaultFinish;
+
+  /// A new card opened without a binder goes where the last one went.
+  late final bool _restoredPlacement = !_isEditing &&
+      widget.defaultBinderId == kUnassignedBinderId &&
+      _lastBinderId != null &&
+      widget.binders.any((b) => b.id == _lastBinderId);
+
+  late String _binderId = _restoredPlacement
+      ? _lastBinderId!
+      : widget.existingCard == null
       ? widget.defaultBinderId
       : widget.binders
           .firstWhere(
@@ -173,6 +195,13 @@ class _CardFormScreenState extends State<CardFormScreen> {
       return;
     }
 
+    // A page the binder doesn't have: the note under the field says why.
+    final pageStatus = _pageStatus;
+    if (pageStatus != null && pageStatus.error) {
+      setState(() {});
+      return;
+    }
+
     final unassigned = _binderId == kUnassignedBinderId;
     final binder = unassigned
         ? null
@@ -214,8 +243,16 @@ class _CardFormScreenState extends State<CardFormScreen> {
       imageAssetPath:
           widget.existingCard?.imageAssetPath ?? widget.catalogCard?.collectionImage,
       catalogId: _catalogId,
+      finish: _finish,
       dateAdded: widget.existingCard?.dateAdded ?? DateTime.now(),
     );
+
+    if (!_isEditing) {
+      _rememberChoices(
+        binderId: binder?.id ?? kUnassignedBinderId,
+        page: pageNumber,
+      );
+    }
 
     Navigator.of(context).pop(
       CardFormResult.saved(
@@ -377,21 +414,104 @@ class _CardFormScreenState extends State<CardFormScreen> {
     ];
   }
 
-  /// The peso value suggested for this copy: the catalog's Near Mint price
-  /// scaled for the chosen condition. Null when there is no catalog price.
+  /// Near Mint market price in US dollars for the chosen printing.
+  double? get _marketUsd => widget.catalogCard?.priceUsdFor(_finish);
+
+  double? get _marketPhp {
+    final usd = _marketUsd;
+    return usd == null ? null : roundPeso(usd * kUsdToPhpRate);
+  }
+
+  /// The peso value suggested for this copy: the Near Mint price of the chosen
+  /// printing, scaled for the chosen condition. Null when there is no catalog
+  /// price.
   double? get _suggestedValue {
-    final nearMint = _isEditing ? null : widget.catalogCard?.marketPricePhp;
+    final nearMint = _isEditing ? null : _marketPhp;
     return nearMint == null ? null : priceForCondition(nearMint, _conditionCode);
+  }
+
+  /// Re-fills the value after the condition or finish changes, unless the
+  /// person has typed their own number.
+  void _refreshSuggestedValue() {
+    final suggested = _suggestedValue;
+    if (!_valueEdited && suggested != null) {
+      _valueController.text = suggested.toStringAsFixed(0);
+    }
   }
 
   void _setCondition(String code) {
     setState(() {
       _conditionCode = code;
-      final suggested = _suggestedValue;
-      if (!_valueEdited && suggested != null) {
-        _valueController.text = suggested.toStringAsFixed(0);
-      }
+      _refreshSuggestedValue();
     });
+  }
+
+  void _setFinish(String finish) {
+    setState(() {
+      _finish = finish;
+      _refreshSuggestedValue();
+    });
+  }
+
+  /// The printings this card has prices for. The picker only appears when
+  /// there is a real choice.
+  List<String> get _finishes => widget.catalogCard?.finishes ?? const [];
+
+  // ---- Binder page ----------------------------------------------------------
+
+  BinderData? get _selectedBinder {
+    if (_binderId == kUnassignedBinderId) return null;
+    for (final b in widget.binders) {
+      if (b.id == _binderId) return b;
+    }
+    return null;
+  }
+
+  /// A note about the chosen page: how full it is, that it would add a page,
+  /// or (an error that blocks saving) that the binder doesn't have that page.
+  ({String text, bool error})? get _pageStatus {
+    final binder = _selectedBinder;
+    if (binder == null) return null;
+    final raw = _pageController.text.trim();
+    if (raw.isEmpty) return null;
+
+    final count = binder.pageCount;
+    final page = int.tryParse(raw);
+    if (page == null || page < 1) {
+      return (text: 'Enter a page number from 1 to $count.', error: true);
+    }
+    if (page > count + 1) {
+      return (
+        text: '${binder.name} has $count page${count == 1 ? '' : 's'}. '
+            'Pick 1 to $count, or ${count + 1} to add a new page.',
+        error: true,
+      );
+    }
+    if (page == count + 1) {
+      return (text: 'This adds page $page to ${binder.name}.', error: false);
+    }
+    final used = PokemonCardData.library
+        .where((c) =>
+            c.binderName == binder.name &&
+            c.page == page &&
+            c.id != widget.existingCard?.id)
+        .length;
+    if (used >= binder.slotsPerPage) {
+      return (
+        text: 'Page $page is full ($used of ${binder.slotsPerPage} slots).',
+        error: false,
+      );
+    }
+    return (
+      text: 'Page $page has $used of ${binder.slotsPerPage} slots used.',
+      error: false,
+    );
+  }
+
+  void _rememberChoices({required String binderId, required int page}) {
+    _lastCondition = _conditionCode;
+    _lastBinderId = binderId == kUnassignedBinderId ? null : binderId;
+    _lastPage = page;
   }
 
   void _setQuantity(int value) {
@@ -420,6 +540,12 @@ class _CardFormScreenState extends State<CardFormScreen> {
     final quantity = int.tryParse(_quantityController.text) ?? 1;
     final binderIndex =
         widget.binders.indexWhere((b) => b.name == existing.binderName);
+    _rememberChoices(
+      binderId: binderIndex == -1
+          ? kUnassignedBinderId
+          : widget.binders[binderIndex].id,
+      page: existing.page,
+    );
     Navigator.of(context).pop(
       CardFormResult.saved(
         card: existing.copyWith(
@@ -439,6 +565,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
     final valueDiffers = suggested != null &&
         _valueController.text.trim() != suggested.toStringAsFixed(0);
     final owned = _ownedCopies;
+    final pageStatus = _pageStatus;
 
     return Scaffold(
       backgroundColor: PokeBinderColors.cream,
@@ -473,9 +600,17 @@ class _CardFormScreenState extends State<CardFormScreen> {
                         // Only a freshly picked catalog card has a market
                         // price to show; an owned copy has its own value.
                         showPrice: !_isEditing && widget.catalogCard != null,
-                        priceUsd: widget.catalogCard?.marketPriceUsd,
-                        pricePhp: widget.catalogCard?.marketPricePhp,
+                        priceUsd: _marketUsd,
+                        pricePhp: _marketPhp,
                         priceUpdatedAt: widget.catalogCard?.priceUpdatedAt,
+                        priceCaption: _finishes.length > 1 && _finish != null
+                            ? finishLabel(_finish!)
+                            : null,
+                        // An owned copy shows its printing as a chip; a card
+                        // being added picks it below instead.
+                        finishChip: _isEditing && _finish != null
+                            ? finishLabel(_finish!)
+                            : null,
                       )
                     else ...[
                       const _SectionTitle(
@@ -489,10 +624,36 @@ class _CardFormScreenState extends State<CardFormScreen> {
                       icon: Icons.style_outlined,
                       label: 'Your copy',
                     ),
+                    if (_finishes.length > 1) ...[
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+                        child: Text('FINISH', style: PokeBinderText.formLabel),
+                      ),
+                      Padding(
+                        padding:
+                            const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
+                        child: Wrap(
+                          spacing: PokeBinderSpacing.sp2,
+                          runSpacing: PokeBinderSpacing.sp2,
+                          children: [
+                            for (final finish in _finishes)
+                              _FinishChip(
+                                label: finishLabel(finish),
+                                price: '₱${_money(roundPeso(widget.catalogCard!.finishPrices[finish]! * kUsdToPhpRate))}',
+                                selected: finish == _finish,
+                                onTap: () => _setFinish(finish),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                     if (owned.isNotEmpty)
                       _OwnedNote(
                         copies: owned,
                         selectedCondition: _conditionCode,
+                        selectedFinish: _finish,
+                        defaultFinish: widget.catalogCard?.defaultFinish,
                         addQuantity: int.tryParse(_quantityController.text) ?? 1,
                         onAdd: _addToExisting,
                       ),
@@ -622,9 +783,15 @@ class _CardFormScreenState extends State<CardFormScreen> {
                                 enabled: !unassigned,
                                 keyboardType: TextInputType.number,
                                 style: PokeBinderText.input,
+                                onChanged: (_) => setState(() {}),
                                 decoration: pokeInputDecoration(
                                   hint: unassigned ? '—' : '1',
                                   icon: Icons.bookmark_outline_rounded,
+                                ).copyWith(
+                                  suffixText: _selectedBinder == null
+                                      ? null
+                                      : 'of ${_selectedBinder!.pageCount}',
+                                  suffixStyle: PokeBinderText.listRowSubtitle,
                                 ),
                               ),
                             ),
@@ -632,6 +799,17 @@ class _CardFormScreenState extends State<CardFormScreen> {
                         ),
                       ],
                     ),
+                    if (pageStatus != null)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: PokeBinderSpacing.sp3),
+                        child: Text(
+                          pageStatus.text,
+                          style: pageStatus.error
+                              ? PokeBinderText.formError
+                              : PokeBinderText.listRowSubtitle,
+                        ),
+                      ),
 
                     LabeledFormField(
                       label: 'Notes (optional)',
@@ -893,17 +1071,29 @@ class _MiniAction extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
+  /// An outline instead of a filled pill, for actions that shouldn't compete
+  /// with a primary one nearby.
+  final bool quiet;
+
   const _MiniAction({
     required this.label,
     required this.icon,
     required this.onTap,
+    this.quiet = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: PokeBinderColors.red.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(20),
+      color: quiet
+          ? Colors.transparent
+          : PokeBinderColors.red.withValues(alpha: 0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: quiet
+            ? BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.16))
+            : BorderSide.none,
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
@@ -935,12 +1125,19 @@ class _MiniAction extends StatelessWidget {
 class _OwnedNote extends StatefulWidget {
   final List<PokemonCardData> copies;
   final String selectedCondition;
+
+  /// The printing being added, and the card's default printing (what an owned
+  /// copy with no recorded finish counts as).
+  final String? selectedFinish;
+  final String? defaultFinish;
   final int addQuantity;
   final ValueChanged<PokemonCardData> onAdd;
 
   const _OwnedNote({
     required this.copies,
     required this.selectedCondition,
+    required this.selectedFinish,
+    required this.defaultFinish,
     required this.addQuantity,
     required this.onAdd,
   });
@@ -955,7 +1152,10 @@ class _OwnedNoteState extends State<_OwnedNote> {
   @override
   Widget build(BuildContext context) {
     final count = widget.copies.fold(0, (sum, c) => sum + c.quantityOwned);
-    bool matches(PokemonCardData c) => c.condition == widget.selectedCondition;
+    bool matches(PokemonCardData c) =>
+        c.condition == widget.selectedCondition &&
+        (widget.selectedFinish == null ||
+            (c.finish ?? widget.defaultFinish) == widget.selectedFinish);
     // Copies in the condition being added come first, so they are never
     // hidden behind "Show all".
     final ordered = [
@@ -972,8 +1172,23 @@ class _OwnedNoteState extends State<_OwnedNote> {
       color: PokeBinderColors.ink.withValues(alpha: 0.06),
     );
 
+    // Entries that look identical in every way the row shows also get their
+    // date added, so they can still be told apart; otherwise it is left out.
+    String sameness(PokemonCardData c) =>
+        '${c.condition}|${c.finish ?? widget.defaultFinish}|'
+        '${c.binderName}|${c.page}';
+    final alikeCounts = <String, int>{};
+    for (final c in widget.copies) {
+      alikeCounts.update(sameness(c), (n) => n + 1, ifAbsent: () => 1);
+    }
+
     return Container(
-      margin: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
+      // Extra room above, so the card doesn't sit right under the section
+      // heading.
+      margin: const EdgeInsets.only(
+        top: PokeBinderSpacing.sp3,
+        bottom: PokeBinderSpacing.sp3,
+      ),
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
         borderRadius: BorderRadius.circular(14),
@@ -993,7 +1208,7 @@ class _OwnedNoteState extends State<_OwnedNote> {
                       size: 20, color: PokeBinderColors.goldDeep),
                   const SizedBox(width: PokeBinderSpacing.sp3),
                   Expanded(
-                    child: Text('You own $count of this card.',
+                    child: Text('You Own $count ${count == 1 ? 'Copy' : 'Copies'}',
                         style: PokeBinderText.rowTitle),
                   ),
                 ],
@@ -1002,8 +1217,10 @@ class _OwnedNoteState extends State<_OwnedNote> {
             divider,
             // The instruction sits on its own cream band, so it reads as a
             // separate step rather than a caption under the title.
+            // A soft warm grey rather than the page's cream, so the band reads
+            // as part of this card instead of the background showing through.
             Container(
-              color: PokeBinderColors.cream,
+              color: PokeBinderColors.ink.withValues(alpha: 0.04),
               padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
               child: Row(
                 children: [
@@ -1017,9 +1234,11 @@ class _OwnedNoteState extends State<_OwnedNote> {
                         children: const [
                           TextSpan(text: 'Tap '),
                           TextSpan(text: 'Add', style: _kOwnedKeyword),
+                          TextSpan(text: ' to raise a copy you own, or '),
+                          // Non-breaking space: "Add Card" never splits
+                          // across two lines.
                           TextSpan(
-                              text: ' to increase a copy you own, or use '),
-                          TextSpan(text: 'Add Card', style: _kOwnedKeyword),
+                              text: 'Add\u00A0Card', style: _kOwnedKeyword),
                           TextSpan(text: ' to save a new entry.'),
                         ],
                       ),
@@ -1033,6 +1252,7 @@ class _OwnedNoteState extends State<_OwnedNote> {
               _OwnedCopyRow(
                 copy: copy,
                 selected: matches(copy),
+                showDate: (alikeCounts[sameness(copy)] ?? 1) > 1,
                 addQuantity: widget.addQuantity,
                 onAdd: () => widget.onAdd(copy),
               ),
@@ -1051,8 +1271,8 @@ class _OwnedNoteState extends State<_OwnedNote> {
                       children: [
                         Text(
                           _showAll
-                              ? 'Show fewer'
-                              : 'Show all ${ordered.length} entries',
+                              ? 'Show Fewer'
+                              : 'Show All ${ordered.length} Entries',
                           style: PokeBinderText.backLink,
                         ),
                         const SizedBox(width: PokeBinderSpacing.sp1),
@@ -1082,12 +1302,17 @@ class _OwnedNoteState extends State<_OwnedNote> {
 class _OwnedCopyRow extends StatelessWidget {
   final PokemonCardData copy;
   final bool selected;
+
+  /// Whether to show when this entry was added — only needed when another
+  /// entry looks exactly the same.
+  final bool showDate;
   final int addQuantity;
   final VoidCallback onAdd;
 
   const _OwnedCopyRow({
     required this.copy,
     required this.selected,
+    required this.showDate,
     required this.addQuantity,
     required this.onAdd,
   });
@@ -1098,64 +1323,210 @@ class _OwnedCopyRow extends StatelessWidget {
         .firstWhere((o) => o.$2 == copy.condition,
             orElse: () => (copy.condition, copy.condition))
         .$1;
-    final binder = copy.binderName == kUnassignedBinderName
-        ? 'No binder'
-        : copy.binderName;
-    final metaStyle = PokeBinderText.listRowSubtitle;
+    final inBinder = copy.binderName != kUnassignedBinderName;
+    final where = inBinder ? '${copy.binderName} · p.${copy.page}' : 'No binder';
+    final title = copy.finish == null
+        ? condition
+        : '$condition · ${finishLabel(copy.finish!)}';
 
-    return Container(
-      padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
-      decoration: BoxDecoration(
-        color: selected ? PokeBinderColors.gold.withValues(alpha: 0.08) : null,
-        border: Border(
-          left: BorderSide(
-            color: selected ? PokeBinderColors.gold : Colors.transparent,
-            width: 3,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(conditionIconFor(copy.condition),
-              size: 18, color: PokeBinderColors.teal),
-          const SizedBox(width: PokeBinderSpacing.sp3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(condition, style: PokeBinderText.rowTitle),
-                const SizedBox(height: PokeBinderSpacing.sp0),
-                Wrap(
-                  spacing: PokeBinderSpacing.sp2,
-                  crossAxisAlignment: WrapCrossAlignment.center,
+    return Stack(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
+          color: selected ? PokeBinderColors.gold.withValues(alpha: 0.08) : null,
+          child: Row(
+            children: [
+              Icon(conditionIconFor(copy.condition),
+                  size: 18, color: PokeBinderColors.teal),
+              const SizedBox(width: PokeBinderSpacing.sp3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${copy.quantityOwned} owned',
-                        style: metaStyle.copyWith(fontWeight: FontWeight.w600)),
                     Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.folder_outlined,
-                            size: 11, color: PokeBinderColors.inkSoft),
-                        const SizedBox(width: PokeBinderSpacing.sp1),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 90),
-                          child: Text(binder,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: metaStyle),
+                        Flexible(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: PokeBinderText.rowTitle,
+                          ),
                         ),
+                        if (selected) ...[
+                          const SizedBox(width: PokeBinderSpacing.sp2),
+                          const _MatchTag(),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: PokeBinderSpacing.sp0),
+                    Wrap(
+                      spacing: PokeBinderSpacing.sp2,
+                      runSpacing: PokeBinderSpacing.sp0,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text('${copy.quantityOwned} owned',
+                            style: PokeBinderText.listRowSubtitle
+                                .copyWith(fontWeight: FontWeight.w600)),
+                        _OwnedMeta(
+                          icon: Icons.folder_outlined,
+                          text: where,
+                          maxWidth: 170,
+                        ),
+                        if (showDate)
+                          _OwnedMeta(
+                            icon: Icons.event_outlined,
+                            text: 'Added ${_shortDate(copy.dateAdded)}',
+                          ),
                       ],
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: PokeBinderSpacing.sp2),
+              // The entry matching what is being added gets the filled
+              // button; the others are quieter outlines.
+              _MiniAction(
+                label: 'Add $addQuantity',
+                icon: Icons.add_rounded,
+                quiet: !selected,
+                onTap: onAdd,
+              ),
+            ],
+          ),
+        ),
+        // An inset gold edge: unlike a full-height border, two highlighted
+        // rows in a row keep a gap between their bars.
+        if (selected)
+          Positioned(
+            left: 0,
+            top: PokeBinderSpacing.sp3,
+            bottom: PokeBinderSpacing.sp3,
+            child: Container(
+              width: 3,
+              decoration: const BoxDecoration(
+                color: PokeBinderColors.gold,
+                borderRadius:
+                    BorderRadius.horizontal(right: Radius.circular(3)),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Marks the owned entry that matches the condition (and finish) being added.
+class _MatchTag extends StatelessWidget {
+  const _MatchTag();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.gold.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        'MATCH',
+        style: PokeBinderText.tagLabel(PokeBinderColors.ink)
+            .copyWith(fontSize: 9, letterSpacing: 0.6),
+      ),
+    );
+  }
+}
+
+/// One selectable printing (Normal, Holofoil ...) with its market price.
+class _FinishChip extends StatelessWidget {
+  final String label;
+  final String price;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FinishChip({
+    required this.label,
+    required this.price,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$label, $price',
+      child: Material(
+        color: selected
+            ? PokeBinderColors.red.withValues(alpha: 0.1)
+            : PokeBinderColors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: selected
+                ? PokeBinderColors.red.withValues(alpha: 0.55)
+                : PokeBinderColors.ink.withValues(alpha: 0.1),
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: PokeBinderSpacing.sp3,
+              vertical: PokeBinderSpacing.sp3,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (selected) ...[
+                  const Icon(Icons.check_rounded,
+                      size: 15, color: PokeBinderColors.red),
+                  const SizedBox(width: PokeBinderSpacing.sp1),
+                ],
+                Text(label, style: PokeBinderText.pillLabel(selected: selected)),
+                const SizedBox(width: PokeBinderSpacing.sp2),
+                Text(price, style: PokeBinderText.listRowSubtitle),
               ],
             ),
           ),
-          const SizedBox(width: PokeBinderSpacing.sp2),
-          _MiniAction(
-              label: 'Add $addQuantity', icon: Icons.add_rounded, onTap: onAdd),
-        ],
+        ),
       ),
+    );
+  }
+}
+
+/// A small icon-and-text detail in an owned-copy row.
+class _OwnedMeta extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final double maxWidth;
+
+  const _OwnedMeta({
+    required this.icon,
+    required this.text,
+    this.maxWidth = 140,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 11, color: PokeBinderColors.inkSoft),
+        const SizedBox(width: PokeBinderSpacing.sp1),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: PokeBinderText.listRowSubtitle,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1225,6 +1596,12 @@ class _CatalogSummary extends StatelessWidget {
   final double? pricePhp;
   final DateTime? priceUpdatedAt;
 
+  /// The printing the price is for ("Holofoil"), when the card has several.
+  final String? priceCaption;
+
+  /// The owned copy's printing, shown as a chip when editing.
+  final String? finishChip;
+
   const _CatalogSummary({
     required this.name,
     required this.setName,
@@ -1238,6 +1615,8 @@ class _CatalogSummary extends StatelessWidget {
     required this.priceUsd,
     required this.pricePhp,
     required this.priceUpdatedAt,
+    this.priceCaption,
+    this.finishChip,
   });
 
   @override
@@ -1326,6 +1705,11 @@ class _CatalogSummary extends StatelessWidget {
                             icon: Icons.label_outline_rounded,
                             label: subtype!,
                           ),
+                        if (finishChip != null)
+                          _InfoChip(
+                            icon: Icons.auto_awesome_outlined,
+                            label: finishChip!,
+                          ),
                       ],
                     ),
                   ],
@@ -1339,6 +1723,7 @@ class _CatalogSummary extends StatelessWidget {
               usd: priceUsd,
               php: pricePhp,
               updatedAt: priceUpdatedAt,
+              caption: priceCaption,
             ),
           ],
           const SizedBox(height: PokeBinderSpacing.sp3),
@@ -1368,10 +1753,14 @@ class _PricePanel extends StatelessWidget {
   final double? php;
   final DateTime? updatedAt;
 
+  /// Which printing the price is for, shown after the heading.
+  final String? caption;
+
   const _PricePanel({
     required this.usd,
     required this.php,
     required this.updatedAt,
+    this.caption,
   });
 
   @override
@@ -1399,7 +1788,12 @@ class _PricePanel extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('MARKET PRICE', style: PokeBinderText.sectionLabel),
+                      Text(
+                        caption == null
+                            ? 'MARKET PRICE'
+                            : 'MARKET PRICE · ${caption!.toUpperCase()}',
+                        style: PokeBinderText.sectionLabel,
+                      ),
                       const SizedBox(height: PokeBinderSpacing.sp0),
                       Text('₱${_money(php!)}', style: PokeBinderText.statNumber),
                     ],

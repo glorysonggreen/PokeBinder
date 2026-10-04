@@ -158,7 +158,9 @@ class _HomeScreenState extends State<HomeScreen> {
     // Previously this only added the card to the in-memory list, so a card
     // added from Home was never saved to the database (and was gone after a
     // reload). saveNewCard also grows the binder if the page is past its end.
-    setState(() => saveNewCard(result));
+    setState(() {
+      saveNewCard(result);
+    });
   }
 
   @override

@@ -270,3 +270,14 @@ alter table public.cards
   add column if not exists catalog_id text
   references public.card_catalog (id) on delete set null;
 create index if not exists cards_catalog_id_idx on public.cards (catalog_id);
+
+-- Prices for each printing of a catalog card (normal, holofoil, reverse holo,
+-- 1st edition ...) as {"holofoil": 5.4, "reverseHolofoil": 2.1}, in US dollars.
+-- market_price_usd stays as the single default price.
+alter table public.card_catalog
+  add column if not exists prices jsonb;
+
+-- Which printing the person owns ("holofoil", "reverseHolofoil" ...). Null for
+-- cards added before this existed or typed in by hand.
+alter table public.cards
+  add column if not exists finish text;

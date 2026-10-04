@@ -156,6 +156,10 @@ class PokemonCardData {
   /// user typed in by hand. A linked card's name, set, number, rarity, type
   /// and artwork come from the catalog and are not editable.
   final String? catalogId;
+
+  /// Which printing the person owns (`holofoil`, `reverseHolofoil` ...), or
+  /// null when unknown — older cards and cards typed in by hand.
+  final String? finish;
   final DateTime dateAdded;
 
   PokemonCardData({
@@ -175,6 +179,7 @@ class PokemonCardData {
     this.notes = '',
     this.imageAssetPath,
     this.catalogId,
+    this.finish,
     DateTime? dateAdded,
   }) : dateAdded = dateAdded ?? DateTime.now();
 
@@ -199,6 +204,7 @@ class PokemonCardData {
       notes: row['notes'] as String? ?? '',
       imageAssetPath: row['image_asset_path'] as String?,
       catalogId: row['catalog_id'] as String?,
+      finish: row['finish'] as String?,
       dateAdded: DateTime.parse(row['date_added'] as String).toLocal(),
     );
   }
@@ -223,6 +229,9 @@ class PokemonCardData {
       'notes': notes,
       'image_asset_path': imageAssetPath,
       'catalog_id': catalogId,
+      // Only sent when set, so saving a card never depends on the `finish`
+      // column existing until a finish is actually chosen.
+      if (finish != null) 'finish': finish,
       'date_added': dateAdded.toUtc().toIso8601String(),
     };
   }
@@ -244,6 +253,7 @@ class PokemonCardData {
     String? notes,
     String? imageAssetPath,
     String? catalogId,
+    String? finish,
     DateTime? dateAdded,
   }) {
     return PokemonCardData(
@@ -263,6 +273,7 @@ class PokemonCardData {
       notes: notes ?? this.notes,
       imageAssetPath: imageAssetPath ?? this.imageAssetPath,
       catalogId: catalogId ?? this.catalogId,
+      finish: finish ?? this.finish,
       dateAdded: dateAdded ?? this.dateAdded,
     );
   }

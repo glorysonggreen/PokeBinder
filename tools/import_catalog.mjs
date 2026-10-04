@@ -103,6 +103,18 @@ export function pickPrice(card) {
   return { usd: null, updated: null };
 }
 
+// The market price of every printing the card has, e.g.
+// { holofoil: 5.4, reverseHolofoil: 2.1 }; null when none are priced.
+export function pickFinishPrices(card) {
+  const prices = card.tcgplayer?.prices;
+  if (!prices) return null;
+  const out = {};
+  for (const [finish, p] of Object.entries(prices)) {
+    if (typeof p?.market === 'number') out[finish] = p.market;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 // "2025/10/03" -> "2025-10-03"; anything unparseable -> null.
 export function toIsoDate(value) {
   if (!value) return null;
@@ -114,6 +126,9 @@ export function toIsoDate(value) {
 
 const q = (v) => (v === null || v === undefined || v === '' ? 'null' : `'${String(v).replaceAll("'", "''")}'`);
 const n = (v) => (typeof v === 'number' && Number.isFinite(v) ? String(v) : 'null');
+
+const jsonb = (v) =>
+  v === null || v === undefined ? 'null' : `'${JSON.stringify(v).replaceAll("'", "''")}'::jsonb`;
 
 export function setRow(set) {
   const name = SET_NAME_OVERRIDES[set.id] ?? set.name;
@@ -127,7 +142,7 @@ export function cardRow(card) {
     q(card.id), q(card.set.id), q(card.number), q(card.name), q(supertype),
     q(mapSubtype(card, supertype)), q(mapType(card, supertype)),
     q(normalizeRarity(card.rarity)), q(card.rarity), q(card.images?.small),
-    q(card.images?.large), n(usd), q(updated),
+    q(card.images?.large), n(usd), q(updated), jsonb(pickFinishPrices(card)),
   ].join(', ')})`;
 }
 
@@ -156,7 +171,8 @@ export function buildSql(sets, cards) {
   const cardSql = insertStatements(
     'card_catalog',
     ['id', 'set_id', 'number', 'name', 'supertype', 'subtype', 'type', 'rarity',
-      'rarity_raw', 'image_small', 'image_large', 'market_price_usd', 'price_updated_at'],
+      'rarity_raw', 'image_small', 'image_large', 'market_price_usd', 'price_updated_at',
+      'prices'],
     cards.map(cardRow), ['id'],
   );
   return [
@@ -270,7 +286,7 @@ export function cardJson(card) {
     supertype, subtype: mapSubtype(card, supertype), type: mapType(card, supertype),
     rarity: normalizeRarity(card.rarity), rarity_raw: card.rarity ?? null,
     image_small: card.images?.small ?? null, image_large: card.images?.large ?? null,
-    market_price_usd: usd, price_updated_at: updated,
+    market_price_usd: usd, price_updated_at: updated, prices: pickFinishPrices(card),
   };
 }
 
@@ -337,7 +353,8 @@ async function main() {
       ...insertStatements(
         'card_catalog',
         ['id', 'set_id', 'number', 'name', 'supertype', 'subtype', 'type', 'rarity',
-          'rarity_raw', 'image_small', 'image_large', 'market_price_usd', 'price_updated_at'],
+          'rarity_raw', 'image_small', 'image_large', 'market_price_usd', 'price_updated_at',
+      'prices'],
         cards.map(cardRow), ['id'],
       ),
     ];

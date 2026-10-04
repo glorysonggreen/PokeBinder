@@ -23,17 +23,23 @@ import 'card_form_screen.dart';
 /// second one.
 ///
 /// Shared by every "add a new card" entry point so they all behave the same.
-void saveNewCard(CardFormResult result) {
+///
+/// Returns the entry that was replaced when the card was already in the
+/// library, or null when it is new — callers use that to offer Undo.
+PokemonCardData? saveNewCard(CardFormResult result) {
   final card = result.card!;
   final library = PokemonCardData.library;
   final index = library.indexWhere((c) => c.id == card.id);
+  PokemonCardData? replaced;
   if (index == -1) {
     _growBinderIfNeeded(result.binderId!, result.pageIndex!);
     library.add(card);
   } else {
+    replaced = library[index];
     library[index] = card;
   }
   CardRepository.upsert(card);
+  return replaced;
 }
 
 void _growBinderIfNeeded(String binderId, int pageIndex) {
@@ -229,11 +235,40 @@ class _AddCardScreenState extends State<AddCardScreen> {
     if (!mounted || result == null || result.deleted || result.card == null) {
       return;
     }
-    saveNewCard(result);
+    final card = result.card!;
+    final replaced = saveNewCard(result);
     widget.onCardAdded();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added ${result.card!.name} to your collection.')),
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          replaced == null
+              ? 'Added ${card.name} to your collection.'
+              : 'Now you own ${card.quantityOwned} of ${card.name}.',
+        ),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () => _undoAdd(card, replaced),
+        ),
+      ),
     );
+  }
+
+  /// Takes back [_handleResult]: removes a card that was just added, or puts
+  /// an entry whose quantity was raised back to how it was.
+  void _undoAdd(PokemonCardData card, PokemonCardData? replaced) {
+    final library = PokemonCardData.library;
+    if (replaced == null) {
+      library.removeWhere((c) => c.id == card.id);
+      CardRepository.delete(card.id);
+    } else {
+      final index = library.indexWhere((c) => c.id == card.id);
+      if (index != -1) library[index] = replaced;
+      CardRepository.upsert(replaced);
+    }
+    if (mounted) widget.onCardAdded();
   }
 
   @override

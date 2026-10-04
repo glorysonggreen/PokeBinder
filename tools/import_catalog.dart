@@ -90,6 +90,20 @@ String? mapSubtype(Map<String, dynamic> card, String supertype) {
   return subtypes.isEmpty ? null : subtypes.first;
 }
 
+/// The market price of every printing the card has, e.g.
+/// {holofoil: 5.4, reverseHolofoil: 2.1}; null when none are priced.
+Map<String, num>? pickFinishPrices(Map<String, dynamic> card) {
+  final tcg = card['tcgplayer'] as Map<String, dynamic>?;
+  final prices = tcg?['prices'] as Map<String, dynamic>?;
+  if (prices == null) return null;
+  final out = <String, num>{};
+  prices.forEach((finish, value) {
+    final market = (value as Map<String, dynamic>?)?['market'];
+    if (market is num) out[finish] = market;
+  });
+  return out.isEmpty ? null : out;
+}
+
 /// "2025/10/03" -> "2025-10-03"; anything unparseable -> null.
 String? toIsoDate(Object? value) {
   if (value is! String) return null;
@@ -124,6 +138,9 @@ String _q(Object? v) {
 
 String _n(Object? v) => v is num && v.isFinite ? v.toString() : 'null';
 
+String _jsonb(Object? v) =>
+    v == null ? 'null' : "'${jsonEncode(v).replaceAll("'", "''")}'::jsonb";
+
 String setRow(Map<String, dynamic> set) {
   final id = set['id'] as String;
   final name = _setNameOverrides[id] ?? set['name'];
@@ -144,6 +161,7 @@ String cardRow(Map<String, dynamic> card) {
     _q(supertype), _q(mapSubtype(card, supertype)), _q(mapType(card, supertype)),
     _q(normalizeRarity(card['rarity'] as String?)), _q(card['rarity']),
     _q(images?['small']), _q(images?['large']), _n(price.usd), _q(price.updated),
+    _jsonb(pickFinishPrices(card)),
   ].join(', ')})';
 }
 
@@ -178,7 +196,7 @@ String buildSql(List<Map<String, dynamic>> sets, List<Map<String, dynamic>> card
       'card_catalog',
       ['id', 'set_id', 'number', 'name', 'supertype', 'subtype', 'type',
         'rarity', 'rarity_raw', 'image_small', 'image_large',
-        'market_price_usd', 'price_updated_at'],
+        'market_price_usd', 'price_updated_at', 'prices'],
       cards.map(cardRow).toList(),
     ),
   ].join('\n');
@@ -304,6 +322,7 @@ Map<String, dynamic> cardJson(Map<String, dynamic> card) {
     'image_large': images?['large'],
     'market_price_usd': price.usd,
     'price_updated_at': price.updated,
+    'prices': pickFinishPrices(card),
   };
 }
 
@@ -423,7 +442,7 @@ Future<void> main(List<String> args) async {
         'card_catalog',
         ['id', 'set_id', 'number', 'name', 'supertype', 'subtype', 'type',
           'rarity', 'rarity_raw', 'image_small', 'image_large',
-          'market_price_usd', 'price_updated_at'],
+          'market_price_usd', 'price_updated_at', 'prices'],
         cards.map(cardRow).toList(),
       ),
     ];

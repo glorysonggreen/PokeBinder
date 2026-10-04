@@ -30,12 +30,17 @@ class PokemonCard extends StatelessWidget {
   }
 }
 
-/// A card image shown exactly as it is, for an image that isn't part of an
-/// owned card yet (for example a printing picked from the catalog).
+/// Corner radius of a printed Pokémon card, as a share of its width.
+const double _kCardCornerRadiusFraction = 0.045;
+
+/// A card image shown full size, for an image that isn't part of an owned
+/// card yet (for example a printing picked from the catalog).
 ///
-/// Deliberately has no frame, shine or shadow: the artwork has its own rounded,
-/// transparent corners, and [PokemonCard]'s frame would paint a pale rim
-/// outside the printed edge.
+/// Has no frame, shine or shadow of its own, so [PokemonCard]'s pale rim never
+/// shows outside the printed edge. The corners are rounded to the shape of a
+/// real card, though: modern artwork already has transparent rounded corners,
+/// but many older cards are square-cornered images, and this keeps every card
+/// looking the same.
 class PokemonCardArt extends StatelessWidget {
   final String imagePath;
 
@@ -43,7 +48,17 @@ class PokemonCardArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CardImage(path: imagePath, fit: BoxFit.contain);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final radius = constraints.maxWidth.isFinite
+            ? constraints.maxWidth * _kCardCornerRadiusFraction
+            : 8.0;
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: CardImage(path: imagePath, fit: BoxFit.contain),
+        );
+      },
+    );
   }
 }
 

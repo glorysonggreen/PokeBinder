@@ -30,6 +30,31 @@ class CatalogSet {
   }
 }
 
+/// The printings the price source reports, most ordinary first. The first one
+/// a card has is its default finish (and matches its `market_price_usd`).
+const _finishOrder = [
+  'normal',
+  'unlimitedNormal',
+  'holofoil',
+  'unlimitedHolofoil',
+  'reverseHolofoil',
+  '1stEditionNormal',
+  '1stEditionHolofoil',
+];
+
+const _finishLabels = {
+  'normal': 'Normal',
+  'unlimitedNormal': 'Unlimited',
+  'holofoil': 'Holofoil',
+  'unlimitedHolofoil': 'Unlimited Holo',
+  'reverseHolofoil': 'Reverse Holo',
+  '1stEditionNormal': '1st Edition',
+  '1stEditionHolofoil': '1st Ed. Holo',
+};
+
+/// A friendly name for a finish key such as `reverseHolofoil`.
+String finishLabel(String key) => _finishLabels[key] ?? key;
+
 /// One printed card from the `card_catalog` table: the reference data the
 /// user picks from instead of typing a name, set, number and rarity by hand.
 ///
@@ -58,6 +83,10 @@ class CatalogCard {
   final String? imageSmall;
   final String? imageLarge;
   final double? marketPriceUsd;
+
+  /// Market price in US dollars for each printing, keyed like `holofoil`.
+  /// Empty when the catalog only knows one price (see [marketPriceUsd]).
+  final Map<String, double> finishPrices;
   final DateTime? priceUpdatedAt;
 
   const CatalogCard({
@@ -75,8 +104,32 @@ class CatalogCard {
     this.imageSmall,
     this.imageLarge,
     this.marketPriceUsd,
+    this.finishPrices = const {},
     this.priceUpdatedAt,
   });
+
+  /// The printings this card has a price for, most ordinary first.
+  List<String> get finishes {
+    final keys = finishPrices.keys.toList();
+    int rank(String k) {
+      final i = _finishOrder.indexOf(k);
+      return i == -1 ? _finishOrder.length : i;
+    }
+
+    keys.sort((a, b) {
+      final byRank = rank(a).compareTo(rank(b));
+      return byRank != 0 ? byRank : a.compareTo(b);
+    });
+    return keys;
+  }
+
+  /// The finish used until the person picks another, or null when the catalog
+  /// has no per-finish prices.
+  String? get defaultFinish => finishes.isEmpty ? null : finishes.first;
+
+  /// The dollar price for [finish], falling back to [marketPriceUsd].
+  double? priceUsdFor(String? finish) =>
+      (finish == null ? null : finishPrices[finish]) ?? marketPriceUsd;
 
   /// `4/102` when the set size is known, otherwise just `4` — the same
   /// format the rest of the app uses for [PokemonCardData.cardNumber].
@@ -111,9 +164,19 @@ class CatalogCard {
       imageSmall: row['image_small'] as String?,
       imageLarge: row['image_large'] as String?,
       marketPriceUsd: (row['market_price_usd'] as num?)?.toDouble(),
+      finishPrices: _parseFinishPrices(row['prices']),
       priceUpdatedAt: row['price_updated_at'] == null
           ? null
           : DateTime.tryParse(row['price_updated_at'] as String)?.toLocal(),
     );
   }
+}
+
+Map<String, double> _parseFinishPrices(Object? raw) {
+  if (raw is! Map) return const {};
+  final out = <String, double>{};
+  raw.forEach((key, value) {
+    if (key is String && value is num) out[key] = value.toDouble();
+  });
+  return out;
 }

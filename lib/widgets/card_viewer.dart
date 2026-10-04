@@ -59,6 +59,9 @@ class _CardViewer extends StatelessWidget {
                     icon: const Icon(Icons.close_rounded,
                         color: PokeBinderColors.white),
                   ),
+                  // Breathing room so the button doesn't crowd the card's
+                  // top edge.
+                  const SizedBox(height: PokeBinderSpacing.sp4),
                   AspectRatio(
                     aspectRatio: kPokemonCardImageAspectRatio,
                     child: Interactive3DCard(
