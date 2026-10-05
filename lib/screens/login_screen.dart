@@ -8,6 +8,8 @@ import '../widgets/pokebinder_form_fields.dart';
 import 'app_shell.dart';
 import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
+import '../services/audio_service.dart';
+import '../widgets/sound_widgets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,6 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _submitting = false;
   String? _error;
   int _errorTick = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    PokeBinderAudio.music(MusicTrack.title);
+  }
 
   @override
   void dispose() {
@@ -51,6 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await AuthService.signIn(email: email, password: password);
       if (!mounted) return;
+      PokeBinderAudio.play(Sfx.success);
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AppShell()),
         (route) => false,
@@ -91,6 +100,11 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Align(
+                alignment: Alignment.centerRight,
+                child: SoundToggleButton(),
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp2),
               const _AuthBanner(
                 heading: 'Welcome to PokéBinder',
                 subtitle: 'Log in to sync your collection',

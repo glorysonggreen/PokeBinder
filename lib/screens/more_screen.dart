@@ -5,6 +5,7 @@ import '../theme/pokebinder_theme.dart';
 import 'stats_screen.dart';
 import 'trainer_card_screen.dart';
 import 'wishlist_screen.dart';
+import 'sound_settings_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   final TrainerProfileData profile;
@@ -85,6 +86,15 @@ class MoreScreen extends StatelessWidget {
         subtitle: 'Cards you want or will trade',
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const WishlistScreen()),
+        ),
+      ),
+      _MoreRowData(
+        icon: Icons.volume_up_rounded,
+        gradient: PokeBinderColors.goldGradient,
+        title: 'Sound & Music',
+        subtitle: 'Music, effects, volume',
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const SoundSettingsScreen()),
         ),
       ),
       if (onSignOut != null)

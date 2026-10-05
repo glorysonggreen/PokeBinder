@@ -14,6 +14,7 @@ import '../widgets/pokemon_card_widget.dart';
 import '../widgets/trainer_avatar.dart';
 import 'avatar_crop_screen.dart';
 import 'trainer_favorite_card_screen.dart';
+import '../services/audio_service.dart';
 
 const _noneValue = '__none__';
 const double _kAvatarActionWidth = 150;
@@ -142,6 +143,7 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
       favoriteDeckId: _favoriteDeckId,
     );
 
+    PokeBinderAudio.play(Sfx.save);
     Navigator.of(context).pop(updated);
   }
 

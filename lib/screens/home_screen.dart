@@ -19,6 +19,7 @@ import 'card_form_screen.dart';
 import 'deck_form_screen.dart';
 import 'stats_screen.dart';
 import 'trainer_card_screen.dart';
+import '../services/audio_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final TrainerProfileData profile;
@@ -125,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     final created = result?.binder;
     if (created == null) return;
+    PokeBinderAudio.play(Sfx.success);
     setState(() => _binders.add(created));
     BinderRepository.upsert(created);
   }
@@ -134,6 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (_) => const DeckFormScreen()),
     );
     if (created == null) return;
+    PokeBinderAudio.play(Sfx.success);
     DeckData.library.add(created);
     DeckRepository.upsert(created);
     widget.onOpenDeck(created);

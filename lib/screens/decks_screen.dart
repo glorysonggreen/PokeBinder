@@ -9,6 +9,7 @@ import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'deck_detail_screen.dart';
 import 'deck_form_screen.dart';
+import '../services/audio_service.dart';
 
 const _kTagOkBg = Color(0xFFE4EFE7);
 const _kTagOkFg = Color(0xFF2F6B45);
@@ -126,6 +127,7 @@ class _DecksScreenState extends State<DecksScreen> {
   }
 
   void _toggleDeckPin(DeckData deck) {
+    PokeBinderAudio.play(deck.isPinned ? Sfx.toggleOff : Sfx.star);
     setState(() {
       final index = _decks.indexWhere((d) => d.id == deck.id);
       if (index == -1) return;
@@ -147,6 +149,7 @@ class _DecksScreenState extends State<DecksScreen> {
       MaterialPageRoute(builder: (_) => const DeckFormScreen()),
     );
     if (created == null) return;
+    PokeBinderAudio.play(Sfx.success);
     setState(() {
       _decks.add(created);
       _viewingAllDecks = false;

@@ -7,6 +7,7 @@ import '../widgets/card_tags.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'deck_add_card_screen.dart';
+import '../services/audio_service.dart';
 
 const _kTagOkFg = Color(0xFF2F6B45);
 
@@ -97,6 +98,7 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
       ),
     );
     if (result == null) return;
+    PokeBinderAudio.play(Sfx.cardMove);
     _updateDeck(_deck.copyWith(cards: result));
   }
 

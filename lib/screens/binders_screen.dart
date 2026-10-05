@@ -16,6 +16,7 @@ import 'binder_detail_screen.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
+import '../services/audio_service.dart';
 
 export '../widgets/card_sort_controls.dart' show CardSortOption, TimeSortDirection;
 
@@ -124,6 +125,7 @@ class _BindersScreenState extends State<BindersScreen> {
   }
 
   void _toggleBinderPin(BinderData binder) {
+    PokeBinderAudio.play(binder.isPinned ? Sfx.toggleOff : Sfx.star);
     setState(() {
       final index = _binders.indexWhere((b) => b.id == binder.id);
       if (index == -1) return;
@@ -139,6 +141,7 @@ class _BindersScreenState extends State<BindersScreen> {
     );
     if (result?.binder == null) return;
 
+    PokeBinderAudio.play(Sfx.success);
     setState(() => _binders.add(result!.binder!));
     BinderRepository.upsert(result!.binder!);
     if (!mounted) return;
@@ -231,6 +234,7 @@ class _BindersScreenState extends State<BindersScreen> {
           .copyWith(binderName: kUnassignedBinderName, page: 0);
     });
     if (!found) return;
+    PokeBinderAudio.play(Sfx.cardMove);
     CardRepository.upsert(
       PokemonCardData.library.firstWhere((c) => c.id == card.id),
     );
@@ -258,6 +262,7 @@ class _BindersScreenState extends State<BindersScreen> {
     );
     if (picks == null || picks.isEmpty) return;
 
+    PokeBinderAudio.play(Sfx.cardMove);
     setState(() => _moveCardsToBinder(picks, binder.id, pageIndex));
   }
 

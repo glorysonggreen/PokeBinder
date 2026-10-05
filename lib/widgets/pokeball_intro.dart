@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import 'pokeball.dart';
+import '../services/audio_service.dart';
 
 /// Plays a short Poké Ball intro the first time the app is launched, then
 /// fades it away to reveal [child].
@@ -68,6 +69,9 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
       if (status == AnimationStatus.completed) _beginExit();
     });
     _timeline.forward();
+    // One composed sound timed to the animation: bounce, wobble clicks,
+    // burst, and the fanfare as the wordmark appears.
+    PokeBinderAudio.play(Sfx.intro);
   }
 
   @override
@@ -81,6 +85,7 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
     if (_exiting || !mounted) return;
     _exiting = true;
     if (skipped) {
+      PokeBinderAudio.stop(Sfx.intro);
       _timeline.stop();
       _exit.duration = const Duration(milliseconds: 320);
     }

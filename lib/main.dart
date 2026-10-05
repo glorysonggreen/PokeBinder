@@ -10,6 +10,9 @@ import 'screens/login_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'theme/pokebinder_theme.dart';
 import 'widgets/pokeball_intro.dart';
+import 'services/audio_navigator_observer.dart';
+import 'services/audio_service.dart';
+import 'widgets/sound_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +20,9 @@ Future<void> main() async {
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey,
   );
+  // Loads the saved sound settings and starts the audio engine. This never
+  // throws: if audio can't start, the app simply runs silently.
+  await PokeBinderAudio.instance.init();
 
   runApp(
     DevicePreview(
@@ -35,6 +41,7 @@ class PokeBinderApp extends StatefulWidget {
 
 class _PokeBinderAppState extends State<PokeBinderApp> {
   final _navigatorKey = GlobalKey<NavigatorState>();
+  final _audioObserver = PokeBinderAudioObserver();
   StreamSubscription<AuthState>? _authSubscription;
   bool _resetScreenOpen = false;
 
@@ -75,10 +82,13 @@ class _PokeBinderAppState extends State<PokeBinderApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      navigatorObservers: [_audioObserver],
       title: 'PokeBinder',
       debugShowCheckedModeBanner: false,
       locale: DevicePreview.locale(context),
-      builder: DevicePreview.appBuilder,
+      builder: (context, child) => AudioGestureUnlocker(
+        child: DevicePreview.appBuilder(context, child),
+      ),
       theme: PokeBinderTheme.light(),
       home: PokeBinderIntro(
         child: Supabase.instance.client.auth.currentSession == null

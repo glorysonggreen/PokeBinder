@@ -24,6 +24,7 @@ import 'home_screen.dart';
 import 'add_card_screen.dart';
 import 'login_screen.dart';
 import 'more_screen.dart';
+import '../services/audio_service.dart';
 
 class AppShell extends StatefulWidget {
   final String trainerName;
@@ -66,6 +67,7 @@ class _AppShellState extends State<AppShell> {
       }
     });
     SyncStatus.lastError.addListener(_showSyncError);
+    PokeBinderAudio.music(MusicTrack.main);
   }
 
   @override
@@ -78,6 +80,7 @@ class _AppShellState extends State<AppShell> {
   void _showSyncError() {
     final message = SyncStatus.lastError.value;
     if (message == null) return;
+    PokeBinderAudio.play(Sfx.error);
     _scaffoldKey.currentState
       ?..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(message)));
@@ -109,6 +112,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   Future<void> _signOut() async {
+    PokeBinderAudio.play(Sfx.signOut);
     _signingOut = true;
     await SyncStatus.flush();
     await AuthService.signOut();

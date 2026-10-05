@@ -4,6 +4,7 @@ import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import 'motion_widgets.dart';
 import 'pokeball.dart';
+import '../services/audio_service.dart';
 
 class BackLink extends StatelessWidget {
   final VoidCallback onTap;
@@ -271,7 +272,11 @@ class AuthLinkText extends StatefulWidget {
 }
 
 class _AuthLinkTextState extends State<AuthLinkText> {
-  late final _recognizer = TapGestureRecognizer()..onTap = widget.onTap;
+  late final _recognizer = TapGestureRecognizer()
+    ..onTap = () {
+      PokeBinderAudio.play(Sfx.tap);
+      widget.onTap();
+    };
 
   @override
   void dispose() {
@@ -599,5 +604,6 @@ Future<bool> confirmDestructive(
       ],
     ),
   );
+  if (confirmed == true) PokeBinderAudio.play(Sfx.remove);
   return confirmed ?? false;
 }

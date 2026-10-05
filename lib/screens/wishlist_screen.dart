@@ -13,6 +13,7 @@ import 'wishlist_form_screen.dart';
 import 'trade_list_add_card_screen.dart';
 import 'trade_entry_form_screen.dart';
 import 'wishlist_form_result.dart';
+import '../services/audio_service.dart';
 
 enum _WishlistSort { nameAsc, newest, oldest, priorityFirst, valueHigh }
 
@@ -165,6 +166,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       ),
     );
     if (added == null) return;
+    PokeBinderAudio.play(Sfx.star);
 
     final index = _entries.indexWhere((e) =>
         e.kind == WishlistEntryKind.wishlist &&
@@ -192,6 +194,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       ),
     );
     if (result == null) return;
+    if (!result.deleted) PokeBinderAudio.play(Sfx.save);
 
     setState(() {
       _entries.removeWhere((e) => e.id == entry.id);

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../services/audio_service.dart';
 
 /// A card you can drag to tilt and spin.
 ///
@@ -127,6 +128,7 @@ class _Interactive3DCardState extends State<Interactive3DCard>
     _controller.stop();
     _onDone = null;
     _dragActive = true;
+    if (widget.holo) PokeBinderAudio.play(Sfx.foil);
   }
 
   void _handlePanUpdate(DragUpdateDetails details) {
@@ -145,6 +147,7 @@ class _Interactive3DCardState extends State<Interactive3DCard>
 
   void _handleTap() {
     if (_dragActive) return;
+    if (widget.holo) PokeBinderAudio.play(Sfx.foil);
     final peekY = _rotationY == 0 ? 0.18 : _rotationY * 1.3;
     _animateTo(
       toX: 0,

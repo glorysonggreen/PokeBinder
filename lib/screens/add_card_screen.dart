@@ -7,6 +7,7 @@ import '../services/card_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/catalog_picker.dart';
 import 'card_form_screen.dart';
+import '../services/audio_service.dart';
 
 PokemonCardData? saveNewCard(CardFormResult result) {
   final card = result.card!;
@@ -65,6 +66,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
     }
     final card = result.card!;
     final replaced = saveNewCard(result);
+    PokeBinderAudio.play(Sfx.cardAdd);
+    if (isChaseRarity(card.rarity)) {
+      PokeBinderAudio.play(
+        Sfx.rare,
+        delay: const Duration(milliseconds: 450),
+      );
+    }
     setState(() {});
     widget.onCardAdded();
 

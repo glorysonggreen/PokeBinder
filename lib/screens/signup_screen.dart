@@ -6,6 +6,7 @@ import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'app_shell.dart';
+import '../services/audio_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -25,6 +26,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _submitting = false;
   String? _error;
   int _errorTick = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    PokeBinderAudio.music(MusicTrack.title);
+  }
 
   @override
   void dispose() {
@@ -81,6 +88,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
       await TrainerProfileRepository.load(fallbackName: name);
       if (!mounted) return;
+      PokeBinderAudio.play(Sfx.success);
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => AppShell(trainerName: name)),
         (route) => false,

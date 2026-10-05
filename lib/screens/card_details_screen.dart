@@ -11,6 +11,7 @@ import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'card_form_screen.dart';
 import 'deck_form_screen.dart';
+import '../services/audio_service.dart';
 
 class CardDetailsScreen extends StatefulWidget {
   final PokemonCardData card;
@@ -30,6 +31,23 @@ class CardDetailsScreen extends StatefulWidget {
 
 class _CardDetailsScreenState extends State<CardDetailsScreen> {
   late PokemonCardData _card = widget.card;
+
+  @override
+  void initState() {
+    super.initState();
+    // The card is "dealt" onto the table as the screen opens; chase rarities
+    // get an extra sparkle once it has landed.
+    PokeBinderAudio.play(
+      Sfx.cardDeal,
+      delay: const Duration(milliseconds: 160),
+    );
+    if (isChaseRarity(widget.card.rarity)) {
+      PokeBinderAudio.play(
+        Sfx.rare,
+        delay: const Duration(milliseconds: 650),
+      );
+    }
+  }
 
   Future<void> _editCard() async {
     final currentBinder = widget.binders.firstWhere(
@@ -63,6 +81,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     }
 
     setState(() => _card = result.card!);
+    PokeBinderAudio.play(Sfx.save);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,6 +92,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
 
   Future<void> _addToDeck() async {
     if (_card.quantityOwned <= 0) {
+      PokeBinderAudio.play(Sfx.error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("You don't own any copies of ${_card.name} to add."),
@@ -117,6 +137,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     }
     DeckData.library[index] = DeckData.library[index].copyWith(cards: cards);
     DeckRepository.upsert(DeckData.library[index]);
+    PokeBinderAudio.play(Sfx.cardMove);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

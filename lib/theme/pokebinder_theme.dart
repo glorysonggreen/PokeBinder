@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'pokebinder_page_transitions.dart';
+import 'sound_splash_factory.dart';
 
 class PokeBinderColors {
   PokeBinderColors._();
@@ -299,6 +300,8 @@ class PokeBinderTheme {
 
     return base.copyWith(
       textTheme: bodyTextTheme(base.textTheme),
+      // Same ink splash as before, plus a soft menu tick on every press.
+      splashFactory: SoundSplashFactory(base.splashFactory),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: PokeBinderPageTransitionsBuilder(),

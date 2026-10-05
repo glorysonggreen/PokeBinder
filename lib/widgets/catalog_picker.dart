@@ -12,6 +12,7 @@ import 'pokebinder_controls.dart';
 import 'pokebinder_form_fields.dart';
 import 'pokeball.dart';
 import 'pokemon_card_widget.dart';
+import '../services/audio_service.dart';
 
 String _catalogErrorMessage(Object error) {
   if (error is PostgrestException) {
@@ -155,6 +156,7 @@ class _CatalogPickerState extends State<CatalogPicker> {
       _loading = true;
       _error = null;
     });
+    PokeBinderAudio.play(Sfx.scan);
     try {
       final setId = _activeSetId;
       final List<CatalogCard> cards;
@@ -165,6 +167,7 @@ class _CatalogPickerState extends State<CatalogPicker> {
         cards = CatalogRepository.filterCards(all, _query);
       }
       if (!mounted || token != _searchToken) return;
+      PokeBinderAudio.play(cards.isEmpty ? Sfx.scanNone : Sfx.scanFound);
       setState(() {
         _results = cards;
         _truncated =
@@ -174,6 +177,7 @@ class _CatalogPickerState extends State<CatalogPicker> {
       });
     } catch (e) {
       if (!mounted || token != _searchToken) return;
+      PokeBinderAudio.play(Sfx.error);
       setState(() {
         _loading = false;
         _error = _catalogErrorMessage(e);

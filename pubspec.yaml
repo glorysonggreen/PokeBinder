@@ -23,6 +23,10 @@ dependencies:
   # Lets you preview the app inside a phone frame while you develop in a
   # browser. It is switched off automatically in a release build.
   device_preview: ^1.3.1
+  # Sound effects and looping background music (see lib/services/audio_service.dart).
+  audioplayers: ^6.1.0
+  # Remembers the sound and music settings between launches.
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +37,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+    - assets/audio/sfx/
+    - assets/audio/music/

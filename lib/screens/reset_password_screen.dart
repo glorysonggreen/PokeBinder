@@ -4,6 +4,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
+import '../services/audio_service.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -57,6 +58,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     try {
       await AuthService.updatePassword(password);
       if (!mounted) return;
+      PokeBinderAudio.play(Sfx.success);
       setState(() {
         _submitting = false;
         _done = true;

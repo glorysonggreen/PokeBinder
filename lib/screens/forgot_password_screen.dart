@@ -4,6 +4,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
+import '../services/audio_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -18,6 +19,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _submitting = false;
   String? _error;
   String? _sentToEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    PokeBinderAudio.music(MusicTrack.title);
+  }
 
   @override
   void dispose() {
@@ -39,6 +46,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       await AuthService.sendPasswordResetEmail(email);
       if (!mounted) return;
+      PokeBinderAudio.play(Sfx.success);
       setState(() {
         _submitting = false;
         _sentToEmail = email;

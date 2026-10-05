@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
+import '../services/audio_service.dart';
 
 class FadeSlideIn extends StatelessWidget {
   final Widget child;
@@ -188,6 +189,11 @@ class _PressableScaleState extends State<PressableScale>
   }
 
   void _down() {
+    // Card tiles (the ones with a foil shine) get a card "snap"; other
+    // pressable tiles get the standard tick.
+    PokeBinderAudio.play(
+      widget.shineRadius != null ? Sfx.cardSelect : Sfx.tap,
+    );
     setState(() => _pressed = true);
     if (widget.shineRadius != null &&
         !MediaQuery.disableAnimationsOf(context)) {
@@ -414,6 +420,7 @@ class _AnimatedFormErrorState extends State<AnimatedFormError>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
+    PokeBinderAudio.play(Sfx.error);
     if (MediaQuery.disableAnimationsOf(context)) {
       _controller.value = 1;
     } else {
@@ -427,6 +434,7 @@ class _AnimatedFormErrorState extends State<AnimatedFormError>
     if ((oldWidget.message != widget.message ||
             oldWidget.pulse != widget.pulse) &&
         !MediaQuery.disableAnimationsOf(context)) {
+      PokeBinderAudio.play(Sfx.error);
       _controller.forward(from: 0);
     }
   }

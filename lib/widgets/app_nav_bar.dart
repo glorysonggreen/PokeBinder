@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import 'motion_widgets.dart';
+import '../services/audio_service.dart';
 
 enum AppTab { home, binders, add, decks, more }
 
@@ -200,6 +201,7 @@ class _AddNavButtonState extends State<_AddNavButton> {
                 child: InkWell(
                   onTap: () {
                     setState(() => _turns += 1);
+                    PokeBinderAudio.play(Sfx.addPress);
                     widget.onTap();
                   },
                   onHighlightChanged: (value) {
