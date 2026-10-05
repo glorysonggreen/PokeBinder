@@ -13,6 +13,7 @@ import 'card_form_screen.dart';
 import 'deck_form_screen.dart';
 import '../services/audio_service.dart';
 import '../widgets/pokebinder_background.dart';
+import '../widgets/pokebinder_toast.dart';
 
 class CardDetailsScreen extends StatefulWidget {
   final PokemonCardData card;
@@ -85,8 +86,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     PokeBinderAudio.play(Sfx.save);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved changes to ${result.card!.name}')),
+      PokeBinderToast.show(
+        context,
+        'Saved changes to ${result.card!.name}',
+        kind: ToastKind.success,
       );
     }
   }
@@ -94,10 +97,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   Future<void> _addToDeck() async {
     if (_card.quantityOwned <= 0) {
       PokeBinderAudio.play(Sfx.error);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("You don't own any copies of ${_card.name} to add."),
-        ),
+      PokeBinderToast.show(
+        context,
+        "You don't own any copies of ${_card.name} to add.",
+        kind: ToastKind.warning,
       );
       return;
     }
@@ -141,12 +144,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     PokeBinderAudio.play(Sfx.cardMove);
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${_card.name} · $quantity in "${deck.name}"',
-        ),
-      ),
+    PokeBinderToast.show(
+      context,
+      '${_card.name} · $quantity in "${deck.name}"',
+      kind: ToastKind.success,
     );
   }
 

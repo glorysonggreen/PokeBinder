@@ -16,6 +16,7 @@ import 'avatar_crop_screen.dart';
 import 'trainer_favorite_card_screen.dart';
 import '../services/audio_service.dart';
 import '../widgets/pokebinder_background.dart';
+import '../widgets/pokebinder_toast.dart';
 
 const _noneValue = '__none__';
 const double _kAvatarActionWidth = 150;
@@ -98,9 +99,7 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    PokeBinderToast.show(context, message, kind: ToastKind.error);
   }
 
   void _removeAvatar() => setState(() {

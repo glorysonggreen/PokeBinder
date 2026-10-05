@@ -333,6 +333,14 @@ class PokeBinderTheme {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        insetPadding: const EdgeInsets.fromLTRB(
+          PokeBinderSpacing.sp4,
+          0,
+          PokeBinderSpacing.sp4,
+          PokeBinderSpacing.sp3,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         backgroundColor: PokeBinderColors.ink,
         contentTextStyle: PokeBinderText.chakraPetch(const TextStyle(
           fontSize: 14,

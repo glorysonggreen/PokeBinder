@@ -15,6 +15,7 @@ import 'trade_entry_form_screen.dart';
 import 'wishlist_form_result.dart';
 import '../services/audio_service.dart';
 import '../widgets/pokebinder_background.dart';
+import '../widgets/pokebinder_toast.dart';
 
 enum _WishlistSort { nameAsc, newest, oldest, priorityFirst, valueHigh }
 
@@ -224,23 +225,20 @@ class _WishlistScreenState extends State<WishlistScreen> {
     setState(() => _entries.remove(entry));
     WishlistRepository.delete(entry.id);
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('Removed "${entry.name}"'),
-          action: SnackBarAction(
-            label: 'UNDO',
-            onPressed: () {
-              setState(() {
-                final index = removedIndex.clamp(0, _entries.length);
-                _entries.insert(index, entry);
-              });
-              WishlistRepository.upsert(entry);
-            },
-          ),
-        ),
-      );
+    PokeBinderToast.show(
+      context,
+      'Removed "${entry.name}"',
+      kind: ToastKind.info,
+      actionLabel: 'Undo',
+      onAction: () {
+        if (!mounted) return;
+        setState(() {
+          final index = removedIndex.clamp(0, _entries.length);
+          _entries.insert(index, entry);
+        });
+        WishlistRepository.upsert(entry);
+      },
+    );
   }
 
   void _clearFilters() {

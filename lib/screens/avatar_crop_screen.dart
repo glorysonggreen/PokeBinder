@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_background.dart';
+import '../widgets/pokebinder_toast.dart';
 
 const double _kViewport = 300;
 const double _kOutputSize = 512;
@@ -110,13 +111,11 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text("Couldn't crop that photo. Try a different one."),
-          ),
-        );
+      PokeBinderToast.show(
+        context,
+        "Couldn't crop that photo. Try a different one.",
+        kind: ToastKind.error,
+      );
     }
   }
 

@@ -25,6 +25,7 @@ import 'add_card_screen.dart';
 import 'login_screen.dart';
 import 'more_screen.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_toast.dart';
 
 class AppShell extends StatefulWidget {
   final String trainerName;
@@ -81,9 +82,14 @@ class _AppShellState extends State<AppShell> {
     final message = SyncStatus.lastError.value;
     if (message == null) return;
     PokeBinderAudio.play(Sfx.error);
-    _scaffoldKey.currentState
-      ?..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    final messenger = _scaffoldKey.currentState;
+    if (messenger == null) return;
+    PokeBinderToast.showOn(
+      messenger,
+      message,
+      kind: ToastKind.error,
+      duration: const Duration(seconds: 6),
+    );
   }
 
   Future<void> _loadData() async {

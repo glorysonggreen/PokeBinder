@@ -8,6 +8,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/catalog_picker.dart';
 import 'card_form_screen.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_toast.dart';
 
 PokemonCardData? saveNewCard(CardFormResult result) {
   final card = result.card!;
@@ -76,20 +77,14 @@ class _AddCardScreenState extends State<AddCardScreen> {
     setState(() {});
     widget.onCardAdded();
 
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          replaced == null
-              ? 'Added ${card.name} to your collection.'
-              : 'Now you own ${card.quantityOwned} of ${card.name}.',
-        ),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () => _undoAdd(card, replaced),
-        ),
-      ),
+    PokeBinderToast.show(
+      context,
+      replaced == null
+          ? 'Added ${card.name} to your collection.'
+          : 'Now you own ${card.quantityOwned} of ${card.name}.',
+      kind: ToastKind.success,
+      actionLabel: 'Undo',
+      onAction: () => _undoAdd(card, replaced),
     );
   }
 

@@ -8,6 +8,7 @@ import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 import '../widgets/pokebinder_background.dart';
+import '../widgets/pokebinder_toast.dart';
 
 class BinderDetailScreen extends StatefulWidget {
   final String? binderId;
@@ -118,8 +119,10 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
     setState(() {
       if (_currentPageCards.isEmpty) _removeMode = false;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Moved "${card.name}" to Unassigned Cards.')),
+    PokeBinderToast.show(
+      context,
+      'Moved "${card.name}" to Unassigned Cards.',
+      kind: ToastKind.success,
     );
   }
 
@@ -136,8 +139,10 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
 
     if (result.deleted) {
       if (widget.binders.length <= 1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("You need at least one binder.")),
+        PokeBinderToast.show(
+          context,
+          'You need at least one binder.',
+          kind: ToastKind.warning,
         );
         return;
       }

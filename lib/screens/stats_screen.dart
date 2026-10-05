@@ -22,6 +22,11 @@ const _kDonutColors = [
   Color(0xFFA8531F),
 ];
 
+List<Color> _gradientStops(Color base) => [
+      Color.lerp(base, PokeBinderColors.white, 0.32)!,
+      Color.lerp(base, PokeBinderColors.ink, 0.2)!,
+    ];
+
 class _RarityStat {
   final String rarity;
   final double value;
@@ -241,12 +246,18 @@ class _ValueByRarityPanel extends StatelessWidget {
     PokeBinderColors.goldGradient,
     PokeBinderColors.redGradient,
     PokeBinderColors.tealGradient,
+    PokeBinderColors.violetGradient,
     PokeBinderColors.slateGradient,
   ];
 
   double _barFraction(double value, double maxValue) {
-    if (maxValue <= 0) return 0.06;
-    return (value / maxValue).clamp(0.06, 1.0).toDouble();
+    if (maxValue <= 0) return 0.03;
+    return (value / maxValue).clamp(0.03, 1.0).toDouble();
+  }
+
+  String _format(double value) {
+    if (value >= 1000) return '₱${(value / 1000).toStringAsFixed(1)}k';
+    return '₱${value.toStringAsFixed(0)}';
   }
 
   @override
@@ -265,49 +276,69 @@ class _ValueByRarityPanel extends StatelessWidget {
         border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
         boxShadow: kCardElevation,
       ),
-      child: SizedBox(
-        height: 144,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: PokeBinderMotion.adapt(context, PokeBinderMotion.count),
+        curve: PokeBinderMotion.smooth,
+        builder: (context, progress, _) => Column(
           children: [
             for (var i = 0; i < stats.length; i++)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: PokeBinderSpacing.sp1,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        stats[i].value >= 1000
-                            ? '${(stats[i].value / 1000).toStringAsFixed(1)}k'
-                            : stats[i].value.toStringAsFixed(0),
-                        textAlign: TextAlign.center,
-                        style: PokeBinderText.cardMeta,
-                      ),
-                      const SizedBox(height: PokeBinderSpacing.sp1),
-                      Container(
-                        height: 78 * _barFraction(stats[i].value, maxValue),
-                        decoration: BoxDecoration(
-                          gradient: _barGradients[i % _barGradients.length],
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(5),
-                            topRight: Radius.circular(5),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: PokeBinderSpacing.sp2),
-                      Text(
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: i == stats.length - 1 ? 0 : PokeBinderSpacing.sp3,
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 104,
+                      child: Text(
                         stats[i].rarity,
-                        textAlign: TextAlign.center,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: PokeBinderText.cardMeta,
+                        style: PokeBinderText.cardMeta
+                            .copyWith(color: PokeBinderColors.ink),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final gradient =
+                              _barGradients[i % _barGradients.length];
+                          return Container(
+                            height: 16,
+                            alignment: Alignment.centerLeft,
+                            decoration: BoxDecoration(
+                              color:
+                                  PokeBinderColors.ink.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Container(
+                              width: constraints.maxWidth *
+                                  _barFraction(stats[i].value, maxValue) *
+                                  progress,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: gradient.colors,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    SizedBox(
+                      width: 56,
+                      child: Text(
+                        _format(stats[i].value),
+                        textAlign: TextAlign.right,
+                        style: PokeBinderText.cardMeta
+                            .copyWith(color: PokeBinderColors.ink),
+                      ),
+                    ),
+                  ],
                 ),
               ),
           ],
@@ -329,6 +360,19 @@ class _CardsBySetPanel extends StatelessWidget {
     }
 
     final total = stats.fold<int>(0, (sum, s) => sum + s.count);
+    final maxNamed = _kDonutColors.length - 1;
+    final shown = stats.length <= _kDonutColors.length
+        ? stats
+        : [
+            ...stats.take(maxNamed),
+            _SetStat(
+              'Other (${stats.length - maxNamed} sets)',
+              stats.skip(maxNamed).fold<int>(0, (sum, s) => sum + s.count),
+            ),
+          ];
+    final colors = stats.length <= _kDonutColors.length
+        ? _kDonutColors
+        : [..._kDonutColors.take(maxNamed), PokeBinderColors.slate];
 
     return Container(
       padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
@@ -356,8 +400,8 @@ class _CardsBySetPanel extends StatelessWidget {
               ),
               builder: (context, progress, child) => CustomPaint(
                 painter: _DonutPainter(
-                  values: [for (final s in stats) s.count.toDouble()],
-                  colors: _kDonutColors,
+                  values: [for (final s in shown) s.count.toDouble()],
+                  colors: colors,
                   progress: progress,
                 ),
                 child: child,
@@ -369,10 +413,10 @@ class _CardsBySetPanel extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var i = 0; i < stats.length; i++)
+                for (var i = 0; i < shown.length; i++)
                   Padding(
                     padding: EdgeInsets.only(
-                      bottom: i == stats.length - 2 ? 0 : PokeBinderSpacing.sp2,
+                      bottom: i == shown.length - 1 ? 0 : PokeBinderSpacing.sp2,
                     ),
                     child: Row(
                       children: [
@@ -381,20 +425,24 @@ class _CardsBySetPanel extends StatelessWidget {
                           height: 8,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _kDonutColors[i % _kDonutColors.length],
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: _gradientStops(colors[i]),
+                            ),
                           ),
                         ),
                         const SizedBox(width: PokeBinderSpacing.sp1),
                         Expanded(
                           child: Text(
-                            stats[i].setName,
+                            shown[i].setName,
                             overflow: TextOverflow.ellipsis,
                             style: PokeBinderText.listRowSubtitle
                                 .copyWith(color: PokeBinderColors.ink),
                           ),
                         ),
                         Text(
-                          '${(stats[i].count / total * 100).round()}%',
+                          '${(shown[i].count / total * 100).round()}%',
                           style: PokeBinderText.listRowSubtitle,
                         ),
                       ],
@@ -432,8 +480,17 @@ class _DonutPainter extends CustomPainter {
 
     for (var i = 0; i < values.length; i++) {
       final sweep = (values[i] / total) * 2 * math.pi * progress;
+      if (sweep < 0.001) {
+        startAngle += sweep;
+        continue;
+      }
       final paint = Paint()
-        ..color = colors[i % colors.length]
+        ..shader = SweepGradient(
+          startAngle: 0,
+          endAngle: sweep,
+          colors: _gradientStops(colors[i % colors.length]),
+          transform: GradientRotation(startAngle),
+        ).createShader(rect)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.butt;
