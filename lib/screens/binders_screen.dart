@@ -59,10 +59,16 @@ class BindersScreen extends StatefulWidget {
   final int initialTabIndex;
   final String? initialBinderId;
 
+  /// When true, this screen closes itself as soon as the binder opened via
+  /// [initialBinderId] is dismissed, so Back returns to whichever screen
+  /// pushed this one (e.g. the Trainer Card) instead of the binder list.
+  final bool popOnDetailClose;
+
   const BindersScreen({
     super.key,
     this.initialTabIndex = 0,
     this.initialBinderId,
+    this.popOnDetailClose = false,
   });
 
   @override
@@ -97,14 +103,23 @@ class _BindersScreenState extends State<BindersScreen> {
     super.initState();
     final initialId = widget.initialBinderId;
     if (initialId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         if (initialId == kUnassignedBinderId) {
-          _openUnassignedDetail();
-          return;
+          await _openUnassignedDetail();
+        } else {
+          final matches = _binders.where((b) => b.id == initialId);
+          if (matches.isEmpty) {
+            if (widget.popOnDetailClose && mounted) {
+              Navigator.of(context).pop();
+            }
+            return;
+          }
+          await _openBinderDetail(matches.first);
         }
-        final matches = _binders.where((b) => b.id == initialId);
-        if (matches.isNotEmpty) _openBinderDetail(matches.first);
+        if (widget.popOnDetailClose && mounted) {
+          Navigator.of(context).pop();
+        }
       });
     }
   }
@@ -999,6 +1014,7 @@ class _BinderGridTile extends StatelessWidget {
                   if (onTogglePin != null)
                     MinTapTarget(
                       onTap: onTogglePin,
+                      alignment: Alignment.centerRight,
                       semanticLabel: isPinned ? 'Unpin binder' : 'Pin binder',
                       child: BouncySwitcher(
                         child: Icon(
@@ -1006,10 +1022,10 @@ class _BinderGridTile extends StatelessWidget {
                               ? Icons.push_pin_rounded
                               : Icons.push_pin_outlined,
                           key: ValueKey(isPinned),
-                          size: 14,
+                          size: 18,
                           color: isPinned
                               ? PokeBinderColors.red
-                              : PokeBinderColors.inkSoft.withValues(alpha: 0.4),
+                              : PokeBinderColors.inkSoft.withValues(alpha: 0.5),
                         ),
                       ),
                     ),

@@ -22,11 +22,6 @@ const _kDonutColors = [
   Color(0xFFA8531F),
 ];
 
-List<Color> _gradientStops(Color base) => [
-      Color.lerp(base, PokeBinderColors.white, 0.32)!,
-      Color.lerp(base, PokeBinderColors.ink, 0.2)!,
-    ];
-
 class _RarityStat {
   final String rarity;
   final double value;
@@ -242,12 +237,12 @@ class _ValueByRarityPanel extends StatelessWidget {
 
   const _ValueByRarityPanel({required this.stats});
 
-  static const _barGradients = [
-    PokeBinderColors.goldGradient,
-    PokeBinderColors.redGradient,
-    PokeBinderColors.tealGradient,
-    PokeBinderColors.violetGradient,
-    PokeBinderColors.slateGradient,
+  static const _barColors = [
+    PokeBinderColors.gold,
+    PokeBinderColors.red,
+    PokeBinderColors.teal,
+    PokeBinderColors.violet,
+    PokeBinderColors.slate,
   ];
 
   double _barFraction(double value, double maxValue) {
@@ -303,8 +298,7 @@ class _ValueByRarityPanel extends StatelessWidget {
                     Expanded(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          final gradient =
-                              _barGradients[i % _barGradients.length];
+                          final barColor = _barColors[i % _barColors.length];
                           return Container(
                             height: 16,
                             alignment: Alignment.centerLeft,
@@ -318,9 +312,7 @@ class _ValueByRarityPanel extends StatelessWidget {
                                   _barFraction(stats[i].value, maxValue) *
                                   progress,
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: gradient.colors,
-                                ),
+                                color: barColor,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
@@ -425,11 +417,7 @@ class _CardsBySetPanel extends StatelessWidget {
                           height: 8,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: _gradientStops(colors[i]),
-                            ),
+                            color: colors[i],
                           ),
                         ),
                         const SizedBox(width: PokeBinderSpacing.sp1),
@@ -485,12 +473,7 @@ class _DonutPainter extends CustomPainter {
         continue;
       }
       final paint = Paint()
-        ..shader = SweepGradient(
-          startAngle: 0,
-          endAngle: sweep,
-          colors: _gradientStops(colors[i % colors.length]),
-          transform: GradientRotation(startAngle),
-        ).createShader(rect)
+        ..color = colors[i % colors.length]
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.butt;

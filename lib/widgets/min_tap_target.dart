@@ -7,12 +7,18 @@ class MinTapTarget extends StatelessWidget {
   final double size;
   final String? semanticLabel;
 
+  /// Where [child] sits inside the tap area. Use an edge alignment when the
+  /// icon should line up with the container's padding rather than float
+  /// inside the extra hit-area space.
+  final AlignmentGeometry alignment;
+
   const MinTapTarget({
     super.key,
     required this.child,
     required this.onTap,
     this.size = kMinTapTarget,
     this.semanticLabel,
+    this.alignment = Alignment.center,
   });
 
   @override
@@ -25,7 +31,7 @@ class MinTapTarget extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: ConstrainedBox(
           constraints: BoxConstraints(minWidth: size, minHeight: size),
-          child: Center(child: child),
+          child: Align(alignment: alignment, child: child),
         ),
       ),
     );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/binder_data.dart';
 import '../models/trainer_profile_data.dart';
 import '../theme/pokebinder_theme.dart';
 import 'stats_screen.dart';
@@ -11,14 +10,12 @@ import '../widgets/pokebinder_background.dart';
 class MoreScreen extends StatelessWidget {
   final TrainerProfileData profile;
   final ValueChanged<TrainerProfileData>? onProfileChanged;
-  final ValueChanged<BinderData>? onOpenBinder;
   final VoidCallback? onSignOut;
 
   const MoreScreen({
     super.key,
     required this.profile,
     this.onProfileChanged,
-    this.onOpenBinder,
     this.onSignOut,
   });
 
@@ -29,12 +26,6 @@ class MoreScreen extends StatelessWidget {
           profile: profile,
           onProfileChanged: onProfileChanged,
           onBack: () => Navigator.of(context).maybePop(),
-          onOpenBinder: onOpenBinder == null
-              ? null
-              : (binder) {
-                  Navigator.of(context).pop();
-                  onOpenBinder!(binder);
-                },
         ),
       ),
     );

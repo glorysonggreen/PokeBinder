@@ -230,8 +230,6 @@ class _AppShellState extends State<AppShell> {
             MoreScreen(
               profile: _profile,
               onProfileChanged: _handleProfileChanged,
-              onOpenBinder: (BinderData binder) =>
-                  _openBinders(tabIndex: 0, binderId: binder.id),
               onSignOut: _signOut,
             ),
           ],

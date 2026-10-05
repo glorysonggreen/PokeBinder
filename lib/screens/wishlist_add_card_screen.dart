@@ -41,8 +41,6 @@ class WishlistAddCardScreen extends StatelessWidget {
       header: [
         BackLink(onTap: () => Navigator.of(context).maybePop()),
         const SizedBox(height: PokeBinderSpacing.sp2),
-        Text('ADD TO WISHLIST', style: PokeBinderText.eyebrow),
-        const SizedBox(height: PokeBinderSpacing.sp2),
         Text('Find Your Card', style: PokeBinderText.heading),
         const SizedBox(height: PokeBinderSpacing.sp1),
         Text(

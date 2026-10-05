@@ -3,27 +3,28 @@ import '../models/binder_data.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/trainer_profile_data.dart';
+import '../services/audio_navigator_observer.dart';
 import '../services/card_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_tags.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import '../widgets/trainer_avatar.dart';
+import 'binders_screen.dart';
 import 'card_details_screen.dart';
+import 'decks_screen.dart';
 import 'trainer_card_edit_screen.dart';
 import '../widgets/pokebinder_background.dart';
 
 class TrainerCardScreen extends StatefulWidget {
   final TrainerProfileData profile;
   final VoidCallback onBack;
-  final ValueChanged<BinderData>? onOpenBinder;
   final ValueChanged<TrainerProfileData>? onProfileChanged;
 
   const TrainerCardScreen({
     super.key,
     required this.profile,
     required this.onBack,
-    this.onOpenBinder,
     this.onProfileChanged,
   });
 
@@ -67,6 +68,34 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
     if (result == null) return;
     setState(() => _profile = result);
     widget.onProfileChanged?.call(result);
+  }
+
+  /// Opens the binder on top of the Trainer Card. Back from the binder
+  /// returns here, because the binder is pushed onto this screen's navigator
+  /// rather than switching the app to the Binders tab.
+  Future<void> _openFavoriteBinder(BinderData binder) async {
+    await Navigator.of(context).push(
+      SilentPageRoute<void>(
+        builder: (_) => BindersScreen(
+          initialBinderId: binder.id,
+          popOnDetailClose: true,
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  /// Opens the deck on top of the Trainer Card; Back returns here.
+  Future<void> _openFavoriteDeck(DeckData deck) async {
+    await Navigator.of(context).push(
+      SilentPageRoute<void>(
+        builder: (_) => DecksScreen(
+          initialDeckId: deck.id,
+          popOnDetailClose: true,
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
   }
 
   Future<void> _openFavoriteCardDetails(PokemonCardData card) async {
@@ -203,9 +232,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
               favoriteBinder != null
                   ? _FavoriteBinderPanel(
                       binder: favoriteBinder,
-                      onTap: widget.onOpenBinder == null
-                          ? null
-                          : () => widget.onOpenBinder!(favoriteBinder),
+                      onTap: () => _openFavoriteBinder(favoriteBinder),
                     )
                   : const _DashedInfoPanel(
                       icon: Icons.push_pin_outlined,
@@ -216,7 +243,10 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
               Text('FAVORITE DECK', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
               favoriteDeck != null
-                  ? _FavoriteDeckPanel(deck: favoriteDeck)
+                  ? _FavoriteDeckPanel(
+                      deck: favoriteDeck,
+                      onTap: () => _openFavoriteDeck(favoriteDeck),
+                    )
                   : const _DashedInfoPanel(
                       icon: Icons.push_pin_outlined,
                       message: 'Set a favorite deck to feature it here.',
@@ -512,9 +542,9 @@ class _TrainerStatBox extends StatelessWidget {
 
 class _FavoriteBinderPanel extends StatelessWidget {
   final BinderData binder;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
-  const _FavoriteBinderPanel({required this.binder, this.onTap});
+  const _FavoriteBinderPanel({required this.binder, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -584,12 +614,11 @@ class _FavoriteBinderPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: PokeBinderSpacing.sp2),
-              if (onTap != null)
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: PokeBinderColors.inkSoft,
-                ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: PokeBinderColors.inkSoft,
+              ),
             ],
           ),
         ),
@@ -600,71 +629,87 @@ class _FavoriteBinderPanel extends StatelessWidget {
 
 class _FavoriteDeckPanel extends StatelessWidget {
   final DeckData deck;
+  final VoidCallback onTap;
 
-  const _FavoriteDeckPanel({required this.deck});
+  const _FavoriteDeckPanel({required this.deck, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
-      decoration: BoxDecoration(
-        color: PokeBinderColors.white,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
-        boxShadow: kCardElevation,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 44,
-            height: 44,
-            child: Container(
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(11),
-                gradient: PokeBinderColors.redGradient,
-              ),
-              child: const Icon(
-                Icons.style_rounded,
-                size: 18,
-                color: PokeBinderColors.white,
-              ),
-            ),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(PokeBinderSpacing.sp3),
+          decoration: BoxDecoration(
+            color: PokeBinderColors.white,
+            borderRadius: BorderRadius.circular(14),
+            border:
+                Border.all(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+            boxShadow: kCardElevation,
           ),
-          const SizedBox(width: PokeBinderSpacing.sp3),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(11),
+                    gradient: PokeBinderColors.redGradient,
+                  ),
+                  child: const Icon(
+                    Icons.style_rounded,
+                    size: 18,
+                    color: PokeBinderColors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: PokeBinderSpacing.sp3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        deck.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: PokeBinderText.rowTitle,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            deck.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: PokeBinderText.rowTitle,
+                          ),
+                        ),
+                        if (deck.isPinned) ...[
+                          const SizedBox(width: PokeBinderSpacing.sp1),
+                          const Icon(
+                            Icons.push_pin_rounded,
+                            size: 11,
+                            color: PokeBinderColors.redDeep,
+                          ),
+                        ],
+                      ],
                     ),
-                    if (deck.isPinned) ...[
-                      const SizedBox(width: PokeBinderSpacing.sp1),
-                      const Icon(
-                        Icons.push_pin_rounded,
-                        size: 11,
-                        color: PokeBinderColors.redDeep,
-                      ),
-                    ],
+                    const SizedBox(height: PokeBinderSpacing.sp0),
+                    Text(
+                      '${deck.cardCount}/${deck.targetSize} cards · ${deck.format.label}',
+                      style: PokeBinderText.listRowSubtitle,
+                    ),
                   ],
                 ),
-                const SizedBox(height: PokeBinderSpacing.sp0),
-                Text(
-                  '${deck.cardCount}/${deck.targetSize} cards · ${deck.format.label}',
-                  style: PokeBinderText.listRowSubtitle,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: PokeBinderSpacing.sp2),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: PokeBinderColors.inkSoft,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

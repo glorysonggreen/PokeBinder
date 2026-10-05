@@ -2,6 +2,21 @@ import 'package:flutter/widgets.dart';
 
 import 'audio_service.dart';
 
+/// A full-screen route with no transition and no navigation sound.
+///
+/// Used as an invisible host when a screen needs to open a detail page on top
+/// of the current screen (so Back returns there) but the detail page lives
+/// inside another screen's state. The detail page's own route supplies the
+/// visible transition and sound.
+class SilentPageRoute<T> extends PageRouteBuilder<T> {
+  SilentPageRoute({required WidgetBuilder builder})
+      : super(
+          pageBuilder: (context, _, __) => builder(context),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+        );
+}
+
 /// Plays a soft page-turn when a screen opens or closes, and a pop when a
 /// dialog or sheet appears, so navigation always has a sound without every
 /// screen having to ask for one.
@@ -20,6 +35,7 @@ class PokeBinderAudioObserver extends NavigatorObserver {
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     // The very first route is the app launching, not the person navigating.
     if (previousRoute == null) return;
+    if (route is SilentPageRoute) return;
 
     if (route is PageRoute) {
       PokeBinderAudio.play(Sfx.pageIn);
@@ -32,6 +48,7 @@ class PokeBinderAudioObserver extends NavigatorObserver {
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is SilentPageRoute) return;
     if (route is PageRoute) {
       PokeBinderAudio.play(Sfx.pageOut);
     } else if (_isCardViewer(route)) {

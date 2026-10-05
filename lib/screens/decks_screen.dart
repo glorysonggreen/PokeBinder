@@ -66,7 +66,16 @@ extension DeckSortOptionLabel on DeckSortOption {
 class DecksScreen extends StatefulWidget {
   final String? initialDeckId;
 
-  const DecksScreen({super.key, this.initialDeckId});
+  /// When true, this screen closes itself as soon as the deck opened via
+  /// [initialDeckId] is dismissed, so Back returns to whichever screen
+  /// pushed this one (e.g. the Trainer Card) instead of the deck list.
+  final bool popOnDetailClose;
+
+  const DecksScreen({
+    super.key,
+    this.initialDeckId,
+    this.popOnDetailClose = false,
+  });
 
   @override
   State<DecksScreen> createState() => _DecksScreenState();
@@ -85,10 +94,13 @@ class _DecksScreenState extends State<DecksScreen> {
     super.initState();
     final initialId = widget.initialDeckId;
     if (initialId == null) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final matches = _decks.where((d) => d.id == initialId);
-      if (matches.isNotEmpty) _openDeckDetail(matches.first);
+      if (matches.isNotEmpty) await _openDeckDetail(matches.first);
+      if (widget.popOnDetailClose && mounted) {
+        Navigator.of(context).pop();
+      }
     });
   }
 

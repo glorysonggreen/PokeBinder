@@ -98,10 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
           profile: widget.profile,
           onProfileChanged: widget.onProfileChanged,
           onBack: () => Navigator.of(context).maybePop(),
-          onOpenBinder: (binder) {
-            Navigator.of(context).pop();
-            widget.onOpenBinder(binder);
-          },
         ),
       ),
     );
