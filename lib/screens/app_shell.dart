@@ -17,6 +17,7 @@ import '../services/wishlist_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/app_nav_bar.dart';
+import '../widgets/pokeball.dart';
 import 'binders_screen.dart';
 import 'decks_screen.dart';
 import 'home_screen.dart';
@@ -156,7 +157,9 @@ class _AppShellState extends State<AppShell> {
     if (_loading) {
       return const Scaffold(
         backgroundColor: PokeBinderColors.cream,
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: PokeballLoader(label: 'LOADING YOUR COLLECTION'),
+        ),
       );
     }
     if (_loadError != null) {

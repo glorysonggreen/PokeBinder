@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
+import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import 'interactive_3d_card.dart';
 import 'pokemon_card_widget.dart';
@@ -16,9 +18,39 @@ Future<void> showCardViewer(
     barrierDismissible: true,
     barrierLabel: 'Close card',
     barrierColor: PokeBinderColors.ink.withValues(alpha: 0.85),
-    transitionDuration: const Duration(milliseconds: 200),
-    transitionBuilder: (_, animation, __, child) =>
-        FadeTransition(opacity: animation, child: child),
+    transitionDuration: PokeBinderMotion.adapt(context, PokeBinderMotion.viewer),
+    transitionBuilder: (context, animation, _, child) {
+      if (MediaQuery.disableAnimationsOf(context)) {
+        return FadeTransition(opacity: animation, child: child);
+      }
+      // The card rises out of the binder: the backdrop blurs, and the card
+      // zooms up from 80% with a little overshoot.
+      final zoom = animation.drive(CurveTween(curve: Curves.easeOutBack));
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          AnimatedBuilder(
+            animation: animation,
+            builder: (context, _) {
+              final sigma = 5 * Curves.easeOut.transform(animation.value);
+              return ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+                  child: const SizedBox.expand(),
+                ),
+              );
+            },
+          ),
+          FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.8, end: 1).animate(zoom),
+              child: child,
+            ),
+          ),
+        ],
+      );
+    },
     pageBuilder: (_, __, ___) => _CardViewer(imagePath: imagePath),
   );
 }

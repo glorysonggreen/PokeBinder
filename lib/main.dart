@@ -9,6 +9,7 @@ import 'screens/app_shell.dart';
 import 'screens/login_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'theme/pokebinder_theme.dart';
+import 'widgets/pokeball_intro.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,9 +80,11 @@ class _PokeBinderAppState extends State<PokeBinderApp> {
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
       theme: PokeBinderTheme.light(),
-      home: Supabase.instance.client.auth.currentSession == null
-          ? const LoginScreen()
-          : const AppShell(),
+      home: PokeBinderIntro(
+        child: Supabase.instance.client.auth.currentSession == null
+            ? const LoginScreen()
+            : const AppShell(),
+      ),
     );
   }
 }

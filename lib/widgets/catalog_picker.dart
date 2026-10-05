@@ -10,6 +10,7 @@ import '../theme/pokebinder_theme.dart';
 import 'card_sort_controls.dart';
 import 'pokebinder_controls.dart';
 import 'pokebinder_form_fields.dart';
+import 'pokeball.dart';
 import 'pokemon_card_widget.dart';
 
 String _catalogErrorMessage(Object error) {
@@ -267,7 +268,7 @@ class _CatalogPickerState extends State<CatalogPicker> {
       return const [
         Padding(
           padding: EdgeInsets.all(PokeBinderSpacing.sp5),
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: PokeballLoader(size: 44)),
         ),
       ];
     }

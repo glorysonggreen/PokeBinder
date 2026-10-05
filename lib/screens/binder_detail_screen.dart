@@ -4,6 +4,7 @@ import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/binder_card_tile.dart';
 import '../widgets/card_caption.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 
@@ -245,52 +246,60 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                       mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
                     ),
                     children: [
-                      for (final card in currentPageCards)
-                        Column(
-                          children: [
-                            SizedBox(
-                              height: cardHeight,
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(
-                                    child: BinderCardTile(
-                                      card: card,
-                                      onTap: removing
-                                          ? () => _confirmRemove(card)
-                                          : () => _openCard(card),
-                                    ),
-                                  ),
-                                  if (removing)
-                                    const Positioned(
-                                      top: 4,
-                                      right: 4,
-                                      child: IgnorePointer(
-                                        child: _RemoveBadge(),
+                      for (final (i, card) in currentPageCards.indexed)
+                        FadeSlideIn(
+                          key: ValueKey('$_pageIndex-${card.id}'),
+                          index: i,
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: cardHeight,
+                                child: Stack(
+                                  children: [
+                                    Positioned.fill(
+                                      child: BinderCardTile(
+                                        card: card,
+                                        onTap: removing
+                                            ? () => _confirmRemove(card)
+                                            : () => _openCard(card),
                                       ),
                                     ),
-                                ],
+                                    if (removing)
+                                      const Positioned(
+                                        top: 4,
+                                        right: 4,
+                                        child: IgnorePointer(
+                                          child: _RemoveBadge(),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: PokeBinderSpacing.sp1),
-                            CardCaption(card: card),
-                          ],
+                              const SizedBox(height: PokeBinderSpacing.sp1),
+                              CardCaption(card: card),
+                            ],
+                          ),
                         ),
                       if (!removing && !_isUnassigned)
-                        Column(
-                          children: [
-                            SizedBox(
-                              height: cardHeight,
-                              child: AddCardTile(onTap: _openAddCard),
-                            ),
-                            const SizedBox(height: PokeBinderSpacing.sp1),
-                            Text(
-                              'Add Cards',
-                              style: PokeBinderText.cardName,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                        FadeSlideIn(
+                          key: ValueKey('add-$_pageIndex'),
+                          index: currentPageCards.length,
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: cardHeight,
+                                child: AddCardTile(onTap: _openAddCard),
+                              ),
+                              const SizedBox(height: PokeBinderSpacing.sp1),
+                              Text(
+                                'Add Cards',
+                                style: PokeBinderText.cardName,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
                     ],
                   );

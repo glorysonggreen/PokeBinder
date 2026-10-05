@@ -13,8 +13,70 @@
 
   <title>PokeBinder</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Launch screen shown while Flutter downloads and starts. It is removed
+       on Flutter's first frame, so the in-app Poké Ball intro takes over. -->
+  <style>
+    html, body { margin: 0; height: 100%; background: #F5EFE1; }
+    #pb-splash {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 50% 42%, #FFFFFF 0%, #F5EFE1 70%);
+      transition: opacity 0.35s ease;
+    }
+    #pb-splash.pb-hide { opacity: 0; pointer-events: none; }
+    .pb-ball {
+      position: relative; width: 72px; height: 72px; box-sizing: border-box;
+      border: 5px solid #241F1C; border-radius: 50%; overflow: hidden;
+      background: linear-gradient(#D6301B 0 50%, #FFFFFF 50% 100%);
+      box-shadow: 0 8px 14px rgba(36, 31, 28, 0.18);
+      transform-origin: 50% 90%;
+      animation: pb-wobble 1.6s ease-in-out infinite;
+    }
+    .pb-ball::before {
+      content: ""; position: absolute; left: 0; right: 0; top: 50%;
+      height: 6px; margin-top: -3px; background: #241F1C;
+    }
+    .pb-ball::after {
+      content: ""; position: absolute; left: 50%; top: 50%;
+      width: 20px; height: 20px; margin: -10px 0 0 -10px; box-sizing: border-box;
+      border: 4px solid #241F1C; border-radius: 50%; background: #FFFFFF;
+      animation: pb-glow 1.6s ease-in-out infinite;
+    }
+    @keyframes pb-wobble {
+      0%   { transform: rotate(0); }
+      12%  { transform: rotate(-16deg); }
+      30%  { transform: rotate(14deg); }
+      48%  { transform: rotate(-8deg); }
+      60%, 100% { transform: rotate(0); }
+    }
+    @keyframes pb-glow {
+      0%, 60% { background: #FFFFFF; box-shadow: none; }
+      80%     { background: #FFF1C2; box-shadow: 0 0 14px 6px rgba(232, 172, 62, 0.8); }
+      100%    { background: #FFFFFF; box-shadow: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pb-ball, .pb-ball::after { animation: none; }
+    }
+  </style>
 </head>
 <body>
+  <div id="pb-splash" aria-hidden="true"><div class="pb-ball"></div></div>
+  <script>
+    (function () {
+      var splash = document.getElementById('pb-splash');
+      var removed = false;
+      function removeSplash() {
+        if (removed || !splash) return;
+        removed = true;
+        splash.classList.add('pb-hide');
+        setTimeout(function () { splash.remove(); }, 400);
+      }
+      window.addEventListener('flutter-first-frame', removeSplash);
+      // Safety net: never leave the launch screen covering the app.
+      setTimeout(removeSplash, 20000);
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

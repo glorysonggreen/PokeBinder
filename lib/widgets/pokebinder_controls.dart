@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import 'motion_widgets.dart';
+import 'pokeball.dart';
 
 class BackLink extends StatelessWidget {
   final VoidCallback onTap;
@@ -180,53 +181,71 @@ class SegmentedTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final count = labels.length;
+    // Maps the selected index onto Alignment's -1..1 range.
+    final thumbX = count <= 1 ? 0.0 : -1 + 2 * index / (count - 1);
+
     return Container(
       padding: const EdgeInsets.all(PokeBinderSpacing.sp1),
       decoration: BoxDecoration(
         color: PokeBinderColors.cream2,
         borderRadius: BorderRadius.circular(11),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          for (var i = 0; i < labels.length; i++)
-            Expanded(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => onChanged(i),
-                  child: AnimatedContainer(
-                    duration: PokeBinderMotion.fast,
-                    curve: PokeBinderMotion.curve,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: PokeBinderSpacing.sp2,
-                    ),
-                    alignment: Alignment.center,
+          // The white "thumb" glides to the selected segment.
+          if (count > 0)
+            Positioned.fill(
+              child: AnimatedAlign(
+                alignment: Alignment(thumbX, 0),
+                duration: PokeBinderMotion.adapt(context, PokeBinderMotion.pop),
+                curve: PokeBinderMotion.bounce,
+                child: FractionallySizedBox(
+                  widthFactor: 1 / count,
+                  heightFactor: 1,
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: i == index ? PokeBinderColors.white : Colors.transparent,
+                      color: PokeBinderColors.white,
                       borderRadius: BorderRadius.circular(8),
-                      boxShadow: i == index
-                          ? [
-                              BoxShadow(
-                                color:
-                                    PokeBinderColors.ink.withValues(alpha: 0.12),
-                                blurRadius: 3,
-                                offset: const Offset(0, 1),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: AnimatedDefaultTextStyle(
-                      duration: PokeBinderMotion.fast,
-                      style: i == index
-                          ? PokeBinderText.tabLabelActive
-                          : PokeBinderText.tabLabelInactive,
-                      child: Text(labels[i]),
+                      boxShadow: [
+                        BoxShadow(
+                          color: PokeBinderColors.ink.withValues(alpha: 0.12),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
+          Row(
+            children: [
+              for (var i = 0; i < count; i++)
+                Expanded(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => onChanged(i),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: PokeBinderSpacing.sp2,
+                        ),
+                        alignment: Alignment.center,
+                        child: AnimatedDefaultTextStyle(
+                          duration: PokeBinderMotion.fast,
+                          style: i == index
+                              ? PokeBinderText.tabLabelActive
+                              : PokeBinderText.tabLabelInactive,
+                          child: Text(labels[i]),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -405,6 +424,10 @@ class PillButton extends StatefulWidget {
   final bool enabled;
   final IconData? icon;
 
+  /// Shows a spinning Poké Ball in place of [icon]. Pair with `enabled: false`
+  /// while the request is in flight.
+  final bool loading;
+
   const PillButton({
     super.key,
     required this.label,
@@ -412,6 +435,7 @@ class PillButton extends StatefulWidget {
     this.ghost = false,
     this.enabled = true,
     this.icon,
+    this.loading = false,
   });
 
   @override
@@ -473,7 +497,13 @@ class _PillButtonState extends State<PillButton> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
+                  if (widget.loading) ...[
+                    PokeballSpinner(
+                      size: 16,
+                      color: labelStyle.color ?? PokeBinderColors.white,
+                    ),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                  ] else if (icon != null) ...[
                     Icon(icon, size: 14, color: labelStyle.color),
                     const SizedBox(width: PokeBinderSpacing.sp1),
                   ],

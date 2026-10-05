@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/trainer_profile_repository.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'app_shell.dart';
@@ -23,6 +24,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscureConfirm = true;
   bool _submitting = false;
   String? _error;
+  int _errorTick = 0;
 
   @override
   void dispose() {
@@ -44,13 +46,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final confirm = _confirmController.text;
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      setState(() => _error = 'Fill in every field to continue.');
+      setState(() {
+        _error = 'Fill in every field to continue.';
+        _errorTick++;
+      });
       return;
     }
     if (password != confirm) {
-      setState(
-        () => _error = "Passwords don't match — check and try again.",
-      );
+      setState(() {
+        _error = "Passwords don't match — check and try again.";
+        _errorTick++;
+      });
       return;
     }
 
@@ -69,6 +75,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         setState(() {
           _submitting = false;
           _error = 'Check your email to confirm your account, then log in.';
+          _errorTick++;
         });
         return;
       }
@@ -83,6 +90,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() {
         _submitting = false;
         _error = 'Could not create that account — try again.';
+        _errorTick++;
       });
     }
   }
@@ -172,13 +180,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
-                  child: Text(_error!, style: PokeBinderText.formError),
+                  child: AnimatedFormError(
+                    message: _error!,
+                    pulse: _errorTick,
+                  ),
                 ),
 
               const SizedBox(height: PokeBinderSpacing.sp2),
               PillButton(
                 label: _submitting ? 'Creating Account…' : '+ Create Account',
                 enabled: !_submitting,
+                loading: _submitting,
                 onTap: _attemptSignUp,
               ),
               const SizedBox(height: PokeBinderSpacing.sp5),

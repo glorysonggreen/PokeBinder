@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../theme/pokebinder_motion.dart';
+import '../theme/pokebinder_theme.dart';
 
 class FadeSlideIn extends StatelessWidget {
   final Widget child;
@@ -330,6 +333,138 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
           offset: Offset(0, (1 - _t.value) * 10),
           child: child,
         ),
+      ),
+    );
+  }
+}
+
+/// A card being dealt onto the table: it swings in on its vertical axis with
+/// a touch of perspective, scales up, and fades in.
+///
+/// Wrap the hero card of a screen. For lists and grids use [FadeSlideIn].
+class CardDealIn extends StatelessWidget {
+  final Widget child;
+  final Duration delay;
+
+  const CardDealIn({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final deal = PokeBinderMotion.adapt(context, PokeBinderMotion.deal);
+    if (deal == Duration.zero) return child;
+
+    final total = deal + delay;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: total,
+      curve: Interval(
+        delay.inMilliseconds / total.inMilliseconds,
+        1,
+        curve: PokeBinderMotion.emphasized,
+      ),
+      child: child,
+      builder: (context, t, child) {
+        final matrix = Matrix4.identity()
+          ..setEntry(3, 2, 0.0012)
+          ..rotateY((1 - t) * -0.85)
+          ..rotateX((1 - t) * 0.12);
+        return Opacity(
+          opacity: (t * 2.2).clamp(0.0, 1.0).toDouble(),
+          child: Transform(
+            alignment: Alignment.center,
+            transform: matrix,
+            child: Transform.scale(
+              scale: 0.86 + 0.14 * t,
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// An inline form error. It fades in with a short sideways shake — like a
+/// Poké Ball that didn't quite hold — every time it appears, its [message]
+/// changes, or [pulse] changes (bump it to shake again for the same message).
+class AnimatedFormError extends StatefulWidget {
+  final String message;
+  final int pulse;
+
+  const AnimatedFormError({super.key, required this.message, this.pulse = 0});
+
+  @override
+  State<AnimatedFormError> createState() => _AnimatedFormErrorState();
+}
+
+class _AnimatedFormErrorState extends State<AnimatedFormError>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+    } else {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(AnimatedFormError oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((oldWidget.message != widget.message ||
+            oldWidget.pulse != widget.pulse) &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final t = _controller.value;
+        final dx = math.sin(t * math.pi * 6) * (1 - t) * 7;
+        return Opacity(
+          opacity: (t * 4).clamp(0.0, 1.0).toDouble(),
+          child: Transform.translate(offset: Offset(dx, 0), child: child),
+        );
+      },
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.error_outline_rounded,
+              size: 14,
+              color: PokeBinderColors.danger,
+            ),
+          ),
+          const SizedBox(width: PokeBinderSpacing.sp1 + 2),
+          Expanded(
+            child: Text(widget.message, style: PokeBinderText.formError),
+          ),
+        ],
       ),
     );
   }

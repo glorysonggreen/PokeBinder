@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 
@@ -94,12 +95,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
-                    child: Text(_error!, style: PokeBinderText.formError),
+                    child: AnimatedFormError(message: _error!),
                   ),
                 const SizedBox(height: PokeBinderSpacing.sp1),
                 PillButton(
                   label: _submitting ? 'Sending…' : 'Send Reset Link',
                   enabled: !_submitting,
+                  loading: _submitting,
                   onTap: _sendResetLink,
                 ),
               ] else ...[

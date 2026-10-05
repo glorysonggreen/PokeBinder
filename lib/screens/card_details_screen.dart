@@ -6,6 +6,7 @@ import '../models/pokemon_card_data.dart';
 import '../services/deck_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/interactive_3d_card.dart';
+import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'card_form_screen.dart';
@@ -165,9 +166,11 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                           child: SizedBox(
                             width: cardWidth,
                             height: cardHeight,
-                            child: Interactive3DCard(
-                              back: const PokemonCardBack(),
-                              child: PokemonCard(card: card),
+                            child: CardDealIn(
+                              child: Interactive3DCard(
+                                back: const PokemonCardBack(),
+                                child: PokemonCard(card: card),
+                              ),
                             ),
                           ),
                         ),
@@ -178,51 +181,66 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
 
-              Text(card.name, style: PokeBinderText.heading),
+              FadeSlideIn(
+                index: 1,
+                child: Text(card.name, style: PokeBinderText.heading),
+              ),
               const SizedBox(height: PokeBinderSpacing.sp1),
-              Text(
-                '${card.setName} · #${card.cardNumber} · ${card.rarity}',
-                style: PokeBinderText.subtitle,
+              FadeSlideIn(
+                index: 2,
+                child: Text(
+                  '${card.setName} · #${card.cardNumber} · ${card.rarity}',
+                  style: PokeBinderText.subtitle,
+                ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: _FieldTile(
-                      label: 'Qty owned',
-                      value: '${card.quantityOwned}',
+              FadeSlideIn(
+                index: 3,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _FieldTile(
+                        label: 'Qty owned',
+                        value: '${card.quantityOwned}',
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: PokeBinderSpacing.sp2),
-                  Expanded(
-                    child: _FieldTile(
-                      label: 'Condition',
-                      value: card.condition,
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    Expanded(
+                      child: _FieldTile(
+                        label: 'Condition',
+                        value: card.condition,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              Row(
-                children: [
-                  Expanded(
-                    child: _FieldTile(
-                      label: 'Binder',
-                      value: card.binderName,
+              FadeSlideIn(
+                index: 4,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _FieldTile(
+                        label: 'Binder',
+                        value: card.binderName,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: PokeBinderSpacing.sp2),
-                  Expanded(
-                    child: _FieldTile(label: 'Page', value: '${card.page}'),
-                  ),
-                ],
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    Expanded(
+                      child: _FieldTile(label: 'Page', value: '${card.page}'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
 
-              _StatBox(
-                label: 'EST. MARKET VALUE',
-                value: '₱${card.estimatedValue.toStringAsFixed(0)}',
+              FadeSlideIn(
+                index: 5,
+                child: _StatBox(
+                  label: 'EST. MARKET VALUE',
+                  value: '₱${card.estimatedValue.toStringAsFixed(0)}',
+                ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
 
@@ -235,25 +253,28 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 ),
               const SizedBox(height: PokeBinderSpacing.sp4),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: PillButton(
-                      label: 'Edit',
-                      icon: Icons.edit_outlined,
-                      ghost: true,
-                      onTap: _editCard,
+              FadeSlideIn(
+                index: 6,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: PillButton(
+                        label: 'Edit',
+                        icon: Icons.edit_outlined,
+                        ghost: true,
+                        onTap: _editCard,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: PokeBinderSpacing.sp2),
-                  Expanded(
-                    child: PillButton(
-                      label: 'Add to Deck',
-                      icon: Icons.add,
-                      onTap: _addToDeck,
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                    Expanded(
+                      child: PillButton(
+                        label: 'Add to Deck',
+                        icon: Icons.add,
+                        onTap: _addToDeck,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -421,20 +442,23 @@ class _StatBox extends StatelessWidget {
                       children: [
                         Text(label, style: PokeBinderText.statLabel),
                         const SizedBox(height: PokeBinderSpacing.sp1),
-                        Text(value, style: PokeBinderText.statNumber),
+                        CountUpText(value, style: PokeBinderText.statNumber),
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(PokeBinderSpacing.sp2),
-                    decoration: BoxDecoration(
-                      color: PokeBinderColors.red.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.trending_up_rounded,
-                      size: 18,
-                      color: PokeBinderColors.redDeep,
+                  PopIn(
+                    delay: const Duration(milliseconds: 350),
+                    child: Container(
+                      padding: const EdgeInsets.all(PokeBinderSpacing.sp2),
+                      decoration: BoxDecoration(
+                        color: PokeBinderColors.red.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.trending_up_rounded,
+                        size: 18,
+                        color: PokeBinderColors.redDeep,
+                      ),
                     ),
                   ),
                 ],

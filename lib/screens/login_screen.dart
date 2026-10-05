@@ -3,6 +3,7 @@ import '../services/auth_service.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/motion_widgets.dart';
+import '../widgets/pokeball.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'app_shell.dart';
 import 'forgot_password_screen.dart';
@@ -22,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _submitting = false;
   String? _error;
+  int _errorTick = 0;
 
   @override
   void dispose() {
@@ -35,7 +37,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _error = 'Enter an email and password to continue.');
+      setState(() {
+        _error = 'Enter an email and password to continue.';
+        _errorTick++;
+      });
       return;
     }
 
@@ -55,6 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _submitting = false;
         _error = 'Could not log in — check your email and password.';
+        _errorTick++;
       });
     }
   }
@@ -128,7 +134,10 @@ class _LoginScreenState extends State<LoginScreen> {
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp3),
-                  child: Text(_error!, style: PokeBinderText.formError),
+                  child: AnimatedFormError(
+                    message: _error!,
+                    pulse: _errorTick,
+                  ),
                 ),
 
               Align(
@@ -145,6 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
               PillButton(
                 label: _submitting ? 'Logging In…' : 'Log In',
                 enabled: !_submitting,
+                loading: _submitting,
                 onTap: _attemptLogin,
               ),
               const SizedBox(height: PokeBinderSpacing.sp6),
@@ -192,30 +202,7 @@ class _AuthBanner extends StatelessWidget {
       ),
       child: Column(
         children: [
-          PopIn(
-            child: Container(
-              width: 56,
-              height: 56,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: PokeBinderColors.goldGradient,
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x26000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Text(
-                'PB',
-                style: PokeBinderText.headingSm.copyWith(
-                  color: PokeBinderColors.white,
-                ),
-              ),
-            ),
-          ),
+          const PopIn(child: PokeballBadge(size: 64)),
           const SizedBox(height: PokeBinderSpacing.sp4),
           FadeSlideIn(
             index: 1,

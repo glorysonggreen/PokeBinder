@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'pokebinder_page_transitions.dart';
+
 class PokeBinderColors {
   PokeBinderColors._();
 
@@ -299,10 +301,10 @@ class PokeBinderTheme {
       textTheme: bodyTextTheme(base.textTheme),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.android: PokeBinderPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: PokeBinderPageTransitionsBuilder(),
+          TargetPlatform.linux: PokeBinderPageTransitionsBuilder(),
+          TargetPlatform.windows: PokeBinderPageTransitionsBuilder(),
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
         },
