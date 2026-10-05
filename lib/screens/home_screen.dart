@@ -12,9 +12,9 @@ import '../widgets/card_caption.dart';
 import '../widgets/min_tap_target.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/trainer_avatar.dart';
 import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
-import 'add_card_screen.dart';
 import 'card_form_screen.dart';
 import 'deck_form_screen.dart';
 import 'stats_screen.dart';
@@ -48,8 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<BinderData> _binders = BinderData.library;
   final List<PokemonCardData> _cards = PokemonCardData.library;
 
-  /// The binder to offer under "Continue", or null when there are no binders
-  /// yet (every new account starts that way).
   BinderData? get _continueBinder {
     if (_binders.isEmpty) return null;
     final pinned = _binders.where((b) => b.isPinned).toList()
@@ -131,14 +129,10 @@ class _HomeScreenState extends State<HomeScreen> {
     BinderRepository.upsert(created);
   }
 
-  /// Quick action: go straight to the Create a Deck form. Once the deck is
-  /// saved it's added to the shared deck list and the app jumps to it in the
-  /// Decks tab (the same place creating a deck from that tab lands).
   Future<void> _openNewDeck() async {
-    final result = await Navigator.of(context).push<DeckFormResult>(
+    final created = await Navigator.of(context).push<DeckData>(
       MaterialPageRoute(builder: (_) => const DeckFormScreen()),
     );
-    final created = result?.deck;
     if (created == null) return;
     DeckData.library.add(created);
     DeckRepository.upsert(created);
@@ -172,7 +166,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      _TrainerAvatar(onTap: _openTrainerCard),
+                      _TrainerAvatarButton(
+                        imageUrl: widget.profile.avatarUrl,
+                        onTap: _openTrainerCard,
+                      ),
                       const SizedBox(width: PokeBinderSpacing.sp3),
                       Expanded(
                         child: Column(
@@ -311,8 +308,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ],
-                      // Keep three equal columns so one or two cards don't
-                      // stretch across the whole row.
                       for (var i = recentCards.length; i < 3; i++) ...[
                         if (i != 0) const SizedBox(width: PokeBinderSpacing.sp2),
                         const Expanded(child: SizedBox.shrink()),
@@ -346,10 +341,11 @@ String _formatCompactCurrency(double value) {
   return '\u20b1${value.toStringAsFixed(0)}';
 }
 
-class _TrainerAvatar extends StatelessWidget {
+class _TrainerAvatarButton extends StatelessWidget {
+  final String? imageUrl;
   final VoidCallback onTap;
 
-  const _TrainerAvatar({required this.onTap});
+  const _TrainerAvatarButton({required this.imageUrl, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -359,28 +355,18 @@ class _TrainerAvatar extends StatelessWidget {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: Container(
-          width: 50,
-          height: 50,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: PokeBinderColors.redGradient,
-            border: Border.all(color: PokeBinderColors.gold, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: PokeBinderColors.redDeep.withValues(alpha: 0.18),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
-                spreadRadius: -2,
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.catching_pokemon,
-            size: 24,
-            color: PokeBinderColors.white,
-          ),
+        child: TrainerAvatar(
+          imageUrl: imageUrl,
+          size: 50,
+          iconSize: 24,
+          shadow: [
+            BoxShadow(
+              color: PokeBinderColors.redDeep.withValues(alpha: 0.18),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+              spreadRadius: -2,
+            ),
+          ],
         ),
       ),
     );

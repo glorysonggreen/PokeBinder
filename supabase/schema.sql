@@ -281,3 +281,68 @@ alter table public.card_catalog
 -- cards added before this existed or typed in by hand.
 alter table public.cards
   add column if not exists finish text;
+
+-- ---------------------------------------------------------------------------
+-- Wishlist cards picked from the catalog
+--
+-- A wishlist entry now remembers which catalog card (and printing) it was
+-- picked from, like a card in the collection does. Null for older entries.
+-- ---------------------------------------------------------------------------
+alter table public.wishlist_entries
+  add column if not exists catalog_id text;
+alter table public.wishlist_entries
+  add column if not exists finish text;
+
+-- ---------------------------------------------------------------------------
+-- Trainer card profile picture
+--
+-- The picture itself lives in the public `avatars` storage bucket, one file
+-- per user at `<user id>/avatar`. trainer_profiles.avatar_url holds its URL.
+-- Anyone can view a picture (the bucket is public); only its owner can add,
+-- replace or delete it.
+-- ---------------------------------------------------------------------------
+alter table public.trainer_profiles
+  add column if not exists avatar_url text;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 2097152, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+  set public = excluded.public,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Owner can read own avatar" on storage.objects;
+create policy "Owner can read own avatar" on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Owner can upload own avatar" on storage.objects;
+create policy "Owner can upload own avatar" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Owner can replace own avatar" on storage.objects;
+create policy "Owner can replace own avatar" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  )
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+drop policy if exists "Owner can delete own avatar" on storage.objects;
+create policy "Owner can delete own avatar" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );

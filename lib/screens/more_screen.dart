@@ -9,8 +9,6 @@ import 'wishlist_screen.dart';
 class MoreScreen extends StatelessWidget {
   final TrainerProfileData profile;
   final ValueChanged<TrainerProfileData>? onProfileChanged;
-  final VoidCallback? onOpenStats;
-  final VoidCallback? onOpenWishlist;
   final ValueChanged<BinderData>? onOpenBinder;
   final VoidCallback? onSignOut;
 
@@ -18,8 +16,6 @@ class MoreScreen extends StatelessWidget {
     super.key,
     required this.profile,
     this.onProfileChanged,
-    this.onOpenStats,
-    this.onOpenWishlist,
     this.onOpenBinder,
     this.onSignOut,
   });
@@ -70,7 +66,7 @@ class MoreScreen extends StatelessWidget {
         icon: Icons.badge_rounded,
         gradient: PokeBinderColors.redGradient,
         title: 'Trainer Card',
-        subtitle: 'Profile, badges, favorite deck',
+        subtitle: 'Profile, favorite card, binder, deck',
         onTap: () => _openTrainerCard(context),
       ),
       _MoreRowData(
@@ -78,30 +74,18 @@ class MoreScreen extends StatelessWidget {
         gradient: PokeBinderColors.goldGradient,
         title: 'Collection Statistics',
         subtitle: 'Value, rarity, set breakdown',
-        onTap: () {
-          if (onOpenStats != null) {
-            onOpenStats!();
-            return;
-          }
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const StatsScreen()),
-          );
-        },
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const StatsScreen()),
+        ),
       ),
       _MoreRowData(
         icon: Icons.swap_horiz_rounded,
         gradient: PokeBinderColors.tealGradient,
         title: 'Wishlist & Trade List',
         subtitle: 'Cards you want or will trade',
-        onTap: () {
-          if (onOpenWishlist != null) {
-            onOpenWishlist!();
-            return;
-          }
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const WishlistScreen()),
-          );
-        },
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const WishlistScreen()),
+        ),
       ),
       if (onSignOut != null)
         _MoreRowData(

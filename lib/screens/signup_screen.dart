@@ -65,10 +65,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         trainerName: name,
       );
       if (!AuthService.isSignedIn) {
-        // Email confirmation is on for this project (see
-        // SUPABASE_SETUP.md) — there's no session yet to create the
-        // trainer profile with, so send them back to log in once they've
-        // confirmed.
         if (!mounted) return;
         setState(() {
           _submitting = false;

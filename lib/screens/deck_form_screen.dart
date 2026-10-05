@@ -6,44 +6,22 @@ import '../widgets/pokebinder_form_fields.dart';
 
 const _kSizePresets = [15, 20, 30, 40, 60];
 
-class DeckFormResult {
-  final DeckData? deck;
-  final bool deleted;
-
-  const DeckFormResult.saved(DeckData deck)
-      : deck = deck,
-        deleted = false;
-
-  const DeckFormResult.deleted()
-      : deck = null,
-        deleted = true;
-}
-
 class DeckFormScreen extends StatefulWidget {
-  final DeckData? existingDeck;
-
-  const DeckFormScreen({super.key, this.existingDeck});
+  const DeckFormScreen({super.key});
 
   @override
   State<DeckFormScreen> createState() => _DeckFormScreenState();
 }
 
 class _DeckFormScreenState extends State<DeckFormScreen> {
-  late final _nameController =
-      TextEditingController(text: widget.existingDeck?.name ?? '');
-  late final _descriptionController =
-      TextEditingController(text: widget.existingDeck?.description ?? '');
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
-  late DeckFormat _format = widget.existingDeck?.format ?? DeckFormat.standard;
-  late int _targetSize = widget.existingDeck?.targetSize ?? 60;
+  DeckFormat _format = DeckFormat.standard;
+  int _targetSize = 60;
 
   String? _nameError;
 
-  bool get _isEditing => widget.existingDeck != null;
-
-  /// The preset sizes, plus the deck's current size if it's a custom value
-  /// (e.g. set before this field became a dropdown), so editing an existing
-  /// deck never silently changes its target size.
   List<int> get _sizeOptions {
     final sizes = {..._kSizePresets, _targetSize}.toList()..sort();
     return sizes;
@@ -63,54 +41,17 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
       return;
     }
 
-    final existing = widget.existingDeck;
-    final deck = DeckData(
-      id: existing?.id ?? 'deck-${DateTime.now().microsecondsSinceEpoch}',
-      name: name,
-      format: _format,
-      targetSize: _targetSize,
-      description: _descriptionController.text.trim(),
-      cards: existing?.cards ?? const [],
-      createdAt: existing?.createdAt ?? DateTime.now(),
-    );
-
-    Navigator.of(context).pop(DeckFormResult.saved(deck));
-  }
-
-  Future<void> _confirmDelete() async {
-    final deck = widget.existingDeck!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete deck?'),
-        content: Text(
-          'This removes "${deck.name}" and its decklist. '
-          "This can't be undone.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton.icon(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            icon: const Icon(
-              Icons.delete_outline,
-              size: 16,
-              color: PokeBinderColors.danger,
-            ),
-            label: const Text(
-              'Delete',
-              style: TextStyle(color: PokeBinderColors.danger),
-            ),
-          ),
-        ],
+    Navigator.of(context).pop(
+      DeckData(
+        id: 'deck-${DateTime.now().microsecondsSinceEpoch}',
+        name: name,
+        format: _format,
+        targetSize: _targetSize,
+        description: _descriptionController.text.trim(),
+        cards: const [],
+        createdAt: DateTime.now(),
       ),
     );
-
-    if (confirmed == true && mounted) {
-      Navigator.of(context).pop(const DeckFormResult.deleted());
-    }
   }
 
   @override
@@ -127,16 +68,11 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                 onTap: () => Navigator.of(context).maybePop(),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              Text(
-                _isEditing ? 'Edit Deck' : 'Create a Deck',
-                style: PokeBinderText.heading,
-              ),
+              Text('Create a Deck', style: PokeBinderText.heading),
               const SizedBox(height: PokeBinderSpacing.sp1),
               Text(
-                _isEditing
-                    ? "Update the deck's details — its decklist stays put."
-                    : 'Name it and set a target size — you can add cards '
-                        'to it right after.',
+                'Name it and set a target size — you can add cards to it '
+                'right after.',
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
@@ -213,37 +149,13 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: _isEditing ? 'Save Changes' : 'Create Deck',
-                      icon: _isEditing ? Icons.check : Icons.add,
+                      label: 'Create Deck',
+                      icon: Icons.add,
                       onTap: _submit,
                     ),
                   ),
                 ],
               ),
-
-              if (_isEditing) ...[
-                const SizedBox(height: PokeBinderSpacing.sp4),
-                Center(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: _confirmDelete,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: PokeBinderSpacing.sp3,
-                          vertical: PokeBinderSpacing.sp2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: PokeBinderColors.danger.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const PokeDangerLabel('Delete Deck'),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),

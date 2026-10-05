@@ -45,7 +45,6 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
 
   int get _totalSelected => _quantities.values.fold(0, (sum, q) => sum + q);
 
-  /// Empties the search box and every chip filter (the sort stays).
   void _clearFilters() {
     setState(() {
       _query = '';
@@ -358,10 +357,6 @@ class _DeckCardPickerRow extends StatelessWidget {
   }
 }
 
-/// Second line of extra card info shown under the "Own …" line: condition,
-/// binder location, and estimated value, matching the icon+label tags used
-/// on the Deck Details and Wishlist card rows so the same fields read the
-/// same way everywhere in the app.
 class _CardMetaRow extends StatelessWidget {
   final PokemonCardData card;
 

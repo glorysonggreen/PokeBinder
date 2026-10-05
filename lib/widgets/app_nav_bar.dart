@@ -126,7 +126,6 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // The filled icon pops in with a little bounce when selected.
               BouncySwitcher(
                 child: Icon(
                   active ? tab.activeIcon : tab.icon,
@@ -145,7 +144,6 @@ class _NavItem extends StatelessWidget {
                 child: Text(tab.label),
               ),
               const SizedBox(height: PokeBinderSpacing.sp0),
-              // The gold dot stretches into a small pill under the active tab.
               AnimatedContainer(
                 duration: PokeBinderMotion.pop,
                 curve: PokeBinderMotion.smooth,
@@ -177,8 +175,6 @@ class _AddNavButton extends StatefulWidget {
 class _AddNavButtonState extends State<_AddNavButton> {
   bool _pressed = false;
 
-  // Every tap adds one full turn, so the icon spins like a Poke Ball being
-  // thrown.
   double _turns = 0;
 
   @override
@@ -190,7 +186,6 @@ class _AddNavButtonState extends State<_AddNavButton> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Squishes on press, springs back on release.
             AnimatedScale(
               scale: _pressed ? 0.88 : 1,
               duration: PokeBinderMotion.adapt(

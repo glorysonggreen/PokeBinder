@@ -3,6 +3,7 @@ import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart' show trainerSubtypeIcon;
+import '../widgets/card_tags.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'deck_add_card_screen.dart';
@@ -35,13 +36,6 @@ class _EntryEditResult {
         quantity = quantity;
 }
 
-/// Full-screen view of a single deck: its stats and card list.
-/// Reached by tapping a deck on the overview (DecksScreen).
-///
-/// Card edits are pushed back to the caller live via [onDeckChanged] as
-/// they happen (rather than only on pop), so the overview list stays
-/// correct no matter how this screen is dismissed (app-bar back button,
-/// system back gesture, etc).
 class DeckDetailScreen extends StatefulWidget {
   final DeckData deck;
   final PokemonCardData? Function(String cardId) cardOf;
@@ -277,9 +271,6 @@ class _FormatTag extends StatelessWidget {
   }
 }
 
-/// Groups deck identity, at-a-glance stats, completion progress, and
-/// type mix into a single card so the "how's this deck doing?" info
-/// reads as one unit instead of loose rows floating on the page.
 class _DeckOverviewCard extends StatelessWidget {
   final DeckData deck;
   final int ready;
@@ -730,8 +721,8 @@ class _DeckCardEntryRow extends StatelessWidget {
                         spacing: PokeBinderSpacing.sp2,
                         runSpacing: PokeBinderSpacing.sp1,
                         children: [
-                          _RarityTag(rarity: card!.rarity),
-                          _ConditionTag(code: card!.condition),
+                          RarityTag(rarity: card!.rarity),
+                          ConditionTag(code: card!.condition),
                         ],
                       ),
                       if (card!.notes.isNotEmpty) ...[
@@ -759,54 +750,6 @@ class _DeckCardEntryRow extends StatelessWidget {
   }
 }
 
-/// Small icon + label pairing for a card's rarity, reusing the app's
-/// shared [rarityIconFor] lookup so it stays in sync with the dropdown
-/// icons used elsewhere (card form, wishlist, trade entry).
-class _RarityTag extends StatelessWidget {
-  final String rarity;
-
-  const _RarityTag({required this.rarity});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
-        const SizedBox(width: PokeBinderSpacing.sp1),
-        Text(rarity, style: PokeBinderText.listRowSubtitle),
-      ],
-    );
-  }
-}
-
-/// Small icon + label pairing for a card's condition, reusing the app's
-/// shared [conditionIconFor] lookup and expanding the stored code (e.g.
-/// 'NM') to its full label via [kConditionOptions] — same source of
-/// truth as the condition dropdown in the card/wishlist/trade forms.
-class _ConditionTag extends StatelessWidget {
-  final String code;
-
-  const _ConditionTag({required this.code});
-
-  @override
-  Widget build(BuildContext context) {
-    final label = kConditionOptions
-        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
-        .$1;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
-        const SizedBox(width: PokeBinderSpacing.sp1),
-        Text(label, style: PokeBinderText.listRowSubtitle),
-      ],
-    );
-  }
-}
-
-/// Pill-shaped quantity badge, styled the same way as [_FormatTag] above
-/// (tinted background + bold colored label) instead of bare red text.
 class _QuantityBadge extends StatelessWidget {
   final int quantity;
 

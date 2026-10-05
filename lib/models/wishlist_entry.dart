@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'enum_parsing.dart';
-import 'pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 
 enum WishlistEntryKind { wishlist, trade }
@@ -58,16 +57,11 @@ class WishlistEntry {
   final String askingFor;
   final DateTime dateAdded;
 
-  /// When this entry was added by picking a card straight out of the
-  /// collection (e.g. via the Trade List's "Add Cards" picker), this holds
-  /// that [PokemonCardData.id] so the picker can find and pre-fill it again.
-  /// Entries typed in by hand leave this null.
   final String? sourceCardId;
 
-  /// Asset path for this entry's card image, same as
-  /// [PokemonCardData.imageAssetPath]. Falls back to the catalog artwork
-  /// (matched by name) when null.
   final String? imageAssetPath;
+  final String? catalogId;
+  final String? finish;
 
   WishlistEntry({
     required this.id,
@@ -84,6 +78,8 @@ class WishlistEntry {
     this.askingFor = '',
     this.sourceCardId,
     this.imageAssetPath,
+    this.catalogId,
+    this.finish,
     DateTime? dateAdded,
   }) : dateAdded = dateAdded ?? DateTime.now();
 
@@ -101,6 +97,8 @@ class WishlistEntry {
     String? askingFor,
     String? sourceCardId,
     String? imageAssetPath,
+    String? catalogId,
+    String? finish,
   }) {
     return WishlistEntry(
       id: id,
@@ -117,11 +115,12 @@ class WishlistEntry {
       askingFor: askingFor ?? this.askingFor,
       sourceCardId: sourceCardId ?? this.sourceCardId,
       imageAssetPath: imageAssetPath ?? this.imageAssetPath,
+      catalogId: catalogId ?? this.catalogId,
+      finish: finish ?? this.finish,
       dateAdded: dateAdded,
     );
   }
 
-  /// Builds an entry from a row returned by the `wishlist_entries` table.
   factory WishlistEntry.fromRow(Map<String, dynamic> row) {
     return WishlistEntry(
       id: row['id'] as String,
@@ -140,13 +139,12 @@ class WishlistEntry {
       askingFor: row['asking_for'] as String? ?? '',
       sourceCardId: row['source_card_id'] as String?,
       imageAssetPath: row['image_asset_path'] as String?,
+      catalogId: row['catalog_id'] as String?,
+      finish: row['finish'] as String?,
       dateAdded: DateTime.parse(row['date_added'] as String).toLocal(),
     );
   }
 
-  /// The row to upsert into the `wishlist_entries` table. `user_id` is
-  /// left out — the column defaults to `auth.uid()` on insert and never
-  /// changes on update.
   Map<String, dynamic> toRow() {
     return {
       'id': id,
@@ -163,12 +161,11 @@ class WishlistEntry {
       'asking_for': askingFor,
       'source_card_id': sourceCardId,
       'image_asset_path': imageAssetPath,
+      'catalog_id': catalogId,
+      'finish': finish,
       'date_added': dateAdded.toUtc().toIso8601String(),
     };
   }
 
-  /// The signed-in user's wishlist and trade-list entries, loaded from the
-  /// `wishlist_entries` table by [WishlistRepository.loadAll]. Empty until
-  /// then.
   static final List<WishlistEntry> library = [];
 }

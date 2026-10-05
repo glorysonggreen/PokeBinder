@@ -89,11 +89,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     if (result == null || !mounted) return;
 
     if (result.createNew) {
-      final formResult = await Navigator.of(context).push<DeckFormResult>(
+      final newDeck = await Navigator.of(context).push<DeckData>(
         MaterialPageRoute(builder: (_) => const DeckFormScreen()),
       );
-      if (formResult == null || formResult.deck == null || !mounted) return;
-      final newDeck = formResult.deck!;
+      if (newDeck == null || !mounted) return;
       DeckData.library.add(newDeck);
       _applyCardToDeck(newDeck, 1);
       return;
@@ -448,10 +447,6 @@ class _StatBox extends StatelessWidget {
   }
 }
 
-/// Result of the [_AddToDeckSheet]: either an existing deck plus the
-/// quantity of this card it should now hold, or a request to create a
-/// brand-new deck first (handled by the caller, which then adds the card
-/// once the new deck exists).
 class _AddToDeckSheetResult {
   final DeckData? deck;
   final int quantity;
@@ -466,10 +461,6 @@ class _AddToDeckSheetResult {
         createNew = true;
 }
 
-/// Bottom sheet for the "Add to Deck" quick action on the Card Details
-/// screen: pick which deck should hold this card, and how many copies
-/// (capped at how many the trainer actually owns), or jump into creating
-/// a brand-new deck if none of the existing ones fit.
 class _AddToDeckSheet extends StatefulWidget {
   final PokemonCardData card;
 

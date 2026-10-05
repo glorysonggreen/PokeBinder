@@ -3,9 +3,6 @@ import 'pokemon_card_data.dart';
 
 const kUnassignedBinderId = '__unassigned__';
 
-/// The `binderName` a card carries while it isn't placed in any binder.
-/// This — not a card's supertype or anything else — is what makes a card
-/// count as "unassigned".
 const kUnassignedBinderName = 'Unassigned';
 const kUncategorized = '';
 
@@ -15,11 +12,6 @@ class BinderData {
   final String name;
   final String description;
 
-  /// How many pages this binder has. This is the only thing about a
-  /// binder's contents that's actually stored here — which cards sit on
-  /// which page is derived from [PokemonCardData.library] (see [pages]),
-  /// so a binder can have empty trailing pages before any card is placed
-  /// on them.
   final int pageCount;
   final int slotsPerPage;
   final String category;
@@ -40,11 +32,6 @@ class BinderData {
   DateTime get createdAtOrEpoch =>
       createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
 
-  /// This binder's cards, grouped by page, read live from
-  /// [PokemonCardData.library] — the single source of truth for where
-  /// every card lives. A binder never keeps its own copy of a card: a
-  /// card belongs to this binder exactly when its `binderName` matches
-  /// [name], and sits on the page numbered by its `page` field.
   List<List<PokemonCardData>> get pages {
     final result = List.generate(pageCount, (_) => <PokemonCardData>[]);
     for (final card in PokemonCardData.library) {
@@ -60,12 +47,10 @@ class BinderData {
   int get cardCount =>
       PokemonCardData.library.where((c) => c.binderName == name).length;
 
-  /// What the cards in this binder are worth together, one copy per card.
   double get totalValue => PokemonCardData.library
       .where((c) => c.binderName == name)
       .fold(0.0, (sum, c) => sum + c.estimatedValue);
 
-  /// Builds a binder from a row returned by the `binders` table.
   factory BinderData.fromRow(Map<String, dynamic> row) {
     return BinderData(
       id: row['id'] as String,
@@ -81,15 +66,6 @@ class BinderData {
     );
   }
 
-  /// The row to upsert into the `binders` table. `user_id` is left out —
-  /// the column defaults to `auth.uid()` on insert and never changes on
-  /// update.
-  ///
-  /// Timestamps are sent as UTC. A local [DateTime]'s ISO string has no
-  /// offset, which Postgres reads as UTC, so every save used to shift the
-  /// stored time by the device's UTC offset. `created_at` is omitted when
-  /// unknown so the column's `now()` default applies, instead of storing
-  /// 1970-01-01.
   Map<String, dynamic> toRow() {
     return {
       'id': id,
@@ -124,11 +100,5 @@ class BinderData {
     );
   }
 
-  /// The signed-in user's binders — id, name, pin state, page count and
-  /// the like — loaded from the `binders` table by
-  /// [BinderRepository.loadAll]. Empty until then. Every screen that lists
-  /// or edits binders reads and writes this same list, the same way
-  /// screens share [PokemonCardData.library] and [DeckData.library].
-  /// What's *inside* a binder isn't stored here at all; see [pages].
   static final List<BinderData> library = [];
 }

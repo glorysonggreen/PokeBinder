@@ -68,11 +68,6 @@ class BindersScreen extends StatefulWidget {
 }
 
 class _BindersScreenState extends State<BindersScreen> {
-  // The same shared lists every other screen reads and writes —
-  // BinderData.library for binder metadata, PokemonCardData.library for
-  // the cards themselves. Nothing in this screen keeps its own copy of
-  // either, so edits made here are visible everywhere else immediately,
-  // and vice versa.
   final List<BinderData> _binders = BinderData.library;
 
   List<PokemonCardData> get _unassignedCards => PokemonCardData.library
@@ -93,15 +88,11 @@ class _BindersScreenState extends State<BindersScreen> {
   String? _conditionFilter;
   TimeSortDirection _timeDirection = TimeSortDirection.newest;
 
-  /// Every card in the collection — this *is* PokemonCardData.library, since
-  /// every card is either in some binder or in the Unassigned bucket.
   List<PokemonCardData> get _allCards => PokemonCardData.library;
 
   @override
   void initState() {
     super.initState();
-    // Deep-linked here from Home/More with a specific binder in mind —
-    // skip the picker and jump straight to that binder's detail view.
     final initialId = widget.initialBinderId;
     if (initialId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -154,11 +145,6 @@ class _BindersScreenState extends State<BindersScreen> {
     await _openBinderDetail(result!.binder!);
   }
 
-  /// Opens the full-screen detail view for [binder]. The detail screen
-  /// shares the same live [_binders] list, and reads this binder's cards
-  /// (and the Unassigned bucket) straight off `PokemonCardData.library`,
-  /// so any edits it makes — directly, or via the callbacks below — are
-  /// visible here immediately, with nothing to keep in sync by hand.
   Future<void> _openBinderDetail(BinderData binder) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -174,7 +160,7 @@ class _BindersScreenState extends State<BindersScreen> {
         ),
       ),
     );
-    setState(() {}); // pinned/name/count changes may affect the overview list
+    setState(() {});
   }
 
   Future<void> _openUnassignedDetail() async {
@@ -195,10 +181,6 @@ class _BindersScreenState extends State<BindersScreen> {
     setState(() {});
   }
 
-  /// Applies an edit made in BinderFormScreen. A rename needs to cascade
-  /// to every card in this binder — `card.binderName` is how a card knows
-  /// which binder it's in, so if it isn't updated too the binder would
-  /// appear to lose all its cards.
   void _applyBinderChange(BinderData updated) {
     setState(() {
       final index = _binders.indexWhere((b) => b.id == updated.id);
@@ -220,8 +202,6 @@ class _BindersScreenState extends State<BindersScreen> {
     BinderRepository.delete(deleted.id);
   }
 
-  /// Repoints every card whose `binderName` is [oldName] to [newName] in
-  /// PokemonCardData.library — the only place binder membership lives.
   void _renameCardsBinder(String oldName, String newName,
       {bool resetPage = false}) {
     final library = PokemonCardData.library;
@@ -234,15 +214,11 @@ class _BindersScreenState extends State<BindersScreen> {
       );
       changed = true;
     }
-    // One request for the whole binder, not one upsert per card.
     if (changed) {
       CardRepository.renameBinder(oldName, newName, resetPage: resetPage);
     }
   }
 
-  /// Takes [card] out of its binder without deleting it: it lands in the
-  /// Unassigned bucket (same as when a whole binder is deleted), so it stays
-  /// in the collection and can be added to a binder again later.
   void _removeCardFromBinder(PokemonCardData card) {
     var found = true;
     setState(() {
@@ -260,9 +236,6 @@ class _BindersScreenState extends State<BindersScreen> {
     );
   }
 
-  /// "Add card" from a binder page opens the collection picker (the same
-  /// layout as the Deck Planner's Add Cards screen). The Unassigned bucket
-  /// isn't a binder, so there is nothing to add to.
   Future<void> _openAddCardFor({
     required String? binderId,
     required int pageIndex,
@@ -288,9 +261,6 @@ class _BindersScreenState extends State<BindersScreen> {
     setState(() => _moveCardsToBinder(picks, binder.id, pageIndex));
   }
 
-  /// Every card in the collection that isn't already in [binderId] — the
-  /// candidates offered by the Add Cards picker. Always reads
-  /// PokemonCardData.library live so edits made mid-flow are reflected.
   List<PokemonCardData> _cardsOutsideBinder(String binderId) {
     final matches = _binders.where((b) => b.id == binderId);
     if (matches.isEmpty) return PokemonCardData.library;
@@ -300,9 +270,6 @@ class _BindersScreenState extends State<BindersScreen> {
         .toList();
   }
 
-  /// Grows [binderId]'s page count so it covers [pageIndex], if it doesn't
-  /// already — mirrors what typing a page number ahead of a binder's
-  /// current size used to do by padding out its `pages` list.
   void _growBinderIfNeeded(String binderId, int pageIndex) {
     if (binderId == kUnassignedBinderId) return;
     final index = _binders.indexWhere((b) => b.id == binderId);
@@ -314,13 +281,6 @@ class _BindersScreenState extends State<BindersScreen> {
     }
   }
 
-  /// Moves the picked cards into [binderId] on [pageIndex] by updating each
-  /// card's `binderName`/`page` fields directly in PokemonCardData.library —
-  /// the only place a card's binder placement lives.
-  ///
-  /// Picking every owned copy moves the card as-is. Picking fewer splits it:
-  /// the remaining copies stay put and the picked copies become a new entry
-  /// in the binder, so no copies are ever lost or duplicated.
   void _moveCardsToBinder(
     List<BinderCardPick> picks,
     String binderId,
@@ -362,9 +322,6 @@ class _BindersScreenState extends State<BindersScreen> {
     }
   }
 
-  /// Applies an edit made from CardDetailsScreen (reached by tapping a card
-  /// here). [result.card] already carries the binder/page the form chose,
-  /// so this just needs to write it back into the library.
   void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
     setState(() {
       final index =
@@ -416,7 +373,6 @@ class _BindersScreenState extends State<BindersScreen> {
               const SizedBox(height: PokeBinderSpacing.sp3),
               Expanded(
                 child: FadeSlideIn.fade(
-                  // A new key each time the tab changes replays the fade-in.
                   key: ValueKey(_tabIndex),
                   child: _tabIndex == 0
                       ? _BindersTab(
@@ -748,7 +704,6 @@ class _AllCardsTab extends StatelessWidget {
                     mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
                   ),
                   children: [
-                    // Cards are dealt onto the page one after another.
                     for (final (i, card) in filtered.indexed)
                       FadeSlideIn(
                         index: i,
@@ -880,7 +835,6 @@ class _BinderListPanel extends StatelessWidget {
                 spacing: gap,
                 runSpacing: gap,
                 children: [
-                  // Tiles are "dealt" one after another.
                   for (final (i, binder) in section.binders.indexed)
                     FadeSlideIn(
                       index: i,
@@ -918,7 +872,6 @@ class _BinderListPanel extends StatelessWidget {
                       style: PokeBinderText.backLink,
                     ),
                     const SizedBox(width: PokeBinderSpacing.sp1),
-                    // One chevron that flips, instead of swapping two icons.
                     AnimatedRotation(
                       turns: viewingAllBinders ? 0.5 : 0,
                       duration: PokeBinderMotion.fast,
@@ -1016,9 +969,6 @@ class _BinderGridTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // The pin button sits in a 44pt tap area. Fixing the row to that
-            // height keeps tiles without a pin (Unassigned) the same size as
-            // the ones with it.
             SizedBox(
               height: kMinTapTarget,
               child: Row(
@@ -1045,7 +995,6 @@ class _BinderGridTile extends StatelessWidget {
                     MinTapTarget(
                       onTap: onTogglePin,
                       semanticLabel: isPinned ? 'Unpin binder' : 'Pin binder',
-                      // The pin pops between outlined and filled with a little bounce.
                       child: BouncySwitcher(
                         child: Icon(
                           isPinned
@@ -1144,9 +1093,6 @@ class _BinderSortSelector extends StatelessWidget {
               child: _BinderSortMenuRow(option: option, selected: option == selected),
             ),
         ],
-        // ConstrainedBox+Center grows the tappable area PopupMenuButton
-        // hit-tests against to kMinTapTarget (44) without growing the pill
-        // itself, which stays sized by PokeBinderSpacing.chip as before.
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: kMinTapTarget),
           child: Center(

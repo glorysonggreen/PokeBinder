@@ -5,8 +5,10 @@ import '../models/pokemon_card_data.dart';
 import '../models/trainer_profile_data.dart';
 import '../services/card_repository.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/card_tags.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
+import '../widgets/trainer_avatar.dart';
 import 'card_details_screen.dart';
 import 'trainer_card_edit_screen.dart';
 
@@ -153,6 +155,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                 trainerName: trainerName,
                 trainerTitle: trainerTitle,
                 bio: bio,
+                avatarUrl: _profile.avatarUrl,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
 
@@ -218,22 +221,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                       icon: Icons.push_pin_outlined,
                       message: 'Set a favorite deck to feature it here.',
                     ),
-              const SizedBox(height: PokeBinderSpacing.sp5),
-
-              Text(
-                'ACHIEVEMENT BADGES',
-                style: PokeBinderText.sectionLabel,
-              ),
-              const SizedBox(height: PokeBinderSpacing.sp2),
-              const Row(
-                children: [
-                  Expanded(child: _LockedBadgeSlot()),
-                  SizedBox(width: PokeBinderSpacing.sp2),
-                  Expanded(child: _LockedBadgeSlot()),
-                  SizedBox(width: PokeBinderSpacing.sp2),
-                  Expanded(child: _LockedBadgeSlot()),
-                ],
-              ),
             ],
           ),
         ),
@@ -246,11 +233,13 @@ class _TrainerHeaderPanel extends StatelessWidget {
   final String trainerName;
   final String trainerTitle;
   final String? bio;
+  final String? avatarUrl;
 
   const _TrainerHeaderPanel({
     required this.trainerName,
     required this.trainerTitle,
     required this.bio,
+    required this.avatarUrl,
   });
 
   @override
@@ -304,28 +293,19 @@ class _TrainerHeaderPanel extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Container(
-                      width: 82,
-                      height: 82,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: PokeBinderColors.redGradient,
-                        border: Border.all(color: PokeBinderColors.gold, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: PokeBinderColors.redDeep.withValues(alpha: 0.22),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                            spreadRadius: -2,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.catching_pokemon,
-                        size: 36,
-                        color: PokeBinderColors.white,
-                      ),
+                    TrainerAvatar(
+                      imageUrl: avatarUrl,
+                      size: 82,
+                      iconSize: 36,
+                      borderWidth: 3,
+                      shadow: [
+                        BoxShadow(
+                          color: PokeBinderColors.redDeep.withValues(alpha: 0.22),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                          spreadRadius: -2,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -377,10 +357,6 @@ class _TrainerHeaderPanel extends StatelessWidget {
   }
 }
 
-/// Displays the trainer's favorite card the same way a card entry reads on
-/// the Deck Details list: thumbnail, name, set/number, an "Own N" line,
-/// rarity + condition tags, and an italic notes line. Tapping the panel
-/// opens the card's details, signposted by a trailing chevron.
 class _FavoriteCardPanel extends StatelessWidget {
   final PokemonCardData card;
   final VoidCallback onTap;
@@ -455,8 +431,8 @@ class _FavoriteCardPanel extends StatelessWidget {
                         spacing: PokeBinderSpacing.sp2,
                         runSpacing: PokeBinderSpacing.sp1,
                         children: [
-                          _RarityTag(rarity: card.rarity),
-                          _ConditionTag(code: card.condition),
+                          RarityTag(rarity: card.rarity),
+                          ConditionTag(code: card.condition),
                         ],
                       ),
                       if (card.notes.isNotEmpty) ...[
@@ -492,54 +468,6 @@ class _FavoriteCardPanel extends StatelessWidget {
     );
   }
 }
-
-/// Small icon + label pairing for a card's rarity, reusing the app's
-/// shared [rarityIconFor] lookup so it stays in sync with the dropdown
-/// icons used elsewhere (card form, wishlist, trade entry).
-class _RarityTag extends StatelessWidget {
-  final String rarity;
-
-  const _RarityTag({required this.rarity});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
-        const SizedBox(width: PokeBinderSpacing.sp1),
-        Text(rarity, style: PokeBinderText.listRowSubtitle),
-      ],
-    );
-  }
-}
-
-/// Small icon + label pairing for a card's condition, reusing the app's
-/// shared [conditionIconFor] lookup and expanding the stored code (e.g.
-/// 'NM') to its full label via [kConditionOptions] — same source of
-/// truth as the condition dropdown in the card/wishlist/trade forms.
-class _ConditionTag extends StatelessWidget {
-  final String code;
-
-  const _ConditionTag({required this.code});
-
-  @override
-  Widget build(BuildContext context) {
-    final label = kConditionOptions
-        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
-        .$1;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
-        const SizedBox(width: PokeBinderSpacing.sp1),
-        Text(label, style: PokeBinderText.listRowSubtitle),
-      ],
-    );
-  }
-}
-
-
 
 class _TrainerStatBox extends StatelessWidget {
   final String value;
@@ -766,48 +694,6 @@ class _DashedInfoPanel extends StatelessWidget {
               child: Text(message, style: PokeBinderText.listRowSubtitle),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LockedBadgeSlot extends StatelessWidget {
-  const _LockedBadgeSlot();
-
-  @override
-  Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: CustomPaint(
-        foregroundPainter: _DashedBorderPainter(radius: 12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: PokeBinderColors.cream2.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.lock_outline_rounded,
-                  size: 16,
-                  color: PokeBinderColors.inkSoft.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: PokeBinderSpacing.sp1),
-                Text(
-                  'LOCKED',
-                  style: PokeBinderText.chakraPetch(TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.7,
-                    color: PokeBinderColors.inkSoft.withValues(alpha: 0.45),
-                  )),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

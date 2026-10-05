@@ -1,8 +1,3 @@
-/// Supabase project credentials — see SUPABASE_SETUP.md to generate these.
-///
-/// The anon key is safe to ship in client code: Supabase enforces access
-/// per-user through the Row Level Security policies in
-/// `supabase/schema.sql`, not by keeping this key secret.
 class SupabaseConfig {
   SupabaseConfig._();
 

@@ -4,12 +4,9 @@ import '../theme/pokebinder_theme.dart';
 import 'interactive_3d_card.dart';
 import 'pokemon_card_widget.dart';
 
-/// Share of the screen the full-size card may take up.
 const double _kViewerWidthFraction = 0.78;
 const double _kViewerHeightFraction = 0.7;
 
-/// Opens [imagePath] full size as the same draggable 3D card used on the card
-/// details screen. Tap outside the card, or the close button, to dismiss.
 Future<void> showCardViewer(
   BuildContext context, {
   required String imagePath,
@@ -43,8 +40,6 @@ class _CardViewer extends StatelessWidget {
                   _kViewerHeightFraction *
                   kPokemonCardImageAspectRatio,
             );
-            // The close button sits just above the card's top-right corner,
-            // in line with its edge, rather than out at the screen's corner.
             return SizedBox(
               width: width,
               child: Column(
@@ -59,8 +54,6 @@ class _CardViewer extends StatelessWidget {
                     icon: const Icon(Icons.close_rounded,
                         color: PokeBinderColors.white),
                   ),
-                  // Breathing room so the button doesn't crowd the card's
-                  // top edge.
                   const SizedBox(height: PokeBinderSpacing.sp4),
                   AspectRatio(
                     aspectRatio: kPokemonCardImageAspectRatio,

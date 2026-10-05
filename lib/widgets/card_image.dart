@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/pokebinder_theme.dart';
 
-/// True when [path] is a web URL rather than a bundled asset.
 bool isNetworkImage(String path) =>
     path.startsWith('http://') || path.startsWith('https://');
 
-/// Shows a card's artwork from either a bundled asset (the starter cards) or
-/// an `https://` URL (cards picked from the catalog).
-///
-/// Network art can be slow or fail, so this never leaves a blank hole or a
-/// red error box: while loading it shows a soft placeholder, and if the image
-/// can't be fetched it falls back to a neutral "artwork unavailable" tile
-/// that keeps the card's 5:7 shape.
 class CardImage extends StatelessWidget {
   final String path;
   final BoxFit fit;

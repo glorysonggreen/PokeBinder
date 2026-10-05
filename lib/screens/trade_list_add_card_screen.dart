@@ -10,10 +10,6 @@ import '../widgets/pokemon_card_widget.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 
-/// Lets the user pick cards straight out of their collection to list for
-/// trade, the same way [DeckAddCardScreen] lets them pick cards for a deck:
-/// search/filter/sort the collection, then step quantities up or down per
-/// card and confirm once at the bottom.
 class TradeListAddCardScreen extends StatefulWidget {
   final List<WishlistEntry> initialEntries;
 
@@ -49,7 +45,6 @@ class _TradeListAddCardScreenState extends State<TradeListAddCardScreen> {
 
   int get _totalSelected => _quantities.values.fold(0, (sum, q) => sum + q);
 
-  /// Empties the search box and every chip filter (the sort stays).
   void _clearFilters() {
     setState(() {
       _query = '';
@@ -122,8 +117,6 @@ class _TradeListAddCardScreenState extends State<TradeListAddCardScreen> {
     });
   }
 
-  /// Finds the existing trade entry already linked to this card, if any, so
-  /// its priority/notes/asking-for/value carry over instead of resetting.
   WishlistEntry? _existingEntryFor(String cardId) {
     for (final entry in widget.initialEntries) {
       if (entry.sourceCardId == cardId) return entry;
@@ -399,10 +392,6 @@ class _TradeCardPickerRow extends StatelessWidget {
   }
 }
 
-/// Second line of extra card info shown under the "Own …" line: condition,
-/// binder location, and estimated value, matching the icon+label tags used
-/// on the Deck Details and Wishlist card rows so the same fields read the
-/// same way everywhere in the app.
 class _CardMetaRow extends StatelessWidget {
   final PokemonCardData card;
 

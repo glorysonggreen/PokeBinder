@@ -1,17 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/binder_data.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/trainer_profile_data.dart';
+import '../services/trainer_profile_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import '../widgets/pokemon_card_widget.dart';
+import '../widgets/trainer_avatar.dart';
+import 'avatar_crop_screen.dart';
 import 'trainer_favorite_card_screen.dart';
 
-/// Sentinel dropdown value meaning "no favorite chosen" — kept as a plain
-/// string so the binder/deck pickers can reuse [PokeDropdownField]'s
-/// non-nullable generic the same way every other dropdown in the app does.
 const _noneValue = '__none__';
 
 class TrainerCardEditScreen extends StatefulWidget {
@@ -34,6 +37,10 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
   late String? _favoriteBinderId = widget.profile.favoriteBinderId;
   late String? _favoriteDeckId = widget.profile.favoriteDeckId;
 
+  late String? _avatarUrl = widget.profile.avatarUrl;
+  Uint8List? _newAvatarBytes;
+  bool _saving = false;
+
   String? _nameError;
 
   PokemonCardData? get _selectedCard {
@@ -51,31 +58,84 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
   }
 
   Future<void> _pickFavoriteCard() async {
-    final result = await Navigator.of(context).push<String?>(
+    final result = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => TrainerFavoriteCardScreen(
           initialCardId: _favoriteCardId,
         ),
       ),
     );
-    if (!mounted) return;
-    // A null pop from the back button leaves the current choice alone; only
-    // an explicit "Done"/"Clear" result (still nullable) updates it.
-    setState(() => _favoriteCardId = result);
+    if (!mounted || result == null) return;
+    setState(() => _favoriteCardId = result.isEmpty ? null : result);
   }
 
-  void _submit() {
+  Future<void> _pickAvatar() async {
+    Uint8List? bytes;
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 90,
+      );
+      bytes = await picked?.readAsBytes();
+    } catch (_) {
+      _showMessage("Couldn't open your photos.");
+      return;
+    }
+    if (bytes == null || !mounted) return;
+    final picture = bytes;
+
+    final cropped = await Navigator.of(context).push<Uint8List>(
+      MaterialPageRoute(builder: (_) => AvatarCropScreen(imageBytes: picture)),
+    );
+    if (cropped == null || !mounted) return;
+    setState(() => _newAvatarBytes = cropped);
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _removeAvatar() => setState(() {
+        _newAvatarBytes = null;
+        _avatarUrl = null;
+      });
+
+  Future<void> _submit() async {
+    if (_saving) return;
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       setState(() => _nameError = 'Give your trainer a name first.');
       return;
     }
 
+    setState(() => _saving = true);
+    var avatarUrl = _avatarUrl;
+    try {
+      final bytes = _newAvatarBytes;
+      if (bytes != null) {
+        avatarUrl = await TrainerProfileRepository.uploadAvatar(bytes);
+      } else if (avatarUrl == null && widget.profile.avatarUrl != null) {
+        await TrainerProfileRepository.deleteAvatar();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      _showMessage("Couldn't upload your photo. Please try again.");
+      return;
+    }
+    if (!mounted) return;
+
     final bio = _bioController.text.trim();
     final updated = widget.profile.copyWith(
       name: name,
       title: _title,
       bio: bio.isEmpty ? null : bio,
+      avatarUrl: avatarUrl,
       favoriteCardId: _favoriteCardId,
       favoriteBinderId: _favoriteBinderId,
       favoriteDeckId: _favoriteDeckId,
@@ -105,7 +165,15 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                 'Update how your trainer card introduces you.',
                 style: PokeBinderText.subtitle,
               ),
-              const SizedBox(height: PokeBinderSpacing.sp3),
+              const SizedBox(height: PokeBinderSpacing.sp4),
+
+              _AvatarPicker(
+                imageUrl: _avatarUrl,
+                imageBytes: _newAvatarBytes,
+                onPick: _pickAvatar,
+                onRemove: _removeAvatar,
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp4),
 
               LabeledFormField(
                 label: 'Trainer name',
@@ -209,8 +277,9 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                   const SizedBox(width: PokeBinderSpacing.sp2),
                   Expanded(
                     child: PillButton(
-                      label: 'Save Changes',
+                      label: _saving ? 'Saving…' : 'Save Changes',
                       icon: Icons.check,
+                      enabled: !_saving,
                       onTap: _submit,
                     ),
                   ),
@@ -288,6 +357,89 @@ class _FavoriteCardField extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AvatarPicker extends StatelessWidget {
+  final String? imageUrl;
+  final Uint8List? imageBytes;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+
+  const _AvatarPicker({
+    required this.imageUrl,
+    required this.imageBytes,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhoto = imageUrl != null || imageBytes != null;
+
+    return Center(
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onPick,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  TrainerAvatar(
+                    imageUrl: imageUrl,
+                    imageBytes: imageBytes,
+                    size: 96,
+                    iconSize: 40,
+                    borderWidth: 3,
+                  ),
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: PokeBinderColors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: PokeBinderColors.ink.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.photo_camera_rounded,
+                        size: 16,
+                        color: PokeBinderColors.redDeep,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: PokeBinderSpacing.sp2),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: onPick,
+                child: Text(hasPhoto ? 'Change photo' : 'Upload photo'),
+              ),
+              if (hasPhoto)
+                TextButton(
+                  onPressed: onRemove,
+                  child: const Text(
+                    'Remove',
+                    style: TextStyle(color: PokeBinderColors.danger),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

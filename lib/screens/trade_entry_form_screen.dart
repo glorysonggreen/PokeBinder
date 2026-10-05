@@ -6,9 +6,6 @@ import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'wishlist_form_result.dart';
 
-/// Edit an existing Trade List entry — cards ready to trade away. New trade
-/// entries are added by picking cards straight out of the collection via
-/// [TradeListAddCardScreen]; this screen only ever edits one already there.
 class TradeEntryFormScreen extends StatefulWidget {
   final WishlistEntry existingEntry;
 
@@ -112,36 +109,15 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
 
   Future<void> _confirmDelete() async {
     final entry = widget.existingEntry;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Remove entry?'),
-        content: Text(
-          'This removes "${entry.name}" from your trade list. '
+    final confirmed = await confirmDestructive(
+      context,
+      title: 'Remove entry?',
+      message: 'This removes "${entry.name}" from your trade list. '
           "This can't be undone.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton.icon(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            icon: const Icon(
-              Icons.delete_outline,
-              size: 16,
-              color: PokeBinderColors.danger,
-            ),
-            label: const Text(
-              'Remove',
-              style: TextStyle(color: PokeBinderColors.danger),
-            ),
-          ),
-        ],
-      ),
+      confirmLabel: 'Remove',
     );
 
-    if (confirmed == true && mounted) {
+    if (confirmed && mounted) {
       Navigator.of(context).pop(const WishlistFormResult.deleted());
     }
   }
@@ -360,26 +336,7 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
               ),
 
               const SizedBox(height: PokeBinderSpacing.sp4),
-              Center(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: _confirmDelete,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: PokeBinderSpacing.sp3,
-                        vertical: PokeBinderSpacing.sp2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: PokeBinderColors.danger.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const PokeDangerLabel('Remove entry'),
-                    ),
-                  ),
-                ),
-              ),
+              DangerActionButton(label: 'Remove entry', onTap: _confirmDelete),
             ],
           ),
         ),

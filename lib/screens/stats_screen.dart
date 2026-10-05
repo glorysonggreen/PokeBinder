@@ -5,6 +5,7 @@ import '../models/pokemon_card_data.dart';
 import '../services/card_repository.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/card_tags.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/pokemon_card_widget.dart';
@@ -343,7 +344,6 @@ class _CardsBySetPanel extends StatelessWidget {
           SizedBox(
             width: 92,
             height: 92,
-            // The ring sweeps around from empty as the total counts up.
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
               duration: PokeBinderMotion.adapt(context, PokeBinderMotion.count),
@@ -413,7 +413,6 @@ class _DonutPainter extends CustomPainter {
   final List<double> values;
   final List<Color> colors;
 
-  /// 0 = nothing drawn, 1 = full ring. Animated from the parent.
   final double progress;
 
   const _DonutPainter({
@@ -500,13 +499,6 @@ class _TopValuePanel extends StatelessWidget {
   }
 }
 
-/// Card row for a top-value card: thumbnail with frame, chakraPetch bold name,
-/// `set · #number` subtitle line, and a [Wrap] of small icon+label tags
-/// (rarity, condition). The rank badge overlays the thumbnail corner and
-/// the estimated value sits at the trailing edge. Tapping the row opens [CardDetailsScreen] for
-/// the card, and any saved notes are shown below the tags as an italic
-/// description line, matching the notes line on the Wishlist screen's
-/// card rows.
 class _TopValueRow extends StatelessWidget {
   final PokemonCardData card;
   final int rank;
@@ -588,8 +580,8 @@ class _TopValueRow extends StatelessWidget {
                       spacing: PokeBinderSpacing.sp2,
                       runSpacing: PokeBinderSpacing.sp1,
                       children: [
-                        _RarityTag(rarity: card.rarity),
-                        _ConditionTag(code: card.condition),
+                        RarityTag(rarity: card.rarity),
+                        ConditionTag(code: card.condition),
                       ],
                     ),
                     if (card.notes.isNotEmpty) ...[
@@ -615,49 +607,6 @@ class _TopValueRow extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Small icon + label pairing for a card's rarity, matching the tag used
-/// elsewhere in the app.
-class _RarityTag extends StatelessWidget {
-  final String rarity;
-
-  const _RarityTag({required this.rarity});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
-        const SizedBox(width: PokeBinderSpacing.sp1),
-        Text(rarity, style: PokeBinderText.listRowSubtitle),
-      ],
-    );
-  }
-}
-
-/// Small icon + label pairing for a card's condition, matching the tag
-/// elsewhere in the app.
-class _ConditionTag extends StatelessWidget {
-  final String code;
-
-  const _ConditionTag({required this.code});
-
-  @override
-  Widget build(BuildContext context) {
-    final label = kConditionOptions
-        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
-        .$1;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
-        const SizedBox(width: PokeBinderSpacing.sp1),
-        Text(label, style: PokeBinderText.listRowSubtitle),
-      ],
     );
   }
 }

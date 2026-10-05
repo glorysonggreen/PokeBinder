@@ -19,7 +19,6 @@ class BinderCardTile extends StatelessWidget {
       aspectRatio: kPokemonCardImageAspectRatio,
       child: PressableScale(
         onTap: onTap,
-        // Sweeps a holo-foil highlight across the artwork on every press.
         shineRadius: hasImage ? 5 : null,
         child: hasImage
             ? Container(

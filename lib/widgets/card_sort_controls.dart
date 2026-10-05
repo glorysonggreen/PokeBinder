@@ -3,9 +3,6 @@ import '../models/catalog_card.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 
-/// The set of ways a card list can be sorted across the app. Shared by the
-/// All Cards screen and the deck-builder's Add Cards screen so both offer
-/// an identical sorting experience.
 enum CardSortOption {
   alphabetical,
   time,
@@ -89,13 +86,10 @@ extension TimeSortDirectionLabel on TimeSortDirection {
   }
 }
 
-/// The sort dropdown used to choose a [CardSortOption]. Renders as a pill
-/// button that opens a scrollable popup menu listing every option.
 class CardSortSelector extends StatelessWidget {
   final CardSortOption selected;
   final ValueChanged<CardSortOption> onChanged;
 
-  /// The options offered, in order. Defaults to every [CardSortOption].
   final List<CardSortOption> options;
 
   const CardSortSelector({
@@ -138,9 +132,6 @@ class CardSortSelector extends StatelessWidget {
               child: CardSortMenuRow(option: option, selected: option == selected),
             ),
         ],
-        // ConstrainedBox+Center grows the tappable area PopupMenuButton
-        // hit-tests against to kMinTapTarget (44) without growing the pill
-        // itself, which stays sized by PokeBinderSpacing.chip as before.
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: kMinTapTarget),
           child: Center(
@@ -218,8 +209,6 @@ class CardSortMenuRow extends StatelessWidget {
   }
 }
 
-/// A small horizontally-scrolling pill used within [TypeChipRow] and
-/// [FilterChipRow].
 class CardFilterChip extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -236,10 +225,6 @@ class CardFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The pill itself stays compact (matches its old visual size); wrapping
-    // it in Center lets the row around it grow to kFilterChipRowHeight
-    // (44, a real tap target) without stretching the pill's background,
-    // border or shadow to fill that height.
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -290,8 +275,6 @@ class CardFilterChip extends StatelessWidget {
   }
 }
 
-/// Horizontally-scrolling row of Pokémon energy-type chips, used as the
-/// sub-filter row when sorting by [CardSortOption.pokemon].
 class TypeChipRow extends StatelessWidget {
   final PokemonCardType? selected;
   final ValueChanged<PokemonCardType?> onChanged;
@@ -414,7 +397,6 @@ const kEnergySubtypeChips = <String?, String>{
   'fairy': 'Fairy',
 };
 
-/// Rarity tiers, coarsest-to-rarest, used by [CardSortOption.rarity].
 const kRarityTiers = <String>[
   'Common',
   'Uncommon',
@@ -476,9 +458,6 @@ int cardNumberValue(PokemonCardData card) {
   return int.tryParse(leading.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
 }
 
-/// The result of [applyCardSort]: the filtered/sorted card list, plus the
-/// contextual sub-filter row (if any) that belongs under the sort dropdown
-/// for the chosen [CardSortOption].
 class CardSortResult {
   final List<PokemonCardData> cards;
   final Widget? subOptionRow;
@@ -486,10 +465,6 @@ class CardSortResult {
   const CardSortResult({required this.cards, this.subOptionRow});
 }
 
-/// The single shared filter + sort algorithm used by every screen that
-/// lists cards with a [CardSortSelector]. Keeping this logic in one place
-/// guarantees the sorting options and interaction stay identical wherever
-/// it's used.
 CardSortResult applyCardSort({
   required List<PokemonCardData> cards,
   required String search,
@@ -676,9 +651,6 @@ CardSortResult applyCardSort({
   return CardSortResult(cards: filtered, subOptionRow: subOptionRow);
 }
 
-/// The chip row under the sort dropdown for the options that owned and
-/// catalog cards share: Newest / Oldest for [CardSortOption.time], Pokémon
-/// types, trainer and energy subtypes, and rarity tiers. Null for the rest.
 Widget? sortSubOptionRow({
   required CardSortOption sortOption,
   required PokemonCardType? typeFilter,
@@ -738,8 +710,6 @@ Widget? sortSubOptionRow({
   }
 }
 
-/// The sort options that make sense for catalog cards. Condition and quantity
-/// belong to a copy the person owns, and the set has its own picker.
 const kCatalogSortOptions = <CardSortOption>[
   CardSortOption.alphabetical,
   CardSortOption.time,
@@ -751,7 +721,6 @@ const kCatalogSortOptions = <CardSortOption>[
   CardSortOption.price,
 ];
 
-/// The result of [applyCatalogSort].
 class CatalogSortResult {
   final List<CatalogCard> cards;
   final Widget? subOptionRow;
@@ -759,8 +728,6 @@ class CatalogSortResult {
   const CatalogSortResult({required this.cards, this.subOptionRow});
 }
 
-/// [applyCardSort] for cards from the catalog. For [CardSortOption.time],
-/// "newest" means the most recently released set ([releaseDateOf]).
 CatalogSortResult applyCatalogSort({
   required List<CatalogCard> cards,
   required CardSortOption sortOption,
@@ -789,7 +756,6 @@ CatalogSortResult applyCatalogSort({
       };
   final filtered = cards.where(keep).toList();
 
-  // List.sort is not stable, so every order ends in a tie-break.
   int inSetOrder(CatalogCard a, CatalogCard b) {
     final bySet = a.setId.compareTo(b.setId);
     return bySet != 0 ? bySet : compareByPrintedNumber(a, b);
@@ -824,7 +790,6 @@ CatalogSortResult applyCatalogSort({
         return byRank != 0 ? byRank : byName(a, b);
       });
     case CardSortOption.price:
-      // Most expensive first; cards without a price go last.
       filtered.sort((a, b) {
         final byPrice = (b.marketPricePhp ?? -1).compareTo(a.marketPricePhp ?? -1);
         return byPrice != 0 ? byPrice : byName(a, b);
@@ -855,9 +820,6 @@ CatalogSortResult applyCatalogSort({
   );
 }
 
-/// A generic horizontally-scrolling row of chips keyed by an arbitrary
-/// string value, used as the sub-filter row for trainer/energy subtypes,
-/// sets, rarity tiers, and conditions.
 class FilterChipRow extends StatelessWidget {
   final Map<String?, String> options;
   final String? selected;

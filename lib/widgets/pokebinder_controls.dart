@@ -25,18 +25,12 @@ class BackLink extends StatelessWidget {
 class CollectionSearchBar extends StatefulWidget {
   final String hint;
 
-  /// Optional. Pass one when the caller needs to read or change the text.
-  /// Without it the bar manages its own.
   final TextEditingController? controller;
 
-  /// Optional. The query the screen currently holds. The bar follows it, so
-  /// when the screen resets its query (e.g. "Clear filters") the text in the
-  /// box is emptied too, and a bar rebuilt later (a tab switch) starts with it.
   final String? text;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
   final bool enabled;
-  final Widget? trailing;
 
   const CollectionSearchBar({
     super.key,
@@ -46,7 +40,6 @@ class CollectionSearchBar extends StatefulWidget {
     this.onChanged,
     this.onTap,
     this.enabled = true,
-    this.trailing,
   });
 
   @override
@@ -89,14 +82,12 @@ class _CollectionSearchBarState extends State<CollectionSearchBar> {
     super.dispose();
   }
 
-  // Rebuilds so the clear button appears and disappears with the text.
   void _onTextChanged() {
     if (mounted) setState(() {});
   }
 
   void _clear() {
     _controller.clear();
-    // clear() doesn't fire onChanged, so tell the owner the query is empty.
     widget.onChanged?.call('');
   }
 
@@ -156,10 +147,6 @@ class _CollectionSearchBarState extends State<CollectionSearchBar> {
                 ),
               ),
             ),
-          ],
-          if (widget.trailing != null) ...[
-            const SizedBox(width: PokeBinderSpacing.sp2),
-            widget.trailing!,
           ],
         ],
       ),
@@ -323,53 +310,6 @@ class PasswordVisibilityToggle extends StatelessWidget {
   }
 }
 
-class ChoiceChipPill extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const ChoiceChipPill({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(
-            horizontal: PokeBinderSpacing.sp3,
-            vertical: PokeBinderSpacing.sp2,
-          ),
-          decoration: BoxDecoration(
-            color: selected ? null : PokeBinderColors.white,
-            gradient: selected ? PokeBinderColors.redGradient : null,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: selected
-                  ? Colors.transparent
-                  : PokeBinderColors.ink.withValues(alpha: 0.12),
-            ),
-          ),
-          child: Text(
-            label,
-            style: selected
-                ? PokeBinderText.chipLabelActive
-                : PokeBinderText.chipLabel,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class EmptyFilterState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -403,7 +343,6 @@ class EmptyFilterState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // The icon badge bounces in a beat after the card appears.
             PopIn(
               delay: const Duration(milliseconds: 120),
               child: Container(
@@ -480,8 +419,6 @@ class PillButton extends StatefulWidget {
 }
 
 class _PillButtonState extends State<PillButton> {
-  // True while a finger is held down on the button. Drives the small
-  // "press in" scale below.
   bool _pressed = false;
 
   @override
@@ -496,7 +433,6 @@ class _PillButtonState extends State<PillButton> {
       opacity: widget.enabled ? 1 : 0.45,
       child: AnimatedScale(
         scale: _pressed ? PokeBinderMotion.pressedScale : 1,
-        // Quick on the way down, slow and springy on the way back up.
         duration: PokeBinderMotion.adapt(
           context,
           _pressed ? PokeBinderMotion.press : PokeBinderMotion.release,
@@ -560,26 +496,78 @@ class _PillButtonState extends State<PillButton> {
   }
 }
 
-/// Icon + label used inside the red "Delete ..." / "Remove ..." buttons at
-/// the bottom of the edit forms.
-class PokeDangerLabel extends StatelessWidget {
+class DangerActionButton extends StatelessWidget {
   final String label;
+  final VoidCallback onTap;
 
-  const PokeDangerLabel(this.label, {super.key});
+  const DangerActionButton({super.key, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(
-          Icons.delete_outline,
-          size: 14,
-          color: PokeBinderColors.danger,
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: PokeBinderSpacing.sp3,
+              vertical: PokeBinderSpacing.sp2,
+            ),
+            decoration: BoxDecoration(
+              color: PokeBinderColors.danger.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.delete_outline,
+                  size: 14,
+                  color: PokeBinderColors.danger,
+                ),
+                const SizedBox(width: PokeBinderSpacing.sp2),
+                Text(label, style: PokeBinderText.buttonDangerLabel),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(width: PokeBinderSpacing.sp2),
-        Text(label, style: PokeBinderText.buttonDangerLabel),
-      ],
+      ),
     );
   }
+}
+
+Future<bool> confirmDestructive(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+}) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Cancel'),
+        ),
+        TextButton.icon(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          icon: const Icon(
+            Icons.delete_outline,
+            size: 16,
+            color: PokeBinderColors.danger,
+          ),
+          label: Text(
+            confirmLabel,
+            style: const TextStyle(color: PokeBinderColors.danger),
+          ),
+        ),
+      ],
+    ),
+  );
+  return confirmed ?? false;
 }

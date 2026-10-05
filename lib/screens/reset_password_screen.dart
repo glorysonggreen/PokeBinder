@@ -4,11 +4,6 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 
-/// Shown after the person follows the link in the password-reset email.
-/// Supabase signs them in with a temporary recovery session when the link
-/// opens the app; this is where they actually choose the new password.
-/// (Before this screen existed the link just dropped them into the app
-/// signed in, with no way to change the password.)
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
 
@@ -17,7 +12,7 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  static const _minLength = 6; // Supabase's default minimum password length.
+  static const _minLength = 6;
 
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();

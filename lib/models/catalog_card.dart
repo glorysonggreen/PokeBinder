@@ -3,7 +3,6 @@ import '../config/pricing.dart';
 import 'enum_parsing.dart';
 import 'pokemon_card_data.dart';
 
-/// One expansion (e.g. Base Set) from the `card_sets` table.
 @immutable
 class CatalogSet {
   final String id;
@@ -30,8 +29,6 @@ class CatalogSet {
   }
 }
 
-/// The printings the price source reports, most ordinary first. The first one
-/// a card has is its default finish (and matches its `market_price_usd`).
 const _finishOrder = [
   'normal',
   'unlimitedNormal',
@@ -52,15 +49,8 @@ const _finishLabels = {
   '1stEditionHolofoil': '1st Ed. Holo',
 };
 
-/// A friendly name for a finish key such as `reverseHolofoil`.
 String finishLabel(String key) => _finishLabels[key] ?? key;
 
-/// One printed card from the `card_catalog` table: the reference data the
-/// user picks from instead of typing a name, set, number and rarity by hand.
-///
-/// This is read-only reference data shared by every account. A card in
-/// someone's collection ([PokemonCardData]) copies these fields at the moment
-/// it is added and keeps a [PokemonCardData.catalogId] link back here.
 @immutable
 class CatalogCard {
   final String id;
@@ -68,13 +58,10 @@ class CatalogCard {
   final String setId;
   final String setName;
 
-  /// The number as printed in the set, e.g. `4`.
   final String number;
 
-  /// How many cards the set prints, e.g. `102` — null when unknown.
   final int? printedTotal;
 
-  /// One of [kRarityOptions] (the source's own wording is in [rarityRaw]).
   final String rarity;
   final String? rarityRaw;
   final PokemonCardType type;
@@ -84,8 +71,6 @@ class CatalogCard {
   final String? imageLarge;
   final double? marketPriceUsd;
 
-  /// Market price in US dollars for each printing, keyed like `holofoil`.
-  /// Empty when the catalog only knows one price (see [marketPriceUsd]).
   final Map<String, double> finishPrices;
   final DateTime? priceUpdatedAt;
 
@@ -108,7 +93,6 @@ class CatalogCard {
     this.priceUpdatedAt,
   });
 
-  /// The printings this card has a price for, most ordinary first.
   List<String> get finishes {
     final keys = finishPrices.keys.toList();
     int rank(String k) {
@@ -123,28 +107,19 @@ class CatalogCard {
     return keys;
   }
 
-  /// The finish used until the person picks another, or null when the catalog
-  /// has no per-finish prices.
   String? get defaultFinish => finishes.isEmpty ? null : finishes.first;
 
-  /// The dollar price for [finish], falling back to [marketPriceUsd].
   double? priceUsdFor(String? finish) =>
       (finish == null ? null : finishPrices[finish]) ?? marketPriceUsd;
 
-  /// `4/102` when the set size is known, otherwise just `4` — the same
-  /// format the rest of the app uses for [PokemonCardData.cardNumber].
   String get displayNumber =>
       printedTotal == null ? number : '$number/$printedTotal';
 
-  /// The suggested value in pesos, or null when the catalog has no price.
   double? get marketPricePhp =>
       marketPriceUsd == null ? null : roundPeso(marketPriceUsd! * kUsdToPhpRate);
 
-  /// Art used for the owned copy: the large image looks sharp on the card
-  /// details screen, the small one is used for list thumbnails.
   String? get collectionImage => imageLarge ?? imageSmall;
 
-  /// Expects a row selected with `*, card_sets(name, printed_total)`.
   factory CatalogCard.fromRow(Map<String, dynamic> row) {
     final set = row['card_sets'] as Map<String, dynamic>?;
     return CatalogCard(
@@ -181,11 +156,8 @@ Map<String, double> _parseFinishPrices(Object? raw) {
   return out;
 }
 
-/// Splits a printed number into its letters and digits, so `SWSH001` sorts
-/// after `99` and `10` after `9`.
 final _numberParts = RegExp(r'^(\D*)(\d*)');
 
-/// Orders cards by printed number: 1, 2, ... 10, then lettered ones (SWSH001).
 int compareByPrintedNumber(CatalogCard a, CatalogCard b) {
   final pa = _numberParts.firstMatch(a.number)!;
   final pb = _numberParts.firstMatch(b.number)!;

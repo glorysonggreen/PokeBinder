@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 
-/// Two-line caption under a card thumbnail: the card name, then
-/// "Set name · #number".
-///
-/// When space runs out the set name is what gets ellipsized, so the card
-/// number always stays visible.
 class CardCaption extends StatelessWidget {
   final PokemonCardData card;
 

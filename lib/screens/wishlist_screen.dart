@@ -5,8 +5,10 @@ import '../services/wishlist_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/motion_widgets.dart';
+import '../widgets/card_tags.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
+import 'wishlist_add_card_screen.dart';
 import 'wishlist_form_screen.dart';
 import 'trade_list_add_card_screen.dart';
 import 'trade_entry_form_screen.dart';
@@ -46,8 +48,6 @@ extension on _WishlistSort {
   }
 }
 
-/// Finds the catalog entry for [name], if any, so wishlist/trade rows can
-/// show real card artwork instead of a generic placeholder.
 PokemonCardData? _libraryMatch(String name) {
   final target = name.trim().toLowerCase();
   if (target.isEmpty) return null;
@@ -62,9 +62,6 @@ String _formatValue(double value) {
   return '₱${value.toStringAsFixed(0)}';
 }
 
-/// Shared size for every secondary line on a wishlist/trade card (set info,
-/// quantity, wants, notes, value, date added) so they all read at one
-/// consistent, legible size instead of the previous mix of tiny sizes.
 final TextStyle _metaStyle = PokeBinderText.cardMeta.copyWith(
   fontSize: 12,
   color: PokeBinderColors.inkSoft,
@@ -149,8 +146,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
               e.kind == WishlistEntryKind.trade && e.sourceCardId != null)
           .toList();
       setState(() {
-        // Only the card-linked trade entries are managed by the picker;
-        // anything typed in by hand elsewhere is left untouched.
         _entries.removeWhere((e) =>
             e.kind == WishlistEntryKind.trade && e.sourceCardId != null);
         _entries.addAll(result);
@@ -164,14 +159,28 @@ class _WishlistScreenState extends State<WishlistScreen> {
       return;
     }
 
-    final result = await Navigator.of(context).push<WishlistFormResult>(
+    final added = await Navigator.of(context).push<WishlistEntry>(
       MaterialPageRoute(
-        builder: (_) => const WishlistFormScreen(),
+        builder: (_) => WishlistAddCardScreen(entries: _entries),
       ),
     );
-    if (result == null || result.deleted) return;
-    setState(() => _entries.add(result.entry!));
-    WishlistRepository.upsert(result.entry!);
+    if (added == null) return;
+
+    final index = _entries.indexWhere((e) =>
+        e.kind == WishlistEntryKind.wishlist &&
+        e.catalogId != null &&
+        e.catalogId == added.catalogId &&
+        e.condition == added.condition &&
+        e.finish == added.finish);
+    if (index == -1) {
+      setState(() => _entries.add(added));
+      WishlistRepository.upsert(added);
+      return;
+    }
+    final merged = _entries[index]
+        .copyWith(quantity: _entries[index].quantity + added.quantity);
+    setState(() => _entries[index] = merged);
+    WishlistRepository.upsert(merged);
   }
 
   Future<void> _openEdit(WishlistEntry entry) async {
@@ -197,35 +206,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
   Future<bool> _confirmRemove(WishlistEntry entry) async {
     final isWishlist = entry.kind == WishlistEntryKind.wishlist;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Remove entry?'),
-        content: Text(
-          'This removes "${entry.name}" from your '
+    return confirmDestructive(
+      context,
+      title: 'Remove entry?',
+      message: 'This removes "${entry.name}" from your '
           '${isWishlist ? 'wishlist' : 'trade list'}.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton.icon(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            icon: const Icon(
-              Icons.delete_outline,
-              size: 16,
-              color: PokeBinderColors.danger,
-            ),
-            label: const Text(
-              'Remove',
-              style: TextStyle(color: PokeBinderColors.danger),
-            ),
-          ),
-        ],
-      ),
+      confirmLabel: 'Remove',
     );
-    return confirmed ?? false;
   }
 
   void _removeEntry(WishlistEntry entry) {
@@ -531,9 +518,6 @@ class _WishlistSortSelector extends StatelessWidget {
               ),
             ),
         ],
-        // ConstrainedBox+Center grows the tappable area PopupMenuButton
-        // hit-tests against to kMinTapTarget (44) without growing the pill
-        // itself, which stays sized by PokeBinderSpacing.chip as before.
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: kMinTapTarget),
           child: Center(
@@ -641,10 +625,6 @@ String _relativeAdded(DateTime date) {
   return 'Just now';
 }
 
-/// Wraps the filtered wishlist/trade entries in the same white, rounded,
-/// bordered-and-shadowed card panel used for the card list on the Deck
-/// Details screen, so entries here read as the same "card row" pattern
-/// as the rest of the app instead of a bare divided list.
 class _WishlistCardListPanel extends StatelessWidget {
   final List<WishlistEntry> entries;
   final ValueChanged<WishlistEntry> onTapEntry;
@@ -703,12 +683,6 @@ class _WishlistCardListPanel extends StatelessWidget {
   }
 }
 
-/// Card row for a wishlist/trade entry, styled to match [_DeckCardEntryRow]
-/// on the Deck Details screen: same thumbnail size/frame, chakraPetch bold
-/// name, `set · #number` subtitle line, a [Wrap] of small icon+label tags
-/// (rarity, condition, priority), and a tinted pill quantity badge on the
-/// trailing edge. Wishlist-only fields (asking-for, notes, estimated value,
-/// date added) are appended below/beside that shared shape.
 class _WishlistRow extends StatelessWidget {
   final WishlistEntry entry;
   final VoidCallback onTap;
@@ -771,9 +745,9 @@ class _WishlistRow extends StatelessWidget {
                       runSpacing: PokeBinderSpacing.sp1,
                       children: [
                         if (entry.rarity.isNotEmpty)
-                          _RarityTag(rarity: entry.rarity),
+                          RarityTag(rarity: entry.rarity),
                         if (!isWishlist && entry.condition.isNotEmpty)
-                          _ConditionTag(code: entry.condition),
+                          ConditionTag(code: entry.condition),
                         _PriorityTag(priority: entry.priority),
                       ],
                     ),
@@ -837,53 +811,6 @@ class _WishlistRow extends StatelessWidget {
   }
 }
 
-/// Small icon + label pairing for a card's rarity, matching the tag used
-/// on the Deck Details card rows (same [rarityIconFor] lookup).
-class _RarityTag extends StatelessWidget {
-  final String rarity;
-
-  const _RarityTag({required this.rarity});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(rarityIconFor(rarity), size: 11, color: PokeBinderColors.goldDeep),
-        const SizedBox(width: PokeBinderSpacing.sp1),
-        Text(rarity, style: PokeBinderText.listRowSubtitle),
-      ],
-    );
-  }
-}
-
-/// Small icon + label pairing for a card's condition, matching the tag
-/// used on the Deck Details card rows (same [conditionIconFor] lookup and
-/// [kConditionOptions] label expansion).
-class _ConditionTag extends StatelessWidget {
-  final String code;
-
-  const _ConditionTag({required this.code});
-
-  @override
-  Widget build(BuildContext context) {
-    final label = kConditionOptions
-        .firstWhere((c) => c.$2 == code, orElse: () => (code, code))
-        .$1;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(conditionIconFor(code), size: 11, color: PokeBinderColors.teal),
-        const SizedBox(width: PokeBinderSpacing.sp1),
-        Text(label, style: PokeBinderText.listRowSubtitle),
-      ],
-    );
-  }
-}
-
-/// Small icon + label pairing for a wishlist/trade entry's priority,
-/// styled like [_RarityTag]/[_ConditionTag] above but colored per
-/// [WishlistPriority] so priority stays scannable in the tag row.
 class _PriorityTag extends StatelessWidget {
   final WishlistPriority priority;
 
@@ -905,10 +832,6 @@ class _PriorityTag extends StatelessWidget {
   }
 }
 
-/// Pill-shaped quantity badge, styled the same way as the Deck Details
-/// quantity badge (tinted background + bold colored label) but keeping the
-/// wishlist/trade icon and color distinction, and the "wanted"/"for trade"
-/// wording, from the previous design.
 class _QuantityBadge extends StatelessWidget {
   final bool isWishlist;
   final int quantity;

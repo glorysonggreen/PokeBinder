@@ -12,6 +12,10 @@ The script is safe to run again whenever it changes: it only creates what is
 missing and replaces the policies and the sign-up trigger. It never drops
 tables or data.
 
+It also creates the public `avatars` storage bucket (with its access rules)
+used for trainer card profile pictures. If you set up your project before
+profile pictures existed, run the script again to add it.
+
 ## 2. Load the card catalog
 
 The **Add** tab lets people pick a card from a shared card database instead of

@@ -9,11 +9,6 @@ import '../widgets/pokemon_card_widget.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 
-/// Lets the user pick a single card from their collection to feature as
-/// their trainer card's favorite — the same search/filter/sort experience,
-/// row layout, and tap-to-view-details behavior as [DeckAddCardScreen],
-/// [TradeListAddCardScreen], and the wishlist's add screen, but a single
-/// selection instead of per-card quantities.
 class TrainerFavoriteCardScreen extends StatefulWidget {
   final String? initialCardId;
 
@@ -42,7 +37,6 @@ class _TrainerFavoriteCardScreenState
   List<PokemonCardData> get _ownedCards =>
       PokemonCardData.library.where((c) => c.quantityOwned > 0).toList();
 
-  /// Empties the search box and every chip filter (the sort stays).
   void _clearFilters() {
     setState(() {
       _query = '';
@@ -95,7 +89,7 @@ class _TrainerFavoriteCardScreenState
     });
   }
 
-  void _done() => Navigator.of(context).pop(_selectedCardId);
+  void _done() => Navigator.of(context).pop(_selectedCardId ?? '');
 
   @override
   Widget build(BuildContext context) {
@@ -350,10 +344,6 @@ class _FavoriteCardPickerRow extends StatelessWidget {
   }
 }
 
-/// Second line of extra card info shown under the "Own …" line: condition,
-/// binder location, and estimated value, matching the icon+label tags used
-/// on the Deck Details, Wishlist, and Trade List card rows so the same
-/// fields read the same way everywhere in the app.
 class _CardMetaRow extends StatelessWidget {
   final PokemonCardData card;
 

@@ -1,7 +1,5 @@
 import '../models/wishlist_entry.dart';
 
-/// Result popped by [WishlistFormScreen] and [TradeEntryFormScreen] when the
-/// user saves or deletes an entry.
 class WishlistFormResult {
   final WishlistEntry? entry;
   final bool deleted;

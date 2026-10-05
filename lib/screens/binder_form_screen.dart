@@ -61,10 +61,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
     }
 
     final existing = widget.existingBinder;
-    // A card finds its binder by name, so two binders with one name would
-    // merge their cards, and a binder called "Unassigned" would swallow every
-    // unplaced card. The database rejects duplicates too (unique(user_id,
-    // name)), but by then the binder was already added to the screen.
     if (name.toLowerCase() == kUnassignedBinderName.toLowerCase()) {
       setState(() => _nameError = '"$name" is reserved — pick another name.');
       return;
@@ -100,36 +96,15 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
 
   Future<void> _confirmDelete() async {
     final binder = widget.existingBinder!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete binder?'),
-        content: Text(
-          'This removes "${binder.name}" and all ${binder.cardCount} '
+    final confirmed = await confirmDestructive(
+      context,
+      title: 'Delete binder?',
+      message: 'This removes "${binder.name}" and all ${binder.cardCount} '
           "cards in it. This can't be undone.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton.icon(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            icon: const Icon(
-              Icons.delete_outline,
-              size: 16,
-              color: PokeBinderColors.danger,
-            ),
-            label: const Text(
-              'Delete',
-              style: TextStyle(color: PokeBinderColors.danger),
-            ),
-          ),
-        ],
-      ),
+      confirmLabel: 'Delete',
     );
 
-    if (confirmed == true && mounted) {
+    if (confirmed && mounted) {
       Navigator.of(context).pop(const BinderFormResult.deleted());
     }
   }
@@ -268,26 +243,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
 
               if (_isEditing) ...[
                 const SizedBox(height: PokeBinderSpacing.sp4),
-                Center(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: _confirmDelete,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: PokeBinderSpacing.sp3,
-                          vertical: PokeBinderSpacing.sp2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: PokeBinderColors.danger.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const PokeDangerLabel('Delete Binder'),
-                      ),
-                    ),
-                  ),
-                ),
+                DangerActionButton(label: 'Delete Binder', onTap: _confirmDelete),
               ],
             ],
           ),

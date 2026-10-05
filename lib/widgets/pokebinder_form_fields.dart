@@ -101,10 +101,8 @@ class PokeDropdownOption<T> {
   final String label;
   final IconData? icon;
 
-  /// Muted text shown at the end of the row in a searchable picker (a year).
   final String? subtitle;
 
-  /// Heading the row is listed under in a searchable picker (a series).
   final String? group;
 
   const PokeDropdownOption(
@@ -122,8 +120,6 @@ class PokeDropdownField<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
   final IconData? icon;
 
-  /// Fixes the field's height (instead of sizing to its text) so it lines up
-  /// exactly with a neighbouring control such as a quantity stepper.
   final double? height;
 
   const PokeDropdownField({
@@ -196,7 +192,6 @@ class PokeDropdownField<T> extends StatelessWidget {
   }
 }
 
-/// The closed state of a dropdown: icon, current label and a chevron.
 class _PokeDropdownBox extends StatelessWidget {
   final String label;
   final IconData? icon;
@@ -244,21 +239,16 @@ class _PokeDropdownBox extends StatelessWidget {
   }
 }
 
-/// Like [PokeDropdownField], but opens a bottom sheet with a search box, for
-/// lists too long to scroll through (hundreds of card sets).
 class PokeSearchableDropdownField<T> extends StatelessWidget {
   final T value;
   final List<PokeDropdownOption<T>> options;
   final ValueChanged<T> onChanged;
   final IconData? icon;
 
-  /// Heading of the picker sheet, e.g. "Choose a Set".
   final String title;
 
-  /// Placeholder in the sheet's search box, e.g. "Search sets…".
   final String searchHint;
 
-  /// Shown when the search matches nothing, e.g. "No sets match your search.".
   final String noMatchesTitle;
 
   const PokeSearchableDropdownField({
@@ -272,7 +262,6 @@ class PokeSearchableDropdownField<T> extends StatelessWidget {
     this.icon,
   });
 
-  /// How much of the screen height the picker sheet may use.
   static const _sheetHeightFactor = 0.85;
 
   Future<void> _open(BuildContext context) async {
@@ -340,7 +329,6 @@ class _SearchableOptionsSheetState<T> extends State<_SearchableOptionsSheet<T>> 
     super.dispose();
   }
 
-  /// Options matching the search (by label or group), in order.
   List<PokeDropdownOption<T>> _matches() {
     final needle = _controller.text.trim().toLowerCase();
     if (needle.isEmpty) return widget.options;
@@ -351,8 +339,6 @@ class _SearchableOptionsSheetState<T> extends State<_SearchableOptionsSheet<T>> 
         .toList();
   }
 
-  /// The list rows: options gathered under their group name (a String),
-  /// groups in order of first appearance. Ungrouped options come first.
   List<Object> _rows(List<PokeDropdownOption<T>> matches) {
     final groups = <String?, List<PokeDropdownOption<T>>>{};
     for (final option in matches) {
@@ -373,7 +359,6 @@ class _SearchableOptionsSheetState<T> extends State<_SearchableOptionsSheet<T>> 
     final searching = _controller.text.trim().isNotEmpty;
 
     return Padding(
-      // Lifts the sheet above the keyboard.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Column(
         children: [
@@ -400,7 +385,6 @@ class _SearchableOptionsSheetState<T> extends State<_SearchableOptionsSheet<T>> 
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: PokeBinderSpacing.sp4),
-            // Same search bar as every other screen, clear button included.
             child: CollectionSearchBar(
               hint: widget.searchHint,
               controller: _controller,

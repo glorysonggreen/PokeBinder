@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/pokebinder_theme.dart';
 import 'enum_parsing.dart';
 
 enum PokemonCardType {
@@ -103,7 +102,6 @@ extension PokemonCardTypeGradient on PokemonCardType {
     }
   }
 
-  /// Same icon set used by the type-filter chips on the All Cards screen.
   IconData get typeIcon {
     switch (this) {
       case PokemonCardType.colorless:
@@ -148,17 +146,10 @@ class PokemonCardData {
   final int page;
   final double estimatedValue;
   final String notes;
-  /// Artwork for the card: a bundled asset path, or an `https://` URL for a
-  /// card picked from the catalog (see CardImage, which handles both).
   final String? imageAssetPath;
 
-  /// The `card_catalog` row this card was picked from, or null for a card the
-  /// user typed in by hand. A linked card's name, set, number, rarity, type
-  /// and artwork come from the catalog and are not editable.
   final String? catalogId;
 
-  /// Which printing the person owns (`holofoil`, `reverseHolofoil` ...), or
-  /// null when unknown — older cards and cards typed in by hand.
   final String? finish;
   final DateTime dateAdded;
 
@@ -183,7 +174,6 @@ class PokemonCardData {
     DateTime? dateAdded,
   }) : dateAdded = dateAdded ?? DateTime.now();
 
-  /// Builds a card from a row returned by the `cards` table.
   factory PokemonCardData.fromRow(Map<String, dynamic> row) {
     return PokemonCardData(
       id: row['id'] as String,
@@ -209,8 +199,6 @@ class PokemonCardData {
     );
   }
 
-  /// The row to upsert into the `cards` table. `user_id` is left out — the
-  /// column defaults to `auth.uid()` on insert and never changes on update.
   Map<String, dynamic> toRow() {
     return {
       'id': id,
@@ -229,8 +217,6 @@ class PokemonCardData {
       'notes': notes,
       'image_asset_path': imageAssetPath,
       'catalog_id': catalogId,
-      // Only sent when set, so saving a card never depends on the `finish`
-      // column existing until a finish is actually chosen.
       if (finish != null) 'finish': finish,
       'date_added': dateAdded.toUtc().toIso8601String(),
     };
@@ -278,27 +264,5 @@ class PokemonCardData {
     );
   }
 
-  static final sample = PokemonCardData(
-    id: 'sample-charizard',
-    dateAdded: DateTime(2023, 1, 15),
-    name: 'Charizard',
-    setName: 'Base Set',
-    cardNumber: '4/102',
-    rarity: 'Rare',
-    type: PokemonCardType.fire,
-    quantityOwned: 2,
-    condition: 'NM',
-    binderName: 'Kanto Starters',
-    page: 1,
-    estimatedValue: 6200,
-    notes: 'Kept in top loader, light corner wear on back.',
-    imageAssetPath: '../assets/charizard_base_set.jpg',
-  );
-
-  /// The signed-in user's cards, loaded from the `cards` table by
-  /// [CardRepository.loadAll]. Empty until then — every screen that reads
-  /// this assumes AppShell has already finished loading (see its loading
-  /// state).
   static final List<PokemonCardData> library = [];
-
 }

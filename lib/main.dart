@@ -40,10 +40,6 @@ class _PokeBinderAppState extends State<PokeBinderApp> {
   @override
   void initState() {
     super.initState();
-    // Following the link in a password-reset email opens the app with a
-    // temporary "recovery" session and emits this event. (The stream
-    // replays past events, so it's still delivered if the link was handled
-    // during Supabase.initialize, before this listener existed.)
     _authSubscription =
         Supabase.instance.client.auth.onAuthStateChange.listen((state) {
       if (state.event == AuthChangeEvent.passwordRecovery) {
@@ -61,7 +57,6 @@ class _PokeBinderAppState extends State<PokeBinderApp> {
   void _openResetPassword() {
     if (_resetScreenOpen) return;
     _resetScreenOpen = true;
-    // Wait a frame: the event can arrive before the Navigator exists.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final navigator = _navigatorKey.currentState;
       if (navigator == null) {
@@ -84,8 +79,6 @@ class _PokeBinderAppState extends State<PokeBinderApp> {
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
       theme: PokeBinderTheme.light(),
-      // Already signed in (e.g. app was killed and reopened) -> straight
-      // to the collection instead of back through the login form.
       home: Supabase.instance.client.auth.currentSession == null
           ? const LoginScreen()
           : const AppShell(),

@@ -1,17 +1,15 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/trainer_profile_data.dart';
 import 'sync_status.dart';
 
-/// Loads and saves the signed-in user's one row in `trainer_profiles`.
 class TrainerProfileRepository {
   TrainerProfileRepository._();
 
   static SupabaseQueryBuilder get _table =>
       Supabase.instance.client.from('trainer_profiles');
 
-  /// Returns the user's profile, creating one with [fallbackName] the
-  /// first time (e.g. right after sign-up, using the trainer name they
-  /// entered on the form).
   static Future<TrainerProfileData> load({required String fallbackName}) async {
     final row = await _table.select().maybeSingle();
     if (row != null) return TrainerProfileData.fromRow(row);
@@ -26,5 +24,29 @@ class TrainerProfileRepository {
       'save your profile',
       () => _table.upsert(profile.toRow()),
     );
+  }
+
+  static const _avatarBucket = 'avatars';
+
+  static String get _avatarPath =>
+      '${Supabase.instance.client.auth.currentUser!.id}/avatar';
+
+  static StorageFileApi get _avatars =>
+      Supabase.instance.client.storage.from(_avatarBucket);
+
+  static Future<String> uploadAvatar(Uint8List bytes) async {
+    await _avatars.uploadBinary(
+      _avatarPath,
+      bytes,
+      fileOptions: const FileOptions(contentType: 'image/png', upsert: true),
+    );
+    final version = DateTime.now().millisecondsSinceEpoch;
+    return '${_avatars.getPublicUrl(_avatarPath)}?v=$version';
+  }
+
+  static Future<void> deleteAvatar() async {
+    try {
+      await _avatars.remove([_avatarPath]);
+    } catch (_) {}
   }
 }

@@ -5,8 +5,6 @@ import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 
-/// One card the user picked in [BinderAddCardScreen], and how many of its
-/// copies should be moved into the binder.
 @immutable
 class BinderCardPick {
   final String cardId;
@@ -15,28 +13,13 @@ class BinderCardPick {
   const BinderCardPick({required this.cardId, required this.quantity});
 }
 
-/// Lets the user pick cards straight out of their collection to place in a
-/// binder, the same way the Deck Planner's add-cards screen lets them pick cards for a deck:
-/// search/filter/sort the collection, step a quantity up or down per card,
-/// and confirm once at the bottom.
-///
-/// Unlike a deck (which just references cards), a card lives in exactly one
-/// place, so picking a card *moves* it here from wherever it's stored now.
-/// The stepper controls how many copies move; picking fewer than the owned
-/// count leaves the remaining copies where they were.
 class BinderAddCardScreen extends StatefulWidget {
   final String binderName;
 
-  /// Zero-based page the cards will be placed on.
   final int pageIndex;
 
-  /// Cards that can be added: the whole collection minus whatever is already
-  /// in this binder. A function (not a list) so it always reflects the live
-  /// collection, e.g. after a card is edited from the details screen.
   final List<PokemonCardData> Function() availableCards;
 
-  /// Opens the card's details screen. The owner performs the actual edit;
-  /// this screen re-reads [availableCards] when it returns.
   final Future<void> Function(PokemonCardData card) onCardTap;
 
   const BinderAddCardScreen({
@@ -68,7 +51,6 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
 
   int get _totalSelected => _quantities.values.fold(0, (sum, q) => sum + q);
 
-  /// Empties the search box and every chip filter (the sort stays).
   void _clearFilters() {
     setState(() {
       _query = '';
@@ -110,9 +92,6 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
     setState(_reconcileSelections);
   }
 
-  /// After a card was edited elsewhere, drop or shrink any pick that no
-  /// longer makes sense (card deleted, moved into this binder, or fewer
-  /// copies owned than were selected).
   void _reconcileSelections() {
     final owned = {
       for (final card in widget.availableCards()) card.id: card.quantityOwned,
@@ -378,10 +357,6 @@ class _BinderCardPickerRow extends StatelessWidget {
   }
 }
 
-/// Second line of extra card info shown under the "Own …" line: condition,
-/// binder location, and estimated value, matching the icon+label tags used
-/// on the Deck Details and Wishlist card rows so the same fields read the
-/// same way everywhere in the app.
 class _CardMetaRow extends StatelessWidget {
   final PokemonCardData card;
 

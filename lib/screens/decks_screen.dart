@@ -62,8 +62,6 @@ extension DeckSortOptionLabel on DeckSortOption {
 }
 
 class DecksScreen extends StatefulWidget {
-  /// When set, the deck with this id is opened right after the screen is
-  /// built (e.g. after creating a deck from the Home quick actions).
   final String? initialDeckId;
 
   const DecksScreen({super.key, this.initialDeckId});
@@ -145,22 +143,19 @@ class _DecksScreenState extends State<DecksScreen> {
   }
 
   Future<void> _openNewDeck() async {
-    final result = await Navigator.of(context).push<DeckFormResult>(
+    final created = await Navigator.of(context).push<DeckData>(
       MaterialPageRoute(builder: (_) => const DeckFormScreen()),
     );
-    if (result == null || result.deck == null) return;
+    if (created == null) return;
     setState(() {
-      _decks.add(result.deck!);
+      _decks.add(created);
       _viewingAllDecks = false;
     });
-    DeckRepository.upsert(result.deck!);
+    DeckRepository.upsert(created);
     if (!mounted) return;
-    await _openDeckDetail(result.deck!);
+    await _openDeckDetail(created);
   }
 
-  /// Opens the full-screen detail view for [deck]. Edits made there are
-  /// streamed back live via the callbacks below, so `_decks` stays in
-  /// sync no matter how the detail screen gets dismissed.
   Future<void> _openDeckDetail(DeckData deck) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -331,10 +326,6 @@ class _DeckFilterChip extends StatelessWidget {
             : PokeBinderText.chipLabelActive)
         : PokeBinderText.chipLabel;
 
-    // The pill itself stays compact (matches its old visual size); wrapping
-    // it in Center lets the row around it grow to kFilterChipRowHeight
-    // (44, a real tap target) without stretching the pill's background,
-    // border or shadow to fill that height.
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -642,9 +633,6 @@ class _DeckSortSelector extends StatelessWidget {
               child: _DeckSortMenuRow(option: option, selected: option == selected),
             ),
         ],
-        // ConstrainedBox+Center grows the tappable area PopupMenuButton
-        // hit-tests against to kMinTapTarget (44) without growing the pill
-        // itself, which stays sized by PokeBinderSpacing.chip as before.
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: kMinTapTarget),
           child: Center(

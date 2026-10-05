@@ -7,21 +7,6 @@ import '../widgets/card_caption.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
 
-/// Full-screen view of a single binder's pages, or of the "Unassigned
-/// Cards" bucket when [binderId] is null. Reached by tapping a tile on
-/// the Binders overview (BindersScreen).
-///
-/// This screen doesn't own the binder/card data. [binders] is the same
-/// live List the parent screen holds, and a binder's own cards are read
-/// straight off [PokemonCardData.library] via [BinderData.pages] — so any
-/// edit made anywhere in the app (e.g. from Decks, Trade List, or Stats)
-/// is visible here as soon as this screen rebuilds. [unassignedCards]
-/// is a function rather than a plain list for the same reason: it
-/// re-queries [PokemonCardData.library] each time it's called instead of
-/// handing over a snapshot that could go stale. Actions taken from this
-/// screen call back into the parent via [onCardTap] / [onAddCard] /
-/// [onCardRemoved] / [onBinderChanged] / [onBinderDeleted], and this
-/// screen refreshes itself right after each of those completes.
 class BinderDetailScreen extends StatefulWidget {
   final String? binderId;
   final List<BinderData> binders;
@@ -30,8 +15,6 @@ class BinderDetailScreen extends StatefulWidget {
   final Future<void> Function({required String? binderId, required int pageIndex})
       onAddCard;
 
-  /// Takes a card out of this binder (it is kept in the collection, as an
-  /// unassigned card).
   final ValueChanged<PokemonCardData> onCardRemoved;
   final ValueChanged<BinderData> onBinderChanged;
   final ValueChanged<BinderData> onBinderDeleted;
@@ -55,9 +38,6 @@ class BinderDetailScreen extends StatefulWidget {
 class _BinderDetailScreenState extends State<BinderDetailScreen> {
   int _pageIndex = 0;
 
-  /// True while the user is picking cards to take out of the binder: tiles
-  /// get a remove badge and tapping one asks to confirm instead of opening
-  /// its details.
   bool _removeMode = false;
 
   bool get _isUnassigned => widget.binderId == null;
@@ -92,7 +72,6 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
   void _goToPage(int index) {
     setState(() {
       _pageIndex = index;
-      // Nothing to remove on an empty page — drop back to normal mode.
       if (_currentPageCards.isEmpty) _removeMode = false;
     });
   }
@@ -177,8 +156,6 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
   Widget build(BuildContext context) {
     final binder = _binder;
 
-    // Defensive: if the binder this screen was showing got deleted from
-    // underneath it somehow, back out to the overview instead of crashing.
     if (!_isUnassigned && binder == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) Navigator.of(context).pop();
@@ -298,8 +275,6 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                             CardCaption(card: card),
                           ],
                         ),
-                      // Only real binders can have cards added; the
-                      // Unassigned bucket just holds cards taken out of them.
                       if (!removing && !_isUnassigned)
                         Column(
                           children: [
@@ -357,8 +332,6 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
   }
 }
 
-/// Small icon + label action in the screen's top-right corner ("Edit",
-/// "Remove", "Done"), styled like the Back link.
 class _HeaderAction extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -386,7 +359,6 @@ class _HeaderAction extends StatelessWidget {
   }
 }
 
-/// Red minus badge shown on each card while removing cards from a binder.
 class _RemoveBadge extends StatelessWidget {
   const _RemoveBadge();
 

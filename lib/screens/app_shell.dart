@@ -25,12 +25,10 @@ import 'login_screen.dart';
 import 'more_screen.dart';
 
 class AppShell extends StatefulWidget {
-  final AppTab initialTab;
   final String trainerName;
 
   const AppShell({
     super.key,
-    this.initialTab = AppTab.home,
     this.trainerName = 'Ash',
   });
 
@@ -40,7 +38,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   final _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
-  late AppTab _tab = widget.initialTab;
+  AppTab _tab = AppTab.home;
   late TrainerProfileData _profile =
       TrainerProfileData(name: _startingTrainerName);
   StreamSubscription<AuthState>? _authSubscription;
@@ -53,10 +51,6 @@ class _AppShellState extends State<AppShell> {
   int _decksLinkToken = 0;
   String? _decksInitialDeckId;
 
-  /// Name to give a brand-new profile. Prefers the name saved with the
-  /// account at sign-up: when email confirmation is on, the profile doesn't
-  /// exist until the *first log in*, and that path builds AppShell with the
-  /// default trainerName, so everyone used to be renamed "Ash".
   String get _startingTrainerName =>
       AuthService.trainerNameFromMetadata ?? widget.trainerName;
 
@@ -64,18 +58,12 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _loadData();
-    // The session can end without the person asking: a refresh token that
-    // was revoked or expired, or signing out in another tab. Without this
-    // the app sat on a "check your connection" error forever.
     _authSubscription =
         Supabase.instance.client.auth.onAuthStateChange.listen((state) {
       if (state.event == AuthChangeEvent.signedOut && !_signingOut) {
         _leaveToLogin();
       }
     });
-    // Every screen calls Repository.upsert/.delete without awaiting it, so
-    // this is the one place a failed background save gets surfaced instead
-    // of vanishing into an unhandled Future (see services/sync_status.dart).
     SyncStatus.lastError.addListener(_showSyncError);
   }
 
@@ -94,10 +82,6 @@ class _AppShellState extends State<AppShell> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  /// Pulls everything the app's screens read from `*.library` out of
-  /// Supabase once, up front, so every screen below this one can keep
-  /// assuming that data is already sitting in memory — exactly like it did
-  /// before there was a backend.
   Future<void> _loadData() async {
     try {
       final profile =
@@ -125,17 +109,12 @@ class _AppShellState extends State<AppShell> {
 
   Future<void> _signOut() async {
     _signingOut = true;
-    // Let saves that are still on their way finish first, so they aren't
-    // sent after the session is gone (or under the next account).
     await SyncStatus.flush();
     await AuthService.signOut();
     _leaveToLogin();
   }
 
-  /// Clears the cached collection and returns to the login screen.
   void _leaveToLogin() {
-    // Clear cached data so the next person to sign in on this device
-    // doesn't briefly see the previous account's collection.
     BinderData.library.clear();
     PokemonCardData.library.clear();
     DeckData.library.clear();
@@ -164,8 +143,6 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
-  /// Switches to the Decks tab and opens [deck] there. Bumping the token
-  /// rebuilds DecksScreen so it picks up the new deck and jumps to it.
   void _openDeck(DeckData deck) {
     setState(() {
       _decksLinkToken++;
@@ -232,8 +209,6 @@ class _AppShellState extends State<AppShell> {
               initialTabIndex: _bindersInitialTabIndex,
               initialBinderId: _bindersInitialBinderId,
             ),
-            // Rebuilding the shell (setState) refreshes Home/Binders, which read
-            // PokemonCardData.library live, so a card added here shows up there.
             AddCardScreen(onCardAdded: () => setState(() {})),
             DecksScreen(
               key: ValueKey(_decksLinkToken),

@@ -17,7 +17,6 @@ extension DeckFormatMeta on DeckFormat {
     }
   }
 
-  /// Compact version of [label] for use in small tags/chips.
   String get shortLabel {
     switch (this) {
       case DeckFormat.standard:
@@ -29,8 +28,6 @@ extension DeckFormatMeta on DeckFormat {
     }
   }
 
-  /// Distinct icon per format, used anywhere a format is shown (filter
-  /// chips, dropdowns, tags) so each one stays visually identifiable.
   IconData get icon {
     switch (this) {
       case DeckFormat.standard:
@@ -60,8 +57,6 @@ class DeckCardEntry {
     );
   }
 
-  /// The row to upsert into `deck_cards`. Needs [deckId] since a
-  /// [DeckCardEntry] doesn't know which deck it belongs to on its own.
   Map<String, dynamic> toRow(String deckId) {
     return {'deck_id': deckId, 'card_id': cardId, 'quantity': quantity};
   }
@@ -92,8 +87,6 @@ class DeckData {
 
   int get cardCount => cards.fold(0, (sum, c) => sum + c.quantity);
 
-  /// What the deck's cards are worth together, using the values of the cards
-  /// in the collection (a card no longer in the collection counts as zero).
   double get totalValue {
     final values = {
       for (final c in PokemonCardData.library) c.id: c.estimatedValue,
@@ -104,8 +97,6 @@ class DeckData {
     );
   }
 
-  /// Builds a deck from a row returned by the `decks` table plus its
-  /// already-fetched rows from `deck_cards`.
   factory DeckData.fromRow(
     Map<String, dynamic> row, {
     List<DeckCardEntry> cards = const [],
@@ -125,10 +116,6 @@ class DeckData {
     );
   }
 
-  /// The row to upsert into the `decks` table. Doesn't include [cards] —
-  /// those are synced separately into `deck_cards`. `user_id` is left out
-  /// too, since the column defaults to `auth.uid()` on insert and never
-  /// changes on update.
   Map<String, dynamic> toRow() {
     return {
       'id': id,
@@ -161,7 +148,5 @@ class DeckData {
     );
   }
 
-  /// The signed-in user's decks, loaded from the `decks` and `deck_cards`
-  /// tables by [DeckRepository.loadAll]. Empty until then.
   static final List<DeckData> library = [];
 }
