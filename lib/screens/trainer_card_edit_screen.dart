@@ -16,6 +16,7 @@ import 'avatar_crop_screen.dart';
 import 'trainer_favorite_card_screen.dart';
 
 const _noneValue = '__none__';
+const double _kAvatarActionWidth = 150;
 
 class TrainerCardEditScreen extends StatefulWidget {
   final TrainerProfileData profile;
@@ -421,22 +422,23 @@ class _AvatarPicker extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: PokeBinderSpacing.sp2),
-          Row(
+          const SizedBox(height: PokeBinderSpacing.sp3),
+          Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextButton(
-                onPressed: onPick,
-                child: Text(hasPhoto ? 'Change photo' : 'Upload photo'),
-              ),
-              if (hasPhoto)
-                TextButton(
-                  onPressed: onRemove,
-                  child: const Text(
-                    'Remove',
-                    style: TextStyle(color: PokeBinderColors.danger),
-                  ),
+              SizedBox(
+                width: _kAvatarActionWidth,
+                child: PillButton(
+                  label: hasPhoto ? 'Change Photo' : 'Upload Photo',
+                  icon: hasPhoto ? Icons.edit_rounded : Icons.upload_rounded,
+                  ghost: true,
+                  onTap: onPick,
                 ),
+              ),
+              if (hasPhoto) ...[
+                const SizedBox(height: PokeBinderSpacing.sp3),
+                DangerActionButton(label: 'Remove', onTap: onRemove),
+              ],
             ],
           ),
         ],

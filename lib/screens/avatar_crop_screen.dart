@@ -2,12 +2,15 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 
 const double _kViewport = 300;
 const double _kOutputSize = 512;
 const double _kMaxZoom = 4;
+const double _kViewportRadius = 24;
+const double _kSliderTrack = 4;
 
 class AvatarCropScreen extends StatefulWidget {
   final Uint8List imageBytes;
@@ -119,10 +122,16 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
   Widget _body(Size size) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        SizedBox(
+        Container(
           width: _kViewport,
           height: _kViewport,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(_kViewportRadius),
+            boxShadow: kCardElevation,
+          ),
+          clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
               RepaintBoundary(
@@ -152,9 +161,18 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
             ],
           ),
         ),
-        const SizedBox(height: PokeBinderSpacing.sp4),
-        SizedBox(
+        const SizedBox(height: PokeBinderSpacing.sp5),
+        Container(
           width: _kViewport,
+          padding: const EdgeInsets.symmetric(
+            horizontal: PokeBinderSpacing.sp4,
+            vertical: PokeBinderSpacing.sp1,
+          ),
+          decoration: BoxDecoration(
+            color: PokeBinderColors.white,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: kCardElevation,
+          ),
           child: Row(
             children: [
               const Icon(
@@ -163,12 +181,21 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
                 color: PokeBinderColors.inkSoft,
               ),
               Expanded(
-                child: Slider(
-                  min: 1,
-                  max: _kMaxZoom,
-                  value: _zoom,
-                  activeColor: PokeBinderColors.redDeep,
-                  onChanged: _setZoom,
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: _kSliderTrack,
+                    activeTrackColor: PokeBinderColors.redDeep,
+                    inactiveTrackColor: PokeBinderColors.cream2,
+                    thumbColor: PokeBinderColors.redDeep,
+                    overlayColor:
+                        PokeBinderColors.red.withValues(alpha: 0.12),
+                  ),
+                  child: Slider(
+                    min: 1,
+                    max: _kMaxZoom,
+                    value: _zoom,
+                    onChanged: _setZoom,
+                  ),
                 ),
               ),
               const Icon(
@@ -214,7 +241,7 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
                       )
                     : size == null
                         ? const Center(child: CircularProgressIndicator())
-                        : _body(size),
+                        : Center(child: _body(size)),
               ),
               Row(
                 children: [

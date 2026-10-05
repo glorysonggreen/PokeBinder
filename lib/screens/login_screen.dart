@@ -59,12 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _comingSoon(String provider) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Continue with $provider is coming soon')),
-    );
-  }
-
   void _openForgotPassword() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
@@ -152,30 +146,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 label: _submitting ? 'Logging In…' : 'Log In',
                 enabled: !_submitting,
                 onTap: _attemptLogin,
-              ),
-              const SizedBox(height: PokeBinderSpacing.sp5),
-
-              const _OrDivider(label: 'OR CONTINUE WITH'),
-              const SizedBox(height: PokeBinderSpacing.sp4),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: PillButton(
-                      label: 'Google',
-                      ghost: true,
-                      onTap: () => _comingSoon('Google'),
-                    ),
-                  ),
-                  const SizedBox(width: PokeBinderSpacing.sp3),
-                  Expanded(
-                    child: PillButton(
-                      label: 'Apple',
-                      ghost: true,
-                      onTap: () => _comingSoon('Apple'),
-                    ),
-                  ),
-                ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp6),
 
@@ -266,36 +236,6 @@ class _AuthBanner extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _OrDivider extends StatelessWidget {
-  final String label;
-
-  const _OrDivider({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final line = Expanded(
-      child: Container(
-        height: 1,
-        color: PokeBinderColors.ink.withValues(alpha: 0.12),
-      ),
-    );
-
-    return Row(
-      children: [
-        line,
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: PokeBinderSpacing.sp3),
-          child: Text(
-            label,
-            style: PokeBinderText.sectionLabel,
-          ),
-        ),
-        line,
-      ],
     );
   }
 }
