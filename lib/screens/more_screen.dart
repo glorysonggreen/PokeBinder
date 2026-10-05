@@ -6,6 +6,7 @@ import 'stats_screen.dart';
 import 'trainer_card_screen.dart';
 import 'wishlist_screen.dart';
 import 'sound_settings_screen.dart';
+import '../widgets/pokebinder_background.dart';
 
 class MoreScreen extends StatelessWidget {
   final TrainerProfileData profile;
@@ -90,7 +91,7 @@ class MoreScreen extends StatelessWidget {
       ),
       _MoreRowData(
         icon: Icons.volume_up_rounded,
-        gradient: PokeBinderColors.goldGradient,
+        gradient: PokeBinderColors.violetGradient,
         title: 'Sound & Music',
         subtitle: 'Music, effects, volume',
         onTap: () => Navigator.of(context).push(
@@ -107,8 +108,7 @@ class MoreScreen extends StatelessWidget {
         ),
     ];
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(

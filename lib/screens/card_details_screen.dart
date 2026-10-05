@@ -12,6 +12,7 @@ import '../widgets/pokemon_card_widget.dart';
 import 'card_form_screen.dart';
 import 'deck_form_screen.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 class CardDetailsScreen extends StatefulWidget {
   final PokemonCardData card;
@@ -153,8 +154,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   Widget build(BuildContext context) {
     final card = _card;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

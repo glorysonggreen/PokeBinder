@@ -11,6 +11,7 @@ import '../widgets/motion_widgets.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
+import '../widgets/pokebinder_background.dart';
 
 const _kDonutColors = [
   PokeBinderColors.red,
@@ -127,8 +128,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final rarityStats = _valueByRarity;
     final setStats = _cardsBySet;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

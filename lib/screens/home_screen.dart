@@ -20,6 +20,7 @@ import 'deck_form_screen.dart';
 import 'stats_screen.dart';
 import 'trainer_card_screen.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 class HomeScreen extends StatefulWidget {
   final TrainerProfileData profile;
@@ -147,8 +148,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final continueBinder = _continueBinder;
     final recentCards = _recentlyAdded;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
+      backdrop: PokeBinderBackdrop.pokeball,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(

@@ -11,6 +11,7 @@ import '../widgets/pokemon_card_widget.dart';
 import '../widgets/trainer_avatar.dart';
 import 'card_details_screen.dart';
 import 'trainer_card_edit_screen.dart';
+import '../widgets/pokebinder_background.dart';
 
 class TrainerCardScreen extends StatefulWidget {
   final TrainerProfileData profile;
@@ -108,8 +109,7 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
     final favoriteBinder = _favoriteBinder;
     final favoriteDeck = _favoriteDeck;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

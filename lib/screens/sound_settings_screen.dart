@@ -4,6 +4,7 @@ import '../services/audio_service.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/pokebinder_background.dart';
 
 /// Turn background music and sound effects on or off, and set their volumes.
 class SoundSettingsScreen extends StatelessWidget {
@@ -13,8 +14,7 @@ class SoundSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final audio = PokeBinderAudio.instance;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,
@@ -25,8 +25,6 @@ class SoundSettingsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   BackLink(onTap: () => Navigator.of(context).maybePop()),
-                  const SizedBox(height: PokeBinderSpacing.sp2),
-                  Text('SETTINGS', style: PokeBinderText.eyebrow),
                   const SizedBox(height: PokeBinderSpacing.sp2),
                   Text('Sound & Music', style: PokeBinderText.heading),
                   const SizedBox(height: PokeBinderSpacing.sp1),

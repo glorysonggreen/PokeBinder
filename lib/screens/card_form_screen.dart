@@ -8,6 +8,7 @@ import '../widgets/card_form_parts.dart';
 import '../widgets/catalog_card_summary.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
+import '../widgets/pokebinder_background.dart';
 
 class CardFormResult {
   final PokemonCardData? card;
@@ -360,8 +361,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
     final owned = _ownedCopies;
     final pageStatus = _pageStatus;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         bottom: false,
         child: Column(

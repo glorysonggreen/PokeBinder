@@ -5,6 +5,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'wishlist_form_result.dart';
+import '../widgets/pokebinder_background.dart';
 
 class TradeEntryFormScreen extends StatefulWidget {
   final WishlistEntry existingEntry;
@@ -124,8 +125,7 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

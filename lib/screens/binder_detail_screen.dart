@@ -7,6 +7,7 @@ import '../widgets/card_caption.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import 'binder_form_screen.dart';
+import '../widgets/pokebinder_background.dart';
 
 class BinderDetailScreen extends StatefulWidget {
   final String? binderId;
@@ -174,8 +175,7 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
             '${unassignedCount == 1 ? 'card' : 'cards'} · no binder'
         : 'Page ${_pageIndex + 1} of ${binder!.pageCount}';
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

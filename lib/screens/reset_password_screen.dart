@@ -5,6 +5,7 @@ import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -75,8 +76,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
+      backdrop: PokeBinderBackdrop.pokeball,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

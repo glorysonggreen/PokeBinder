@@ -8,6 +8,7 @@ import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
+import '../widgets/pokebinder_background.dart';
 
 class TrainerFavoriteCardScreen extends StatefulWidget {
   final String? initialCardId;
@@ -113,8 +114,7 @@ class _TrainerFavoriteCardScreenState
     final filtered = result.cards;
     final subOptionRow = result.subOptionRow;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(PokeBinderSpacing.sp4),

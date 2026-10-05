@@ -17,6 +17,7 @@ import 'binder_form_screen.dart';
 import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 export '../widgets/card_sort_controls.dart' show CardSortOption, TimeSortDirection;
 
@@ -355,8 +356,7 @@ class _BindersScreenState extends State<BindersScreen> {
         .where((b) => b.name.toLowerCase().contains(_binderSearch.toLowerCase()))
         .toList();
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(

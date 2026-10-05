@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/pokebinder_background.dart';
 
 const double _kViewport = 300;
 const double _kOutputSize = 512;
@@ -214,8 +215,7 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
   Widget build(BuildContext context) {
     final size = _contentSize;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: Padding(
           padding: PokeBinderSpacing.page,

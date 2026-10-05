@@ -3,6 +3,7 @@ import '../models/deck_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
+import '../widgets/pokebinder_background.dart';
 
 const _kSizePresets = [15, 20, 30, 40, 60];
 
@@ -56,8 +57,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

@@ -7,6 +7,7 @@ import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'app_shell.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -105,8 +106,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
+      backdrop: PokeBinderBackdrop.pokeball,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

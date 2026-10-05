@@ -9,6 +9,7 @@ import '../widgets/catalog_card_summary.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'wishlist_form_result.dart';
+import '../widgets/pokebinder_background.dart';
 
 class WishlistFormScreen extends StatefulWidget {
   final CatalogCard? catalogCard;
@@ -143,8 +144,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
     final suggested = _suggestedValue;
     final finish = _finish;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         bottom: false,
         child: Column(

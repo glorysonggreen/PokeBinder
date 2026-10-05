@@ -3,6 +3,7 @@ import '../models/binder_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
+import '../widgets/pokebinder_background.dart';
 
 class BinderFormResult {
   final BinderData? binder;
@@ -111,8 +112,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

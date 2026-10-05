@@ -5,6 +5,7 @@ import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -66,8 +67,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final sentToEmail = _sentToEmail;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
+      backdrop: PokeBinderBackdrop.pokeball,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

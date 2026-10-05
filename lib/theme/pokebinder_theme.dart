@@ -20,6 +20,7 @@ class PokeBinderColors {
   static const teal = Color(0xFF3E7C8C);
   static const danger = Color(0xFFB23A2C);
   static const slate = Color(0xFF5C6B73);
+  static const violet = Color(0xFF6B5B9E);
   static const hint = Color(0xFFA89C86);
 
   static const redGradient = LinearGradient(
@@ -38,6 +39,12 @@ class PokeBinderColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [Color(0xFF8FD0D8), teal],
+  );
+
+  static const violetGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFB9A9E3), violet],
   );
 
   static const slateGradient = LinearGradient(

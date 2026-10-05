@@ -10,6 +10,7 @@ import '../widgets/pokebinder_controls.dart';
 import 'deck_detail_screen.dart';
 import 'deck_form_screen.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 const _kTagOkBg = Color(0xFFE4EFE7);
 const _kTagOkFg = Color(0xFF2F6B45);
@@ -181,8 +182,7 @@ class _DecksScreenState extends State<DecksScreen> {
   Widget build(BuildContext context) {
     final visibleDecks = _visibleDecks;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

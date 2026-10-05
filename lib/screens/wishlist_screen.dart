@@ -14,6 +14,7 @@ import 'trade_list_add_card_screen.dart';
 import 'trade_entry_form_screen.dart';
 import 'wishlist_form_result.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 enum _WishlistSort { nameAsc, newest, oldest, priorityFirst, valueHigh }
 
@@ -264,8 +265,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     final pageEntries =
         filtered.isEmpty ? const <WishlistEntry>[] : filtered.sublist(pageStart, pageEnd);
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

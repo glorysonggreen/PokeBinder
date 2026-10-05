@@ -4,6 +4,7 @@ import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
+import '../widgets/pokebinder_background.dart';
 
 @immutable
 class BinderCardPick {
@@ -139,8 +140,7 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
     final subOptionRow = result.subOptionRow;
     final total = _totalSelected;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(PokeBinderSpacing.sp4),

@@ -10,6 +10,7 @@ import 'screens/login_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'theme/pokebinder_theme.dart';
 import 'widgets/pokeball_intro.dart';
+import 'widgets/pokebinder_background.dart';
 import 'services/audio_navigator_observer.dart';
 import 'services/audio_service.dart';
 import 'widgets/sound_widgets.dart';
@@ -53,6 +54,12 @@ class _PokeBinderAppState extends State<PokeBinderApp> {
       if (state.event == AuthChangeEvent.passwordRecovery) {
         _openResetPassword();
       }
+    });
+    // Warm the image cache with the screen backgrounds once the first frame
+    // is up, so no screen flashes plain cream while its background decodes.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _navigatorKey.currentContext;
+      if (context != null) PokeBinderBackground.precacheAll(context);
     });
   }
 

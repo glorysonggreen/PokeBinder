@@ -15,6 +15,7 @@ import '../widgets/trainer_avatar.dart';
 import 'avatar_crop_screen.dart';
 import 'trainer_favorite_card_screen.dart';
 import '../services/audio_service.dart';
+import '../widgets/pokebinder_background.dart';
 
 const _noneValue = '__none__';
 const double _kAvatarActionWidth = 150;
@@ -152,8 +153,7 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
     final binders = BinderData.library;
     final decks = DeckData.library;
 
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: PokeBinderSpacing.page,

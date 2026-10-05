@@ -10,6 +10,7 @@ import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
 import '../services/audio_service.dart';
 import '../widgets/sound_widgets.dart';
+import '../widgets/pokebinder_background.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -87,8 +88,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
+      backdrop: PokeBinderBackdrop.pokeball,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
