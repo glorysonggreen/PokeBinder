@@ -2,13 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../services/audio_service.dart';
 
-/// Wraps the theme's normal ink splash so that every Material tap target in
-/// the app (buttons, list rows, chips, icon buttons, dialog actions...) plays
-/// a small menu "tick" as it is pressed.
-///
-/// The splash itself is drawn exactly as before by the wrapped [inner]
-/// factory; this only adds the sound. Disabled controls never create a splash,
-/// so they stay silent.
 class SoundSplashFactory extends InteractiveInkFeatureFactory {
   const SoundSplashFactory(this.inner);
 

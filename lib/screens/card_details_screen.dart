@@ -37,8 +37,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    // The card is "dealt" onto the table as the screen opens; chase rarities
-    // get an extra sparkle once it has landed.
+
     PokeBinderAudio.play(
       Sfx.cardDeal,
       delay: const Duration(milliseconds: 160),
@@ -166,7 +165,6 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('CARD DETAILS', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               Center(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -202,7 +200,6 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               FadeSlideIn(
                 index: 1,
                 child: Text(card.name, style: PokeBinderText.heading),
@@ -216,7 +213,6 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               FadeSlideIn(
                 index: 3,
                 child: Row(
@@ -256,7 +252,6 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               FadeSlideIn(
                 index: 5,
                 child: _StatBox(
@@ -265,7 +260,6 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               if (card.notes.isNotEmpty)
                 _FieldTile(
                   label: 'Notes',
@@ -274,7 +268,6 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                   stacked: true,
                 ),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               FadeSlideIn(
                 index: 6,
                 child: Row(
@@ -577,7 +570,6 @@ class _AddToDeckSheetState extends State<_AddToDeckSheet> {
               style: PokeBinderText.subtitle,
             ),
             const SizedBox(height: PokeBinderSpacing.sp3),
-
             if (decks.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -672,7 +664,6 @@ class _AddToDeckSheetState extends State<_AddToDeckSheet> {
                 ),
               ),
             const SizedBox(height: PokeBinderSpacing.sp2),
-
             Material(
               color: Colors.transparent,
               child: InkWell(
@@ -700,7 +691,6 @@ class _AddToDeckSheetState extends State<_AddToDeckSheet> {
                 ),
               ),
             ),
-
             if (_selectedDeck != null) ...[
               const SizedBox(height: PokeBinderSpacing.sp2),
               Row(
@@ -740,7 +730,6 @@ class _AddToDeckSheetState extends State<_AddToDeckSheet> {
               ),
             ],
             const SizedBox(height: PokeBinderSpacing.sp3),
-
             PillButton(
               label: 'Add',
               icon: Icons.check,

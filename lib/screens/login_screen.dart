@@ -111,7 +111,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 subtitle: 'Log in to sync your collection',
               ),
               const SizedBox(height: PokeBinderSpacing.sp6),
-
               LabeledFormField(
                 label: 'Email',
                 child: TextField(
@@ -154,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     pulse: _errorTick,
                   ),
                 ),
-
               Align(
                 alignment: Alignment.centerRight,
                 child: Padding(
@@ -165,7 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               PillButton(
                 label: _submitting ? 'Logging In…' : 'Log In',
                 enabled: !_submitting,
@@ -173,7 +170,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 onTap: _attemptLogin,
               ),
               const SizedBox(height: PokeBinderSpacing.sp6),
-
               Center(
                 child: AuthLinkText(
                   prefix: "Don't have an account? ",

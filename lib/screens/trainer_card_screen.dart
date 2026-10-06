@@ -70,9 +70,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
     widget.onProfileChanged?.call(result);
   }
 
-  /// Opens the binder on top of the Trainer Card. Back from the binder
-  /// returns here, because the binder is pushed onto this screen's navigator
-  /// rather than switching the app to the Binders tab.
   Future<void> _openFavoriteBinder(BinderData binder) async {
     await Navigator.of(context).push(
       SilentPageRoute<void>(
@@ -85,7 +82,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
     if (mounted) setState(() {});
   }
 
-  /// Opens the deck on top of the Trainer Card; Back returns here.
   Future<void> _openFavoriteDeck(DeckData deck) async {
     await Navigator.of(context).push(
       SilentPageRoute<void>(
@@ -179,7 +175,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
               const SizedBox(height: PokeBinderSpacing.sp2),
               Text('TRAINER CARD', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               _TrainerHeaderPanel(
                 trainerName: trainerName,
                 trainerTitle: trainerTitle,
@@ -187,7 +182,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                 avatarUrl: _profile.avatarUrl,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               Row(
                 children: [
                   Expanded(
@@ -213,7 +207,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                 ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp5),
-
               Text('FAVORITE CARD', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
               favoriteCard != null
@@ -226,7 +219,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                       message: 'Set a favorite card to feature it here.',
                     ),
               const SizedBox(height: PokeBinderSpacing.sp5),
-
               Text('FAVORITE BINDER', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
               favoriteBinder != null
@@ -239,7 +231,6 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
                       message: 'Set a favorite binder to feature it here.',
                     ),
               const SizedBox(height: PokeBinderSpacing.sp5),
-
               Text('FAVORITE DECK', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
               favoriteDeck != null

@@ -7,9 +7,6 @@ class MinTapTarget extends StatelessWidget {
   final double size;
   final String? semanticLabel;
 
-  /// Where [child] sits inside the tap area. Use an edge alignment when the
-  /// icon should line up with the container's padding rather than float
-  /// inside the extra hit-area space.
   final AlignmentGeometry alignment;
 
   const MinTapTarget({

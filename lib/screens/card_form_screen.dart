@@ -378,7 +378,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
                     const SizedBox(height: PokeBinderSpacing.sp1),
                     Text(_subtitle, style: PokeBinderText.subtitle),
                     const SizedBox(height: PokeBinderSpacing.sp4),
-
                     CatalogSummary(
                       name: _nameController.text,
                       setName: _setController.text,
@@ -400,7 +399,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
                           ? finishLabel(_finish!)
                           : null,
                     ),
-
                     const FormSectionTitle(
                       icon: Icons.style_outlined,
                       label: 'Your copy',
@@ -473,7 +471,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
                         ],
                       ),
                     ),
-
                     EstimatedValueField(
                       controller: _valueController,
                       suggested: suggested,
@@ -485,7 +482,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
                         _valueEdited = false;
                       }),
                     ),
-
                     const FormSectionTitle(
                       icon: Icons.menu_book_outlined,
                       label: 'Where it lives',
@@ -552,7 +548,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
                               : PokeBinderText.listRowSubtitle,
                         ),
                       ),
-
                     LabeledFormField(
                       label: 'Notes (optional)',
                       child: TextField(
@@ -567,7 +562,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
                         ),
                       ),
                     ),
-
                     if (_isEditing) ...[
                       const SizedBox(height: PokeBinderSpacing.sp2),
                       DangerActionButton(label: 'Delete Card', onTap: _confirmDelete),
@@ -576,7 +570,6 @@ class _CardFormScreenState extends State<CardFormScreen> {
                 ),
               ),
             ),
-
             FormActionBar(
               label: _isEditing ? 'Save Changes' : 'Add Card',
               icon: _isEditing ? Icons.check : Icons.add,

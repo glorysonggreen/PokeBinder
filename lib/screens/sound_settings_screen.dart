@@ -6,7 +6,6 @@ import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokebinder_background.dart';
 
-/// Turn background music and sound effects on or off, and set their volumes.
 class SoundSettingsScreen extends StatelessWidget {
   const SoundSettingsScreen({super.key});
 
@@ -65,8 +64,6 @@ class SoundSettingsScreen extends StatelessWidget {
                           value: audio.sfxVolume,
                           enabled: audio.sfxEnabled,
                           onChanged: audio.setSfxVolume,
-                          // A sample plays when the slider is let go, so the
-                          // new level can be judged by ear.
                           onChangeEnd: (_) => PokeBinderAudio.play(Sfx.scanFound),
                         ),
                       ],

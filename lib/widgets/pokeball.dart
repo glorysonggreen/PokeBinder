@@ -5,11 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../theme/pokebinder_theme.dart';
 
-/// Paints a stylised Poké Ball.
-///
-/// * [open] — 0 is closed, 1 is fully open. The lid hinges up and to the
-///   side while the base drops a little, and the centre button shrinks away.
-/// * [glow] — 0..1 pulse on the centre button (the "caught!" flash).
 class PokeballPainter extends CustomPainter {
   final double open;
   final double glow;
@@ -36,7 +31,6 @@ class PokeballPainter extends CustomPainter {
 
     final ballRect = Rect.fromCircle(center: c, radius: r);
 
-    // Base (white half) — drops slightly as the ball opens.
     canvas.save();
     canvas.translate(0, open * r * 0.14);
     _drawHalf(
@@ -51,7 +45,6 @@ class PokeballPainter extends CustomPainter {
     );
     canvas.restore();
 
-    // Lid (red half) — hinges up around its right edge.
     canvas.save();
     final pivot = Offset(c.dx + r * 0.92, c.dy);
     canvas.translate(pivot.dx, pivot.dy);
@@ -70,7 +63,6 @@ class PokeballPainter extends CustomPainter {
     );
     canvas.restore();
 
-    // Centre button — only while the ball is (nearly) closed.
     final buttonScale = (1 - open * 4).clamp(0.0, 1.0).toDouble();
     if (buttonScale > 0) {
       _drawButton(canvas, c, r, buttonScale);
@@ -115,7 +107,6 @@ class PokeballPainter extends CustomPainter {
           .createShader(ballRect);
     canvas.drawRect(ballRect, fill);
 
-    // Equator band.
     final band = Paint()..color = _ink;
     canvas.drawRect(
       top
@@ -125,7 +116,6 @@ class PokeballPainter extends CustomPainter {
     );
 
     if (top) {
-      // Specular highlight on the lid.
       final shine = Paint()
         ..color = PokeBinderColors.white.withValues(alpha: 0.38)
         ..style = PaintingStyle.stroke
@@ -141,7 +131,6 @@ class PokeballPainter extends CustomPainter {
     }
     canvas.restore();
 
-    // Outline.
     canvas.drawPath(
       half,
       Paint()
@@ -197,8 +186,6 @@ class PokeballPainter extends CustomPainter {
       oldDelegate.open != open || oldDelegate.glow != glow;
 }
 
-/// A line-art Poké Ball in a single colour. Used for spinners, watermarks and
-/// anywhere the full-colour ball would clash with its background.
 class PokeballGlyphPainter extends CustomPainter {
   final Color color;
   final double strokeFraction;
@@ -249,7 +236,6 @@ class PokeballGlyphPainter extends CustomPainter {
       oldDelegate.rotation != rotation;
 }
 
-/// A static, full-colour Poké Ball.
 class PokeballIcon extends StatelessWidget {
   final double size;
 
@@ -264,8 +250,6 @@ class PokeballIcon extends StatelessWidget {
   }
 }
 
-/// A small line-art Poké Ball that spins. Used inside buttons while a request
-/// is in flight.
 class PokeballSpinner extends StatefulWidget {
   final double size;
   final Color color;
@@ -322,8 +306,6 @@ class _PokeballSpinnerState extends State<PokeballSpinner>
   }
 }
 
-/// The loading indicator for the app: a Poké Ball that wobbles like it is
-/// waiting to find out whether the catch worked, then glows and wobbles again.
 class PokeballLoader extends StatefulWidget {
   final double size;
   final String? label;
@@ -371,7 +353,7 @@ class _PokeballLoaderState extends State<PokeballLoader>
             animation: _controller,
             builder: (context, _) {
               final t = _controller.value;
-              // 0 – 0.55: two wobbles. 0.55 – 0.8: button glow. Rest: pause.
+
               final wobble = (t / 0.55).clamp(0.0, 1.0);
               final angle = t < 0.55
                   ? math.sin(wobble * math.pi * 4) * 0.32 * (1 - wobble * 0.4)
@@ -415,8 +397,6 @@ class _PokeballLoaderState extends State<PokeballLoader>
   }
 }
 
-/// A Poké Ball for headers and banners. It wobbles once shortly after it
-/// appears, and again whenever it is tapped.
 class PokeballBadge extends StatefulWidget {
   final double size;
   final Duration initialDelay;
@@ -494,7 +474,6 @@ class _PokeballBadgeState extends State<PokeballBadge>
   }
 }
 
-/// A four-point sparkle, used by the intro burst and available for reuse.
 Path sparklePath(Offset center, double radius) {
   final path = Path();
   const points = 4;

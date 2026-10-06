@@ -85,7 +85,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               if (sentToEmail == null) ...[
                 LabeledFormField(
                   label: 'Email',
@@ -174,7 +173,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: PokeBinderSpacing.sp5),
                 PillButton(label: 'Back to Log In', onTap: _backToLogin),
               ],
-
               const SizedBox(height: PokeBinderSpacing.sp4),
               Center(
                 child: AuthLinkText(

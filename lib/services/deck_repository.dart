@@ -10,13 +10,12 @@ class DeckRepository {
   static SupabaseClient get _client => Supabase.instance.client;
 
   static Future<void> loadAll() async {
-    final deckRows =
-        await fetchAllRows('decks', orderBy: 'created_at', thenBy: 'id');
-    final cardRows = await fetchAllRows(
-      'deck_cards',
-      orderBy: 'deck_id',
-      thenBy: 'card_id',
-    );
+    final results = await Future.wait([
+      fetchAllRows('decks', orderBy: 'created_at', thenBy: 'id'),
+      fetchAllRows('deck_cards', orderBy: 'deck_id', thenBy: 'card_id'),
+    ]);
+    final deckRows = results[0];
+    final cardRows = results[1];
 
     final cardsByDeck = <String, List<DeckCardEntry>>{};
     for (final row in cardRows) {

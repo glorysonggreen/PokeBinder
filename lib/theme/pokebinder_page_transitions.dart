@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'pokebinder_motion.dart';
 
-/// Page transition for non-Cupertino platforms.
-///
-/// The incoming page rises a few pixels, grows from 97% and fades in over the
-/// page it covers, so screens feel like cards being laid down on a table. The
-/// page underneath only dips in opacity (no scaling) so no empty edges are
-/// ever revealed behind it.
 class PokeBinderPageTransitionsBuilder extends PageTransitionsBuilder {
   const PokeBinderPageTransitionsBuilder();
 

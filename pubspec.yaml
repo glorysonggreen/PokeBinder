@@ -12,7 +12,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.9
   # Chakra Petch (headers/labels) from Google Fonts, matching the mockup.
   google_fonts: ^6.2.1
   # Backend: auth + Postgres database for the collection, binders, decks,
@@ -40,3 +39,4 @@ flutter:
     - assets/audio/sfx/
     - assets/audio/music/
     - assets/backgrounds/
+    - assets/google_fonts/

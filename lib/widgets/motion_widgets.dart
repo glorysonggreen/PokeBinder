@@ -189,8 +189,6 @@ class _PressableScaleState extends State<PressableScale>
   }
 
   void _down() {
-    // Card tiles (the ones with a foil shine) get a card "snap"; other
-    // pressable tiles get the standard tick.
     PokeBinderAudio.play(
       widget.shineRadius != null ? Sfx.cardSelect : Sfx.tap,
     );
@@ -344,10 +342,6 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
   }
 }
 
-/// A card being dealt onto the table: it swings in on its vertical axis with
-/// a touch of perspective, scales up, and fades in.
-///
-/// Wrap the hero card of a screen. For lists and grids use [FadeSlideIn].
 class CardDealIn extends StatelessWidget {
   final Widget child;
   final Duration delay;
@@ -394,9 +388,6 @@ class CardDealIn extends StatelessWidget {
   }
 }
 
-/// An inline form error. It fades in with a short sideways shake — like a
-/// Poké Ball that didn't quite hold — every time it appears, its [message]
-/// changes, or [pulse] changes (bump it to shake again for the same message).
 class AnimatedFormError extends StatefulWidget {
   final String message;
   final int pulse;

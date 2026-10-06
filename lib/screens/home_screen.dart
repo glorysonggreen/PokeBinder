@@ -191,7 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
-
                 FadeSlideIn(
                   index: 1,
                   child: CollectionSearchBar(
@@ -201,7 +200,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp3),
-
                 FadeSlideIn(
                   index: 2,
                   child: Row(
@@ -233,7 +231,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
-
                 Text('QUICK ACTIONS', style: PokeBinderText.sectionLabel),
                 const SizedBox(height: PokeBinderSpacing.sp2),
                 FadeSlideIn(
@@ -261,7 +258,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
-
                 if (continueBinder != null) ...[
                   FadeSlideIn(
                     index: 4,
@@ -272,7 +268,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: PokeBinderSpacing.sp4),
                 ],
-
                 Row(
                   children: [
                     Expanded(
@@ -316,7 +311,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: PokeBinderSpacing.sp4),
-
                 FadeSlideIn(
                   index: 6,
                   child: PillButton(

@@ -524,9 +524,10 @@ CardSortResult applyCardSort({
       bySupertype,
   };
 
-  final filtered = byChip
-      .where((c) => c.name.toLowerCase().contains(search.toLowerCase()))
-      .toList();
+  final needle = search.toLowerCase();
+  final filtered = needle.isEmpty
+      ? byChip.toList()
+      : byChip.where((c) => c.name.toLowerCase().contains(needle)).toList();
 
   switch (sortOption) {
     case CardSortOption.time:

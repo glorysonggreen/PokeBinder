@@ -37,10 +37,12 @@ class BinderCardTile extends StatelessWidget {
                   child: CardImage(
                     path: card.imageAssetPath!,
                     fit: BoxFit.contain,
+                    thumbnail: true,
+                    cacheWidth: 360,
                   ),
                 ),
               )
-            : const PokemonCardBack(),
+            : const PokemonCardBack(shadow: false),
       ),
     );
   }

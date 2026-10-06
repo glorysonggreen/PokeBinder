@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
 
+import '../theme/pokebinder_theme.dart';
 import 'enum_parsing.dart';
 import 'pokemon_card_data.dart';
 
 enum DeckFormat { standard, expanded, casual }
+
+extension DeckFormatAccent on DeckFormat {
+  Color get accentColor {
+    switch (this) {
+      case DeckFormat.standard:
+        return PokeBinderColors.teal;
+      case DeckFormat.expanded:
+        return PokeBinderColors.goldDeep;
+      case DeckFormat.casual:
+        return PokeBinderColors.slate;
+    }
+  }
+}
 
 extension DeckFormatMeta on DeckFormat {
   String get label {

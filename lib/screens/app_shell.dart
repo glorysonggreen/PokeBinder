@@ -53,6 +53,8 @@ class _AppShellState extends State<AppShell> {
   String? _bindersInitialBinderId;
   int _decksLinkToken = 0;
   String? _decksInitialDeckId;
+  final Map<AppTab, Widget> _tabCache = {};
+  final Set<AppTab> _visitedTabs = {AppTab.home};
 
   String get _startingTrainerName =>
       AuthService.trainerNameFromMetadata ?? widget.trainerName;
@@ -94,14 +96,14 @@ class _AppShellState extends State<AppShell> {
 
   Future<void> _loadData() async {
     try {
-      final profile =
-          await TrainerProfileRepository.load(fallbackName: _startingTrainerName);
-      await Future.wait([
+      final results = await Future.wait<Object?>([
+        TrainerProfileRepository.load(fallbackName: _startingTrainerName),
         BinderRepository.loadAll(),
         CardRepository.loadAll(),
         DeckRepository.loadAll(),
         WishlistRepository.loadAll(),
       ]);
+      final profile = results[0] as TrainerProfileData;
       if (!mounted) return;
       setState(() {
         _profile = profile;
@@ -138,10 +140,18 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  void _switchTab(AppTab tab) => setState(() => _tab = tab);
+  void _switchTab(AppTab tab) {
+    setState(() {
+      _tabCache.remove(tab);
+      _tab = tab;
+    });
+  }
 
   void _handleProfileChanged(TrainerProfileData profile) {
-    setState(() => _profile = profile);
+    setState(() {
+      _tabCache.clear();
+      _profile = profile;
+    });
     TrainerProfileRepository.upsert(profile);
   }
 
@@ -150,6 +160,7 @@ class _AppShellState extends State<AppShell> {
       _bindersLinkToken++;
       _bindersInitialTabIndex = tabIndex;
       _bindersInitialBinderId = binderId;
+      _tabCache.remove(AppTab.binders);
       _tab = AppTab.binders;
     });
   }
@@ -158,12 +169,49 @@ class _AppShellState extends State<AppShell> {
     setState(() {
       _decksLinkToken++;
       _decksInitialDeckId = deck.id;
+      _tabCache.remove(AppTab.decks);
       _tab = AppTab.decks;
     });
   }
 
+  Widget _buildTab(AppTab tab) {
+    switch (tab) {
+      case AppTab.home:
+        return HomeScreen(
+          profile: _profile,
+          onProfileChanged: _handleProfileChanged,
+          onOpenAllCards: () => _openBinders(tabIndex: 1),
+          onOpenBinders: () => _openBinders(tabIndex: 0),
+          onOpenBinder: (BinderData binder) =>
+              _openBinders(tabIndex: 0, binderId: binder.id),
+          onOpenAdd: () => _switchTab(AppTab.add),
+          onOpenDeck: _openDeck,
+        );
+      case AppTab.binders:
+        return BindersScreen(
+          key: ValueKey(_bindersLinkToken),
+          initialTabIndex: _bindersInitialTabIndex,
+          initialBinderId: _bindersInitialBinderId,
+        );
+      case AppTab.add:
+        return AddCardScreen(onCardAdded: () => setState(() {}));
+      case AppTab.decks:
+        return DecksScreen(
+          key: ValueKey(_decksLinkToken),
+          initialDeckId: _decksInitialDeckId,
+        );
+      case AppTab.more:
+        return MoreScreen(
+          profile: _profile,
+          onProfileChanged: _handleProfileChanged,
+          onSignOut: _signOut,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    _visitedTabs.add(_tab);
     if (_loading) {
       return const Scaffold(
         backgroundColor: PokeBinderColors.cream,
@@ -207,36 +255,15 @@ class _AppShellState extends State<AppShell> {
         body: FadeIndexedStack(
           index: AppTab.values.indexOf(_tab),
           children: [
-            HomeScreen(
-              profile: _profile,
-              onProfileChanged: _handleProfileChanged,
-              onOpenAllCards: () => _openBinders(tabIndex: 1),
-              onOpenBinders: () => _openBinders(tabIndex: 0),
-              onOpenBinder: (BinderData binder) =>
-                  _openBinders(tabIndex: 0, binderId: binder.id),
-              onOpenAdd: () => _switchTab(AppTab.add),
-              onOpenDeck: _openDeck,
-            ),
-            BindersScreen(
-              key: ValueKey(_bindersLinkToken),
-              initialTabIndex: _bindersInitialTabIndex,
-              initialBinderId: _bindersInitialBinderId,
-            ),
-            AddCardScreen(onCardAdded: () => setState(() {})),
-            DecksScreen(
-              key: ValueKey(_decksLinkToken),
-              initialDeckId: _decksInitialDeckId,
-            ),
-            MoreScreen(
-              profile: _profile,
-              onProfileChanged: _handleProfileChanged,
-              onSignOut: _signOut,
-            ),
+            for (final tab in AppTab.values)
+              _visitedTabs.contains(tab)
+                  ? _tabCache.putIfAbsent(tab, () => _buildTab(tab))
+                  : const SizedBox.shrink(),
           ],
         ),
         bottomNavigationBar: AppNavBar(
           current: _tab,
-          onChanged: (tab) => setState(() => _tab = tab),
+          onChanged: _switchTab,
         ),
       ),
     );

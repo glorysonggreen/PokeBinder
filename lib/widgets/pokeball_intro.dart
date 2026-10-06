@@ -7,20 +7,6 @@ import '../theme/pokebinder_theme.dart';
 import 'pokeball.dart';
 import '../services/audio_service.dart';
 
-/// Plays a short Poké Ball intro the first time the app is launched, then
-/// fades it away to reveal [child].
-///
-/// Sequence (about 2.6 s):
-///
-///  1. A Poké Ball drops in and bounces to a stop.
-///  2. It wobbles, like a catch attempt.
-///  3. The centre button glows.
-///  4. The ball bursts open in a flash of light and sparkles.
-///  5. The PokéBinder wordmark rises out of the light with a foil shine.
-///  6. The whole scene dissolves into the app.
-///
-/// Tapping anywhere skips it. The intro is skipped entirely when the system
-/// asks for reduced motion, and it only ever plays once per app launch.
 class PokeBinderIntro extends StatefulWidget {
   final Widget child;
 
@@ -69,8 +55,7 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
       if (status == AnimationStatus.completed) _beginExit();
     });
     _timeline.forward();
-    // One composed sound timed to the animation: bounce, wobble clicks,
-    // burst, and the fanfare as the wordmark appears.
+
     PokeBinderAudio.play(Sfx.intro);
   }
 
@@ -95,7 +80,6 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
     });
   }
 
-  /// Progress (0..1) of the window [startMs]..[endMs] of the timeline.
   double _seg(double startMs, double endMs, [Curve curve = Curves.linear]) {
     final raw = (_timeline.value * _totalMs - startMs) / (endMs - startMs);
     return curve.transform(raw.clamp(0.0, 1.0).toDouble());
@@ -156,8 +140,6 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
           return Stack(
             fit: StackFit.expand,
             children: [
-              // Backdrop: soft spotlight plus a slowly turning Poké Ball
-              // watermark.
               DecoratedBox(
                 decoration: const BoxDecoration(
                   gradient: RadialGradient(
@@ -235,7 +217,6 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Light pouring out of the open ball.
           if (open > 0)
             Positioned(
               left: -ballSize,
@@ -264,7 +245,6 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
                 ),
               ),
             ),
-          // Ground shadow — tighter and fainter while the ball is high.
           Positioned(
             left: ballSize * (0.5 - 0.3 * drop),
             right: ballSize * (0.5 - 0.3 * drop),
@@ -280,7 +260,6 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
               ),
             ),
           ),
-          // The ball itself.
           Positioned.fill(
             child: Opacity(
               opacity: fadeIn,
@@ -296,7 +275,6 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
               ),
             ),
           ),
-          // Sparkles and the expanding ring.
           if (burst > 0 && burst < 1)
             Positioned(
               left: -ballSize,
@@ -377,7 +355,6 @@ class _PokeBinderIntroState extends State<PokeBinderIntro>
   }
 }
 
-/// Sparkles flying outward from the ball, plus a ring of light.
 class _BurstPainter extends CustomPainter {
   final double progress;
   final double ballRadius;
@@ -398,7 +375,6 @@ class _BurstPainter extends CustomPainter {
     final c = size.center(Offset.zero);
     final fade = (1 - progress).clamp(0.0, 1.0).toDouble();
 
-    // Expanding ring.
     canvas.drawCircle(
       c,
       ballRadius * (0.6 + 1.9 * progress),
@@ -409,8 +385,6 @@ class _BurstPainter extends CustomPainter {
     );
 
     for (var i = 0; i < _count; i++) {
-      // A fixed, evenly spread but slightly irregular pattern, so the burst
-      // is identical every launch.
       final angle = i * 2 * math.pi / _count + (i.isOdd ? 0.14 : -0.06);
       final reach = ballRadius * (1.25 + 0.5 * ((i * 7) % 5) / 4);
       final start = ballRadius * 0.35;

@@ -146,7 +146,6 @@ class _StatsScreenState extends State<StatsScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               Row(
                 children: [
                   Expanded(
@@ -172,17 +171,14 @@ class _StatsScreenState extends State<StatsScreen> {
                 ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               Text('VALUE BY RARITY', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
               _ValueByRarityPanel(stats: rarityStats),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               Text('CARDS BY SET', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
               _CardsBySetPanel(stats: setStats),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               Text('TOP VALUE CARDS', style: PokeBinderText.sectionLabel),
               const SizedBox(height: PokeBinderSpacing.sp2),
               _TopValuePanel(cards: _topValueCards, onTapCard: _openCardDetails),

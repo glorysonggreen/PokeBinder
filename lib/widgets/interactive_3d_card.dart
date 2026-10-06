@@ -2,11 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
 
-/// A card you can drag to tilt and spin.
-///
-/// On release it springs back to rest. While tilted, a holographic foil sheen
-/// and a specular glint slide across the front face, like a real holo card
-/// catching the light. Set [holo] to false to turn the sheen off.
 class Interactive3DCard extends StatefulWidget {
   final Widget child;
   final Widget? back;
@@ -14,11 +9,8 @@ class Interactive3DCard extends StatefulWidget {
   final double horizontalSensitivity;
   final double verticalSensitivity;
 
-  /// Whether to draw the holographic sheen over the front face.
   final bool holo;
 
-  /// Corner radius of the card as a fraction of its width, so the sheen is
-  /// clipped to the card's shape. Matches the card art.
   final double cornerRadiusFraction;
 
   const Interactive3DCard({
@@ -114,7 +106,6 @@ class _Interactive3DCardState extends State<Interactive3DCard>
       ..forward();
   }
 
-  /// Springs back to rest with a little overshoot, like a card settling.
   void _settle() {
     _animateTo(
       toX: 0,
@@ -180,7 +171,7 @@ class _Interactive3DCardState extends State<Interactive3DCard>
         ? Stack(
             fit: StackFit.passthrough,
             children: [
-              widget.child,
+              RepaintBoundary(child: widget.child),
               Positioned.fill(
                 child: IgnorePointer(
                   child: _HoloSheen(
@@ -192,7 +183,7 @@ class _Interactive3DCardState extends State<Interactive3DCard>
               ),
             ],
           )
-        : widget.child;
+        : RepaintBoundary(child: widget.child);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -209,8 +200,6 @@ class _Interactive3DCardState extends State<Interactive3DCard>
   }
 }
 
-/// Rainbow foil + specular glint that move with the card's tilt. Invisible
-/// while the card is at rest and fades in as it tilts.
 class _HoloSheen extends StatelessWidget {
   final double rotationX;
   final double rotationY;
@@ -229,7 +218,6 @@ class _HoloSheen extends StatelessWidget {
         ((sway.abs() + rotationX.abs() * 1.4) * 1.7).clamp(0.0, 1.0).toDouble();
     if (intensity < 0.01) return const SizedBox.shrink();
 
-    // The foil band slides across the card as it turns.
     final shift = sway * 1.4 - rotationX * 1.2;
 
     return LayoutBuilder(

@@ -137,7 +137,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               LabeledFormField(
                 label: 'Binder name',
                 child: TextField(
@@ -156,7 +155,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
                   child: Text(_nameError!, style: PokeBinderText.formError),
                 ),
-
               LabeledFormField(
                 label: 'Category (optional)',
                 child: TextField(
@@ -167,7 +165,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   ),
                 ),
               ),
-
               FormFieldRow(
                 left: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,7 +204,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   ),
                 ),
               ),
-
               LabeledFormField(
                 label: 'Description (optional)',
                 child: TextField(
@@ -219,7 +215,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                       pokeInputDecoration(hint: "What's this binder for?"),
                 ),
               ),
-
               const SizedBox(height: PokeBinderSpacing.sp2),
               Row(
                 children: [
@@ -240,7 +235,6 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   ),
                 ],
               ),
-
               if (_isEditing) ...[
                 const SizedBox(height: PokeBinderSpacing.sp4),
                 DangerActionButton(label: 'Delete Binder', onTap: _confirmDelete),

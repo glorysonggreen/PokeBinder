@@ -12,19 +12,6 @@ import '../widgets/pokebinder_background.dart';
 
 const _kTagOkFg = Color(0xFF2F6B45);
 
-extension _DeckFormatAccent on DeckFormat {
-  Color get accentColor {
-    switch (this) {
-      case DeckFormat.standard:
-        return PokeBinderColors.teal;
-      case DeckFormat.expanded:
-        return PokeBinderColors.goldDeep;
-      case DeckFormat.casual:
-        return PokeBinderColors.slate;
-    }
-  }
-}
-
 class _EntryEditResult {
   final bool remove;
   final int? quantity;
@@ -196,7 +183,6 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
               const SizedBox(height: PokeBinderSpacing.sp4),
               _DeckOverviewCard(deck: _deck, ready: ready, cardOf: widget.cardOf),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               if (_deck.cards.isEmpty)
                 const _EmptyPanel(
                   message: 'No cards in this deck yet — add some below.',
@@ -236,7 +222,6 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
                   ),
                 ],
               ],
-
               const SizedBox(height: PokeBinderSpacing.sp4),
               PillButton(
                 label: 'Add Card',

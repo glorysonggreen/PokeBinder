@@ -183,7 +183,7 @@ class SegmentedTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = labels.length;
-    // Maps the selected index onto Alignment's -1..1 range.
+
     final thumbX = count <= 1 ? 0.0 : -1 + 2 * index / (count - 1);
 
     return Container(
@@ -194,7 +194,6 @@ class SegmentedTabBar extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // The white "thumb" glides to the selected segment.
           if (count > 0)
             Positioned.fill(
               child: AnimatedAlign(
@@ -429,8 +428,6 @@ class PillButton extends StatefulWidget {
   final bool enabled;
   final IconData? icon;
 
-  /// Shows a spinning Poké Ball in place of [icon]. Pair with `enabled: false`
-  /// while the request is in flight.
   final bool loading;
 
   const PillButton({

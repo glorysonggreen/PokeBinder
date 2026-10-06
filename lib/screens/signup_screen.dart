@@ -123,7 +123,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               LabeledFormField(
                 label: 'Trainer name',
                 child: TextField(
@@ -194,7 +193,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     pulse: _errorTick,
                   ),
                 ),
-
               const SizedBox(height: PokeBinderSpacing.sp2),
               PillButton(
                 label: _submitting ? 'Creating Account…' : '+ Create Account',
@@ -203,7 +201,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 onTap: _attemptSignUp,
               ),
               const SizedBox(height: PokeBinderSpacing.sp5),
-
               Center(
                 child: AuthLinkText(
                   prefix: 'Already have an account? ',

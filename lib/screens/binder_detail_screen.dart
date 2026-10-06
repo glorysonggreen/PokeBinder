@@ -182,11 +182,19 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
 
     return PokeBinderScaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: PokeBinderSpacing.page,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                PokeBinderSpacing.sp4,
+                PokeBinderSpacing.sp4,
+                PokeBinderSpacing.sp4,
+                0,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -232,84 +240,106 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-              LayoutBuilder(
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: PokeBinderSpacing.sp4,
+              ),
+              sliver: SliverLayoutBuilder(
                 builder: (context, constraints) {
                   const crossAxisCount = 3;
                   const crossAxisSpacing = PokeBinderSpacing.sp2;
-                  final cardWidth = (constraints.maxWidth -
+                  final cardWidth = (constraints.crossAxisExtent -
                           crossAxisSpacing * (crossAxisCount - 1)) /
                       crossAxisCount;
                   final cardHeight = cardWidth / kPokemonCardImageAspectRatio;
+                  final showAddTile = !removing && !_isUnassigned;
 
-                  return GridView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
+                  return SliverGrid(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       mainAxisSpacing: PokeBinderSpacing.sp2,
                       crossAxisSpacing: crossAxisSpacing,
                       mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
                     ),
-                    children: [
-                      for (final (i, card) in currentPageCards.indexed)
-                        FadeSlideIn(
-                          key: ValueKey('$_pageIndex-${card.id}'),
-                          index: i,
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: cardHeight,
-                                child: Stack(
-                                  children: [
-                                    Positioned.fill(
-                                      child: BinderCardTile(
-                                        card: card,
-                                        onTap: removing
-                                            ? () => _confirmRemove(card)
-                                            : () => _openCard(card),
+                    delegate: SliverChildBuilderDelegate(
+                      childCount: currentPageCards.length + (showAddTile ? 1 : 0),
+                      (context, i) {
+                        if (i == currentPageCards.length) {
+                          return FadeSlideIn(
+                            key: ValueKey('add-$_pageIndex'),
+                            index: i,
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  height: cardHeight,
+                                  child: AddCardTile(onTap: _openAddCard),
+                                ),
+                                const SizedBox(height: PokeBinderSpacing.sp1),
+                                Text(
+                                  'Add Cards',
+                                  style: PokeBinderText.cardName,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        final card = currentPageCards[i];
+                        final tile = Column(
+                          children: [
+                            SizedBox(
+                              height: cardHeight,
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: BinderCardTile(
+                                      card: card,
+                                      onTap: removing
+                                          ? () => _confirmRemove(card)
+                                          : () => _openCard(card),
+                                    ),
+                                  ),
+                                  if (removing)
+                                    const Positioned(
+                                      top: 4,
+                                      right: 4,
+                                      child: IgnorePointer(
+                                        child: _RemoveBadge(),
                                       ),
                                     ),
-                                    if (removing)
-                                      const Positioned(
-                                        top: 4,
-                                        right: 4,
-                                        child: IgnorePointer(
-                                          child: _RemoveBadge(),
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                                ],
                               ),
-                              const SizedBox(height: PokeBinderSpacing.sp1),
-                              CardCaption(card: card),
-                            ],
-                          ),
-                        ),
-                      if (!removing && !_isUnassigned)
-                        FadeSlideIn(
-                          key: ValueKey('add-$_pageIndex'),
-                          index: currentPageCards.length,
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: cardHeight,
-                                child: AddCardTile(onTap: _openAddCard),
-                              ),
-                              const SizedBox(height: PokeBinderSpacing.sp1),
-                              Text(
-                                'Add Cards',
-                                style: PokeBinderText.cardName,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                            ),
+                            const SizedBox(height: PokeBinderSpacing.sp1),
+                            CardCaption(card: card),
+                          ],
+                        );
+                        final key = ValueKey('$_pageIndex-${card.id}');
+                        return i < _kAnimatedTiles
+                            ? FadeSlideIn(key: key, index: i, child: tile)
+                            : KeyedSubtree(key: key, child: tile);
+                      },
+                    ),
                   );
                 },
               ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp6),
+              sliver: SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: PokeBinderSpacing.sp4,
+                  ),
+                  child: Column(
+                    children: [
               if (!_isUnassigned) ...[
                 const SizedBox(height: PokeBinderSpacing.sp3),
                 Row(
@@ -338,13 +368,19 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                   ],
                 ),
               ],
-            ],
-          ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
+const int _kAnimatedTiles = 12;
 
 class _HeaderAction extends StatelessWidget {
   final IconData icon;

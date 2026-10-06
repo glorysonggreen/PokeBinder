@@ -51,13 +51,12 @@ extension on _WishlistSort {
   }
 }
 
-PokemonCardData? _libraryMatch(String name) {
-  final target = name.trim().toLowerCase();
-  if (target.isEmpty) return null;
+Map<String, PokemonCardData> _libraryByName() {
+  final byName = <String, PokemonCardData>{};
   for (final card in PokemonCardData.library) {
-    if (card.name.toLowerCase() == target) return card;
+    byName.putIfAbsent(card.name.toLowerCase(), () => card);
   }
-  return null;
+  return byName;
 }
 
 String _formatValue(double value) {
@@ -282,7 +281,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               SegmentedTabBar(
                 index: isWishlist ? 0 : 1,
                 labels: [
@@ -298,7 +296,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 }),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               Row(
                 children: [
                   Expanded(
@@ -317,7 +314,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               CollectionSearchBar(
                 hint: isWishlist
                     ? 'Search cards to wishlist…'
@@ -329,7 +325,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 }),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-
               SizedBox(
                 height: kFilterChipRowHeight,
                 child: ListView(
@@ -368,7 +363,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 ),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -387,7 +381,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-
               filtered.isEmpty
                   ? _EmptyWishlistState(
                       isWishlist: isWishlist,
@@ -641,6 +634,7 @@ class _WishlistCardListPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final libraryByName = _libraryByName();
     return Container(
       decoration: BoxDecoration(
         color: PokeBinderColors.white,
@@ -673,6 +667,7 @@ class _WishlistCardListPanel extends StatelessWidget {
                 background: const _DismissBackground(),
                 child: _WishlistRow(
                   entry: entry,
+                  matchedCard: libraryByName[entry.name.trim().toLowerCase()],
                   onTap: () => onTapEntry(entry),
                 ),
               ),
@@ -688,12 +683,17 @@ class _WishlistRow extends StatelessWidget {
   final WishlistEntry entry;
   final VoidCallback onTap;
 
-  const _WishlistRow({required this.entry, required this.onTap});
+  final PokemonCardData? matchedCard;
+
+  const _WishlistRow({
+    required this.entry,
+    required this.onTap,
+    required this.matchedCard,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isWishlist = entry.kind == WishlistEntryKind.wishlist;
-    final matchedCard = _libraryMatch(entry.name);
 
     return Material(
       color: Colors.transparent,

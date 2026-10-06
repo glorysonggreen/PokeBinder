@@ -3,11 +3,6 @@ import 'package:flutter/material.dart';
 import '../services/audio_service.dart';
 import '../theme/pokebinder_theme.dart';
 
-/// Tells the audio service the person has touched the screen.
-///
-/// Browsers won't let a page start playing sound until the visitor interacts
-/// with it, so on web this is what allows the background music to begin. On
-/// phones and desktop it does nothing visible. It never blocks touches.
 class AudioGestureUnlocker extends StatelessWidget {
   final Widget child;
 
@@ -23,9 +18,6 @@ class AudioGestureUnlocker extends StatelessWidget {
   }
 }
 
-/// A small round speaker button that mutes or restores all sound with one tap.
-/// The full controls (separate music and effects switches and volumes) live in
-/// the Sound & Music screen.
 class SoundToggleButton extends StatelessWidget {
   const SoundToggleButton({super.key});
 

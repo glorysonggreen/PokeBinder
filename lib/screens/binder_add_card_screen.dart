@@ -160,19 +160,16 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               CollectionSearchBar(
                 hint: 'Search your binders for a card to add…',
                 text: _query,
                 onChanged: (value) => setState(() => _query = value),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               if (subOptionRow != null) ...[
                 subOptionRow,
                 const SizedBox(height: PokeBinderSpacing.sp2),
               ],
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -192,7 +189,6 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
                 ],
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-
               Expanded(
                 child: filtered.isEmpty
                     ? SingleChildScrollView(

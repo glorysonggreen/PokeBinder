@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -21,16 +22,14 @@ Future<void> main() async {
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey,
   );
-  // Loads the saved sound settings and starts the audio engine. This never
-  // throws: if audio can't start, the app simply runs silently.
-  await PokeBinderAudio.instance.init();
 
   runApp(
     DevicePreview(
-      enabled: true,
+      enabled: kIsWeb,
       builder: (context) => const PokeBinderApp(),
     ),
   );
+  unawaited(PokeBinderAudio.instance.init());
 }
 
 class PokeBinderApp extends StatefulWidget {
@@ -55,8 +54,7 @@ class _PokeBinderAppState extends State<PokeBinderApp> {
         _openResetPassword();
       }
     });
-    // Warm the image cache with the screen backgrounds once the first frame
-    // is up, so no screen flashes plain cream while its background decodes.
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final context = _navigatorKey.currentContext;
       if (context != null) PokeBinderBackground.precacheAll(context);

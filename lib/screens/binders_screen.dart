@@ -59,9 +59,6 @@ class BindersScreen extends StatefulWidget {
   final int initialTabIndex;
   final String? initialBinderId;
 
-  /// When true, this screen closes itself as soon as the binder opened via
-  /// [initialBinderId] is dismissed, so Back returns to whichever screen
-  /// pushed this one (e.g. the Trainer Card) instead of the binder list.
   final bool popOnDetailClose;
 
   const BindersScreen({
@@ -672,84 +669,94 @@ class _AllCardsTab extends StatelessWidget {
     final filtered = result.cards;
     final subOptionRow = result.subOptionRow;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CollectionSearchBar(
-            hint: 'Search all ${cards.length} cards by name…',
-            text: search,
-            onChanged: onSearchChanged,
-          ),
-          const SizedBox(height: PokeBinderSpacing.sp3),
-          if (subOptionRow != null) ...[
-            subOptionRow,
-            const SizedBox(height: PokeBinderSpacing.sp2),
-          ],
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'SHOWING ${filtered.length} CARDS',
-                style: PokeBinderText.resultCount,
+              CollectionSearchBar(
+                hint: 'Search all ${cards.length} cards by name…',
+                text: search,
+                onChanged: onSearchChanged,
               ),
-              CardSortSelector(selected: sortOption, onChanged: onSortChanged),
+              const SizedBox(height: PokeBinderSpacing.sp3),
+              if (subOptionRow != null) ...[
+                subOptionRow,
+                const SizedBox(height: PokeBinderSpacing.sp2),
+              ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'SHOWING ${filtered.length} CARDS',
+                    style: PokeBinderText.resultCount,
+                  ),
+                  CardSortSelector(selected: sortOption, onChanged: onSortChanged),
+                ],
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp2),
             ],
           ),
-          const SizedBox(height: PokeBinderSpacing.sp2),
-          if (filtered.isEmpty)
-            EmptyFilterState(
+        ),
+        if (filtered.isEmpty)
+          SliverToBoxAdapter(
+            child: EmptyFilterState(
               title: 'No cards match your filters.',
               subtitle: 'Try a different search or filter.',
               onClearFilters: onClearFilters,
-            )
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                const crossAxisCount = 3;
-                const crossAxisSpacing = PokeBinderSpacing.sp2;
-                final cardWidth = (constraints.maxWidth -
-                        crossAxisSpacing * (crossAxisCount - 1)) /
-                    crossAxisCount;
-                final cardHeight = cardWidth / kPokemonCardImageAspectRatio;
-
-                return GridView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    mainAxisSpacing: PokeBinderSpacing.sp3,
-                    crossAxisSpacing: crossAxisSpacing,
-                    mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
-                  ),
-                  children: [
-                    for (final (i, card) in filtered.indexed)
-                      FadeSlideIn(
-                        index: i,
-                        child: Column(
-                          children: [
-                            SizedBox(
-                              height: cardHeight,
-                              child: BinderCardTile(
-                                card: card,
-                                onTap: () => onCardTap(card),
-                              ),
-                            ),
-                            const SizedBox(height: PokeBinderSpacing.sp1),
-                            CardCaption(card: card),
-                          ],
-                        ),
-                      ),
-                  ],
-                );
-              },
             ),
-        ],
-      ),
+          )
+        else
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              const crossAxisCount = 3;
+              const crossAxisSpacing = PokeBinderSpacing.sp2;
+              final cardWidth = (constraints.crossAxisExtent -
+                      crossAxisSpacing * (crossAxisCount - 1)) /
+                  crossAxisCount;
+              final cardHeight = cardWidth / kPokemonCardImageAspectRatio;
+
+              return SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: PokeBinderSpacing.sp3,
+                  crossAxisSpacing: crossAxisSpacing,
+                  mainAxisExtent: cardHeight + 4 + kCardCaptionHeight,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  childCount: filtered.length,
+                  (context, i) {
+                    final card = filtered[i];
+                    final tile = Column(
+                      key: ValueKey(card.id),
+                      children: [
+                        SizedBox(
+                          height: cardHeight,
+                          child: BinderCardTile(
+                            card: card,
+                            onTap: () => onCardTap(card),
+                          ),
+                        ),
+                        const SizedBox(height: PokeBinderSpacing.sp1),
+                        CardCaption(card: card),
+                      ],
+                    );
+                    return i < _kAnimatedTiles
+                        ? FadeSlideIn(key: ValueKey(card.id), index: i, child: tile)
+                        : tile;
+                  },
+                ),
+              );
+            },
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: PokeBinderSpacing.sp6)),
+      ],
     );
   }
 }
+
+const int _kAnimatedTiles = 12;
 
 const int kMaxBindersPerSection = 4;
 const int kMaxPinnedBinders = 2;
@@ -792,24 +799,35 @@ class _BinderListPanel extends StatelessWidget {
     required this.onTogglePin,
   });
 
-  int _compare(BinderData a, BinderData b) {
-    switch (sortOption) {
-      case BinderSortOption.name:
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      case BinderSortOption.newest:
-        return b.createdAtOrEpoch.compareTo(a.createdAtOrEpoch);
-      case BinderSortOption.oldest:
-        return a.createdAtOrEpoch.compareTo(b.createdAtOrEpoch);
-      case BinderSortOption.cardCount:
-        return b.cardCount.compareTo(a.cardCount);
-      case BinderSortOption.value:
-        return b.totalValue.compareTo(a.totalValue);
-    }
-  }
-
   List<_BinderSection> _buildSections() {
-    final pinned = binders.where((b) => b.isPinned).toList()..sort(_compare);
-    final rest = binders.where((b) => !b.isPinned).toList()..sort(_compare);
+    final counts = <String, int>{};
+    final values = <String, double>{};
+    if (sortOption == BinderSortOption.cardCount ||
+        sortOption == BinderSortOption.value) {
+      for (final card in PokemonCardData.library) {
+        counts[card.binderName] = (counts[card.binderName] ?? 0) + 1;
+        values[card.binderName] =
+            (values[card.binderName] ?? 0) + card.estimatedValue;
+      }
+    }
+
+    int compare(BinderData a, BinderData b) {
+      switch (sortOption) {
+        case BinderSortOption.name:
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        case BinderSortOption.newest:
+          return b.createdAtOrEpoch.compareTo(a.createdAtOrEpoch);
+        case BinderSortOption.oldest:
+          return a.createdAtOrEpoch.compareTo(b.createdAtOrEpoch);
+        case BinderSortOption.cardCount:
+          return (counts[b.name] ?? 0).compareTo(counts[a.name] ?? 0);
+        case BinderSortOption.value:
+          return (values[b.name] ?? 0).compareTo(values[a.name] ?? 0);
+      }
+    }
+
+    final pinned = binders.where((b) => b.isPinned).toList()..sort(compare);
+    final rest = binders.where((b) => !b.isPinned).toList()..sort(compare);
 
     final sections = <_BinderSection>[];
 

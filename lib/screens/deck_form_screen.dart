@@ -76,7 +76,6 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               LabeledFormField(
                 label: 'Deck name',
                 child: TextField(
@@ -95,7 +94,6 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                   padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
                   child: Text(_nameError!, style: PokeBinderText.formError),
                 ),
-
               FormFieldRow(
                 left: LabeledFormField(
                   label: 'Format',
@@ -122,7 +120,6 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                   ),
                 ),
               ),
-
               LabeledFormField(
                 label: 'Description (optional)',
                 child: TextField(
@@ -135,7 +132,6 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: PokeBinderSpacing.sp2),
               Row(
                 children: [

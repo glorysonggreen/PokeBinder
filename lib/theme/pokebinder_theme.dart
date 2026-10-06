@@ -307,7 +307,6 @@ class PokeBinderTheme {
 
     return base.copyWith(
       textTheme: bodyTextTheme(base.textTheme),
-      // Same ink splash as before, plus a soft menu tick on every press.
       splashFactory: SoundSplashFactory(base.splashFactory),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {

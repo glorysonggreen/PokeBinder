@@ -7,8 +7,21 @@ bool isNetworkImage(String path) =>
 class CardImage extends StatelessWidget {
   final String path;
   final BoxFit fit;
+  final bool thumbnail;
+  final int? cacheWidth;
 
-  const CardImage({super.key, required this.path, this.fit = BoxFit.contain});
+  const CardImage({
+    super.key,
+    required this.path,
+    this.fit = BoxFit.contain,
+    this.thumbnail = false,
+    this.cacheWidth,
+  });
+
+  static const _pokemonTcgHost = 'https://images.pokemontcg.io/';
+
+  static String smallVariant(String url) =>
+      url.startsWith(_pokemonTcgHost) ? url.replaceFirst('_hires.png', '.png') : url;
 
   @override
   Widget build(BuildContext context) {
@@ -16,12 +29,14 @@ class CardImage extends StatelessWidget {
       return Image.asset(
         path,
         fit: fit,
+        cacheWidth: cacheWidth,
         errorBuilder: (_, __, ___) => const _ArtworkPlaceholder(),
       );
     }
     return Image.network(
-      path,
+      thumbnail ? smallVariant(path) : path,
       fit: fit,
+      cacheWidth: cacheWidth,
       gaplessPlayback: true,
       loadingBuilder: (context, child, progress) =>
           progress == null ? child : const _ArtworkPlaceholder(loading: true),

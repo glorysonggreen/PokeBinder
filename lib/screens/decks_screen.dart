@@ -16,19 +16,6 @@ const _kTagOkBg = Color(0xFFE4EFE7);
 const _kTagOkFg = Color(0xFF2F6B45);
 const _kTagWarnBg = Color(0xFFFBE4E0);
 
-extension _DeckFormatAccent on DeckFormat {
-  Color get accentColor {
-    switch (this) {
-      case DeckFormat.standard:
-        return PokeBinderColors.teal;
-      case DeckFormat.expanded:
-        return PokeBinderColors.goldDeep;
-      case DeckFormat.casual:
-        return PokeBinderColors.slate;
-    }
-  }
-}
-
 enum DeckSortOption { name, newest, oldest, cardCount, value }
 
 extension DeckSortOptionLabel on DeckSortOption {
@@ -66,9 +53,6 @@ extension DeckSortOptionLabel on DeckSortOption {
 class DecksScreen extends StatefulWidget {
   final String? initialDeckId;
 
-  /// When true, this screen closes itself as soon as the deck opened via
-  /// [initialDeckId] is dismissed, so Back returns to whichever screen
-  /// pushed this one (e.g. the Trainer Card) instead of the deck list.
   final bool popOnDetailClose;
 
   const DecksScreen({
@@ -210,20 +194,17 @@ class _DecksScreenState extends State<DecksScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               CollectionSearchBar(
                 hint: 'Search decks...',
                 text: _deckSearch,
                 onChanged: (v) => setState(() => _deckSearch = v),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               PillButton(
                 label: 'New Deck',
                 icon: Icons.add,
                 onTap: _openNewDeck,
               ),
-
               if (_decks.isNotEmpty) ...[
                 const SizedBox(height: PokeBinderSpacing.sp4),
                 SizedBox(
@@ -273,7 +254,6 @@ class _DecksScreenState extends State<DecksScreen> {
                 ),
               ],
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               if (_decks.isEmpty)
                 const EmptyFilterState(
                   icon: Icons.style_rounded,

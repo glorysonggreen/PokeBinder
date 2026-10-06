@@ -144,7 +144,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
-
               LabeledFormField(
                 label: 'Card name',
                 child: TextField(
@@ -163,7 +162,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
                   child: Text(_nameError!, style: PokeBinderText.formError),
                 ),
-
               FormFieldRow(
                 left: LabeledFormField(
                   label: 'Set',
@@ -202,7 +200,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                     style: PokeBinderText.formError,
                   ),
                 ),
-
               FormFieldRow(
                 left: LabeledFormField(
                   label: 'Rarity',
@@ -230,7 +227,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   ),
                 ),
               ),
-
               FormFieldRow(
                 left: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +269,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   ),
                 ),
               ),
-
               LabeledFormField(
                 label: 'Eagerness to trade',
                 child: PokeDropdownField<WishlistPriority>(
@@ -286,7 +281,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   onChanged: (p) => setState(() => _priority = p),
                 ),
               ),
-
               LabeledFormField(
                 label: 'Looking for in return (optional)',
                 child: TextField(
@@ -300,7 +294,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   ),
                 ),
               ),
-
               LabeledFormField(
                 label: 'Notes (optional)',
                 child: TextField(
@@ -313,7 +306,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: PokeBinderSpacing.sp2),
               Row(
                 children: [
@@ -334,7 +326,6 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: PokeBinderSpacing.sp4),
               DangerActionButton(label: 'Remove entry', onTap: _confirmDelete),
             ],

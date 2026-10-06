@@ -168,7 +168,6 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               _AvatarPicker(
                 imageUrl: _avatarUrl,
                 imageBytes: _newAvatarBytes,
@@ -176,7 +175,6 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                 onRemove: _removeAvatar,
               ),
               const SizedBox(height: PokeBinderSpacing.sp4),
-
               LabeledFormField(
                 label: 'Trainer name',
                 child: TextField(
@@ -196,7 +194,6 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                   padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
                   child: Text(_nameError!, style: PokeBinderText.formError),
                 ),
-
               LabeledFormField(
                 label: 'Title',
                 child: PokeDropdownField<String>(
@@ -211,7 +208,6 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                   onChanged: (value) => setState(() => _title = value),
                 ),
               ),
-
               LabeledFormField(
                 label: 'Favorite Card',
                 child: _FavoriteCardField(
@@ -219,7 +215,6 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                   onTap: _pickFavoriteCard,
                 ),
               ),
-
               LabeledFormField(
                 label: 'Favorite Binder',
                 child: PokeDropdownField<String>(
@@ -236,7 +231,6 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                   ),
                 ),
               ),
-
               LabeledFormField(
                 label: 'Favorite Deck',
                 child: PokeDropdownField<String>(
@@ -252,7 +246,6 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                   ),
                 ),
               ),
-
               LabeledFormField(
                 label: 'Bio (optional)',
                 child: TextField(
@@ -265,7 +258,6 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: PokeBinderSpacing.sp2),
               Row(
                 children: [

@@ -5,14 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Every sound effect in the app. The files live in `assets/audio/sfx/`.
-///
-/// [gain] is a per-sound trim (0..1) applied on top of the user's effects
-/// volume, so the louder jingles don't drown out the small UI ticks.
-/// [minGapMs] stops the same sound from stacking when it is triggered several
-/// times in a burst (for example by a loop that saves many cards).
-/// [long] sounds (jingles and the intro) get their own players so a flurry of
-/// short UI ticks can never cut them off.
 enum Sfx {
   tap('tap', gain: 0.7, minGapMs: 35),
   addPress('add_press', minGapMs: 120),
@@ -52,11 +44,9 @@ enum Sfx {
   final int minGapMs;
   final bool long;
 
-  /// Path relative to `assets/`, which is what [AssetSource] expects.
   String get asset => 'audio/sfx/$file.wav';
 }
 
-/// Rarities worth a little sparkle fanfare when a card is added or opened.
 bool isChaseRarity(String rarity) => const {
       'Double Rare',
       'Illustration Rare',
@@ -64,42 +54,19 @@ bool isChaseRarity(String rarity) => const {
       'Hyper Rare',
     }.contains(rarity);
 
-/// The looping background tracks. Files live in `assets/audio/music/`.
 enum MusicTrack {
-  /// Silence.
   none(null),
-
-  /// Login, sign up and password screens.
-  title('audio/music/bgm_title.wav'),
-
-  /// The signed-in app.
-  main('audio/music/bgm_main.wav');
+  title('audio/music/bgm_title.mp3'),
+  main('audio/music/bgm_main.mp3');
 
   const MusicTrack(this.asset);
   final String? asset;
 }
 
-/// Sound effects and background music for the whole app.
-///
-/// Use the static helpers from anywhere:
-///
-/// ```dart
-/// PokeBinderAudio.play(Sfx.success);
-/// PokeBinderAudio.music(MusicTrack.main);
-/// ```
-///
-/// The widgets that need to react to the settings (the settings screen and
-/// the quick mute button) listen to [instance], which is a [ChangeNotifier].
-///
-/// Everything here is deliberately forgiving: audio is a nicety, so if the
-/// platform can't play sound (or `init` was never called, as in widget
-/// tests) the calls quietly do nothing instead of throwing.
 class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
   PokeBinderAudio._();
 
   static final PokeBinderAudio instance = PokeBinderAudio._();
-
-  // ---- Static shortcuts ---------------------------------------------------
 
   static void play(Sfx sfx, {Duration delay = Duration.zero}) =>
       instance._play(sfx, delay);
@@ -108,26 +75,19 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
 
   static void music(MusicTrack track) => instance._setTrack(track);
 
-  // ---- Settings keys and tuning -------------------------------------------
-
   static const _kMusicEnabled = 'audio.musicEnabled';
   static const _kMusicVolume = 'audio.musicVolume';
   static const _kSfxEnabled = 'audio.sfxEnabled';
   static const _kSfxVolume = 'audio.sfxVolume';
 
-  /// The music files are mastered fairly hot; this keeps the slider's top end
-  /// comfortable and leaves room for effects to sit on top.
   static const double _musicHeadroom = 0.6;
 
   static const int _shortPoolSize = 6;
   static const int _longPoolSize = 2;
 
-  // ---- State ----------------------------------------------------------------
-
   bool _ready = false;
   bool _appActive = true;
 
-  /// Browsers refuse to start audio until the person has touched the page.
   bool _userGestured = false;
 
   bool _musicEnabled = true;
@@ -153,20 +113,13 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
   Timer? _fadeTimer;
   Future<void> _musicChain = Future<void>.value();
 
-  // ---- Public read-only settings ------------------------------------------
-
   bool get musicEnabled => _musicEnabled;
   double get musicVolume => _musicVolume;
   bool get sfxEnabled => _sfxEnabled;
   double get sfxVolume => _sfxVolume;
 
-  /// True when at least one of music or effects is switched on.
   bool get anySoundOn => _musicEnabled || _sfxEnabled;
 
-  // ---- Setup ----------------------------------------------------------------
-
-  /// Loads the saved settings and creates the players. Safe to call more than
-  /// once, and never throws.
   Future<void> init() async {
     if (_ready) return;
 
@@ -185,10 +138,6 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
       debugPrint('Audio: could not read saved settings ($e)');
     }
 
-    // Let effects and music play together, and share the device politely with
-    // other apps, instead of every player grabbing exclusive audio focus
-    // (which would pause the music each time a button is tapped). This is a
-    // nicety, so it has its own guard: if it fails, sound still works.
     try {
       final dynamic global = AudioPlayer.global;
       await global.setAudioContext(
@@ -216,12 +165,12 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
       _ready = true;
       WidgetsBinding.instance.addObserver(this);
       unawaited(_preload());
+      if (_wanted != MusicTrack.none) _syncMusic();
     } catch (e) {
       debugPrint('Audio: disabled, could not start the audio engine ($e)');
     }
   }
 
-  /// Warms the cache so the first tap of each sound isn't late.
   Future<void> _preload() async {
     try {
       await AudioCache.instance.loadAll([
@@ -231,8 +180,6 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
       debugPrint('Audio: preload skipped ($e)');
     }
   }
-
-  // ---- Sound effects --------------------------------------------------------
 
   void _play(Sfx sfx, Duration delay) {
     if (!_ready || !_sfxEnabled || _sfxVolume <= 0) return;
@@ -276,16 +223,11 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(player.stop().catchError((Object _) {}));
   }
 
-  // ---- Music ------------------------------------------------------------------
-
   void _setTrack(MusicTrack track) {
     _wanted = track;
     _syncMusic();
   }
 
-  /// Brings the music player in line with the settings and the wanted track.
-  /// Calls are queued so two changes in quick succession never race, and an
-  /// older call gives up as soon as a newer one arrives.
   void _syncMusic({int fadeMs = 450}) {
     final gen = ++_musicGen;
     _musicChain = _musicChain
@@ -330,7 +272,6 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
 
-    // A different track is wanted: fade the old one out, swap, fade in.
     if (_loaded != MusicTrack.none && !_musicPaused) {
       await _fadeMusic(player, 0, 300, gen);
       if (gen != _musicGen) return;
@@ -381,10 +322,6 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
     await done.future;
   }
 
-  // ---- Reacting to the app and the person -------------------------------------
-
-  /// Called on the first pointer-down anywhere. Browsers only allow audio to
-  /// start after a gesture, so this is what lets web builds begin the music.
   void notifyUserGesture() {
     if (_userGestured) return;
     _userGestured = true;
@@ -393,8 +330,6 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // `inactive` is deliberately ignored: on desktop it only means the
-    // window lost focus, and music should keep going.
     final active = state != AppLifecycleState.paused &&
         state != AppLifecycleState.hidden &&
         state != AppLifecycleState.detached;
@@ -402,8 +337,6 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
     _appActive = active;
     _syncMusic(fadeMs: active ? 600 : 150);
   }
-
-  // ---- Settings the person can change -----------------------------------------
 
   Future<void> setMusicEnabled(bool value) async {
     if (value == _musicEnabled) return;
@@ -439,7 +372,6 @@ class PokeBinderAudio extends ChangeNotifier with WidgetsBindingObserver {
     await _save();
   }
 
-  /// The quick speaker button: silences everything, or restores everything.
   Future<void> toggleAll() async {
     final turnOn = !anySoundOn;
     if (!turnOn) play(Sfx.toggleOff);

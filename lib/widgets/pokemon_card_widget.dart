@@ -88,20 +88,30 @@ class CardThumbnail extends StatelessWidget {
               )
             : null,
       ),
-      child: path != null ? CardImage(path: path, fit: BoxFit.contain) : null,
+      child: path != null
+          ? CardImage(
+              path: path,
+              fit: BoxFit.contain,
+              thumbnail: width <= 100,
+              cacheWidth: (width * 3).ceil(),
+            )
+          : null,
     );
   }
 }
 
 class PokemonCardBack extends StatelessWidget {
-  const PokemonCardBack({super.key});
+  final bool shadow;
+
+  const PokemonCardBack({super.key, this.shadow = true});
 
   @override
   Widget build(BuildContext context) {
-    return const _CardFrame(
-      background: BoxDecoration(color: PokeBinderColors.redDeep),
+    return _CardFrame(
+      background: const BoxDecoration(color: PokeBinderColors.redDeep),
       showInsetBorder: false,
-      child: _CardImage(assetPath: kPokemonCardBackAssetPath),
+      showShadow: shadow,
+      child: const _CardImage(assetPath: kPokemonCardBackAssetPath),
     );
   }
 }
@@ -110,10 +120,12 @@ class _CardFrame extends StatelessWidget {
   final Widget child;
   final BoxDecoration? background;
   final bool showInsetBorder;
+  final bool showShadow;
 
   const _CardFrame({
     required this.child,
     required this.showInsetBorder,
+    this.showShadow = true,
     this.background,
   });
 
@@ -124,19 +136,20 @@ class _CardFrame extends StatelessWidget {
       child: Container(
         decoration: (background ?? const BoxDecoration()).copyWith(
           borderRadius: BorderRadius.circular(6),
-          boxShadow: [
-            BoxShadow(
-              color: PokeBinderColors.ink.withValues(alpha: 0.25),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          boxShadow: showShadow
+              ? [
+                  BoxShadow(
+                    color: PokeBinderColors.ink.withValues(alpha: 0.25),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
+                  ),
+                ]
+              : null,
         ),
         child: Stack(
           fit: StackFit.expand,
           children: [
             child,
-
             if (showInsetBorder)
               Positioned.fill(
                 child: Container(
@@ -150,7 +163,6 @@ class _CardFrame extends StatelessWidget {
                   ),
                 ),
               ),
-
             const Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
