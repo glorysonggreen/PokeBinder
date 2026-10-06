@@ -2,9 +2,6 @@
 
 > A Pokémon TCG collection manager — track your cards, binders, decks, and wishlist in one place.
 
-**Course:** Applications Development and Emerging Technologies (6ADET), Holy Angel University
-**Author:** Matthew Green
-
 ## What it does
 
 - View a card's full details — artwork, set, rarity, condition, quantity owned, binder and page — with an interactive, drag-to-tilt 3D card.
