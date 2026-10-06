@@ -68,8 +68,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = "Couldn't change your password — the reset link may have "
-            'expired. Request a new one and try again.';
+        _error = AuthService.passwordChangeErrorMessage(e);
       });
     }
   }
@@ -117,6 +116,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   child: TextField(
                     controller: _confirmController,
                     obscureText: _obscureConfirm,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _submitting ? null : _save(),
                     decoration: pokeInputDecoration(
                       hint: '••••••••',
                       icon: Icons.lock_outline,

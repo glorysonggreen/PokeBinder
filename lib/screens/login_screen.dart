@@ -3,13 +3,13 @@ import '../services/auth_service.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/motion_widgets.dart';
-import '../widgets/pokeball.dart';
 import '../widgets/pokebinder_form_fields.dart';
 import 'app_shell.dart';
 import 'forgot_password_screen.dart';
 import 'signup_screen.dart';
 import '../services/audio_service.dart';
 import '../widgets/sound_widgets.dart';
+import '../widgets/auth_banner.dart';
 import '../widgets/pokebinder_background.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -77,7 +77,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _openForgotPassword() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+      MaterialPageRoute(
+        builder: (_) =>
+            ForgotPasswordScreen(initialEmail: _emailController.text.trim()),
+      ),
     );
   }
 
@@ -106,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: SoundToggleButton(),
               ),
               const SizedBox(height: PokeBinderSpacing.sp2),
-              const _AuthBanner(
+              const AuthBanner(
                 heading: 'Welcome to PokéBinder',
                 subtitle: 'Log in to sync your collection',
               ),
@@ -180,59 +183,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _AuthBanner extends StatelessWidget {
-  final String heading;
-  final String subtitle;
-
-  const _AuthBanner({
-    required this.heading,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: PokeBinderSpacing.sp5,
-        vertical: PokeBinderSpacing.sp6,
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [PokeBinderColors.white, Color(0xFFF7EFE0)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: kCardElevation,
-      ),
-      child: Column(
-        children: [
-          const PopIn(child: PokeballBadge(size: 64)),
-          const SizedBox(height: PokeBinderSpacing.sp4),
-          FadeSlideIn(
-            index: 1,
-            child: Text(
-              heading,
-              textAlign: TextAlign.center,
-              style: PokeBinderText.heading,
-            ),
-          ),
-          const SizedBox(height: PokeBinderSpacing.sp1),
-          FadeSlideIn(
-            index: 2,
-            child: Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: PokeBinderText.subtitle,
-            ),
-          ),
-        ],
       ),
     );
   }

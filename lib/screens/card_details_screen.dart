@@ -93,6 +93,26 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     }
   }
 
+  Future<void> _deleteCard() async {
+    final card = _card;
+    final confirmed = await confirmDestructive(
+      context,
+      title: 'Delete card?',
+      message: 'This removes "${card.name}" from your collection. '
+          "This can't be undone.",
+      confirmLabel: 'Delete',
+    );
+    if (!confirmed || !mounted) return;
+
+    widget.onSave(card, const CardFormResult.deleted());
+    PokeBinderToast.show(
+      context,
+      'Deleted ${card.name}',
+      kind: ToastKind.success,
+    );
+    Navigator.of(context).pop();
+  }
+
   Future<void> _addToDeck() async {
     if (_card.quantityOwned <= 0) {
       PokeBinderAudio.play(Sfx.error);
@@ -289,6 +309,14 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp3),
+              FadeSlideIn(
+                index: 7,
+                child: DangerActionButton(
+                  label: 'Delete Card',
+                  onTap: _deleteCard,
                 ),
               ),
             ],

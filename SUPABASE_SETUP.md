@@ -105,7 +105,21 @@ Dashboard > **Authentication**:
 
 "Forgot Password" emails a link. Opening it signs the person in with a
 temporary recovery session and PokeBinder shows the **Choose a New Password**
-screen. Open the link in the same browser that requested it.
+screen.
+
+For it to work:
+
+- **Redirect URLs** (section 4) must include the exact address the app is
+  served from, including the trailing slash. If it is missing, the link goes
+  to the Site URL instead and the reset screen never appears.
+- Open the link in the **same browser** that requested it (Supabase uses PKCE,
+  which stores a one-time key in that browser).
+- Supabase limits reset emails to about one per minute per address. The app
+  shows a countdown on the **Resend Link** button.
+- The built-in Supabase mailer is rate limited and meant for testing. For real
+  users, set up custom SMTP under Authentication > Emails > SMTP Settings.
+- Passwords need at least 6 characters (Authentication > Sign In / Providers >
+  Email), matching the minimum the app enforces.
 
 ## Limits worth knowing
 

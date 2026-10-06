@@ -14,14 +14,18 @@ import 'widgets/pokeball_intro.dart';
 import 'widgets/pokebinder_background.dart';
 import 'services/audio_navigator_observer.dart';
 import 'services/audio_service.dart';
+import 'services/auth_service.dart';
 import 'widgets/sound_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
+  final initialization = Supabase.initialize(
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey,
   );
+  AuthService.watchForPasswordRecovery();
+  await initialization;
+  AuthService.watchForPasswordRecovery();
 
   runApp(
     DevicePreview(
@@ -42,18 +46,13 @@ class PokeBinderApp extends StatefulWidget {
 class _PokeBinderAppState extends State<PokeBinderApp> {
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _audioObserver = PokeBinderAudioObserver();
-  StreamSubscription<AuthState>? _authSubscription;
   bool _resetScreenOpen = false;
 
   @override
   void initState() {
     super.initState();
-    _authSubscription =
-        Supabase.instance.client.auth.onAuthStateChange.listen((state) {
-      if (state.event == AuthChangeEvent.passwordRecovery) {
-        _openResetPassword();
-      }
-    });
+    AuthService.recoveryRequested.addListener(_onRecoveryRequested);
+    if (AuthService.recoveryRequested.value) _openResetPassword();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final context = _navigatorKey.currentContext;
@@ -63,24 +62,33 @@ class _PokeBinderAppState extends State<PokeBinderApp> {
 
   @override
   void dispose() {
-    _authSubscription?.cancel();
+    AuthService.recoveryRequested.removeListener(_onRecoveryRequested);
     super.dispose();
   }
 
-  void _openResetPassword() {
+  void _onRecoveryRequested() {
+    if (AuthService.recoveryRequested.value) _openResetPassword();
+  }
+
+  Future<void> _openResetPassword() async {
     if (_resetScreenOpen) return;
     _resetScreenOpen = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final navigator = _navigatorKey.currentState;
-      if (navigator == null) {
-        _resetScreenOpen = false;
-        return;
+    try {
+      for (var attempt = 0; attempt < 50; attempt++) {
+        if (!mounted) return;
+        final navigator = _navigatorKey.currentState;
+        if (navigator != null) {
+          await navigator.push(
+            MaterialPageRoute(builder: (_) => const ResetPasswordScreen()),
+          );
+          return;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 100));
       }
-      await navigator.push(
-        MaterialPageRoute(builder: (_) => const ResetPasswordScreen()),
-      );
+    } finally {
       _resetScreenOpen = false;
-    });
+      AuthService.recoveryRequested.value = false;
+    }
   }
 
   @override

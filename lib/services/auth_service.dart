@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -5,6 +7,22 @@ class AuthService {
   AuthService._();
 
   static SupabaseClient get _client => Supabase.instance.client;
+
+  static final ValueNotifier<bool> recoveryRequested = ValueNotifier(false);
+  static StreamSubscription<AuthState>? _recoverySubscription;
+
+  static void watchForPasswordRecovery() {
+    if (_recoverySubscription != null) return;
+    try {
+      _recoverySubscription = _client.auth.onAuthStateChange.listen((state) {
+        if (state.event == AuthChangeEvent.passwordRecovery) {
+          recoveryRequested.value = true;
+        }
+      });
+    } catch (e) {
+      debugPrint('Could not listen for password recovery yet: $e');
+    }
+  }
 
   static bool get isSignedIn => _client.auth.currentSession != null;
 
@@ -55,5 +73,47 @@ class AuthService {
 
   static Future<void> updatePassword(String newPassword) {
     return _client.auth.updateUser(UserAttributes(password: newPassword));
+  }
+
+  static const _offlineMessage =
+      "Couldn't reach the server. Check your connection and try again.";
+
+  static String resetEmailErrorMessage(Object error) {
+    if (error is! AuthException) return _offlineMessage;
+    final message = error.message.toLowerCase();
+    if (error.statusCode == '429' ||
+        message.contains('rate limit') ||
+        message.contains('security purposes')) {
+      return 'Too many requests. Wait a minute, then try again.';
+    }
+    if (message.contains('invalid') && message.contains('email')) {
+      return "That email address doesn't look right.";
+    }
+    return "Couldn't send the reset email. Please try again in a moment.";
+  }
+
+  static String passwordChangeErrorMessage(Object error) {
+    if (error is! AuthException) return _offlineMessage;
+    final message = error.message.toLowerCase();
+    if (message.contains('different from the old password') ||
+        message.contains('same password')) {
+      return 'Your new password must be different from your current one.';
+    }
+    if (message.contains('weak') ||
+        message.contains('at least') ||
+        message.contains('characters')) {
+      return 'That password is too weak. Try a longer one with letters and '
+          'numbers.';
+    }
+    if (message.contains('session') ||
+        message.contains('expired') ||
+        message.contains('jwt') ||
+        message.contains('not authenticated') ||
+        error.statusCode == '401' ||
+        error.statusCode == '403') {
+      return 'This reset link has expired or was already used. Request a new '
+          'one and try again.';
+    }
+    return "Couldn't change your password. Please try again.";
   }
 }

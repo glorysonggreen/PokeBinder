@@ -11,6 +11,7 @@ import '../widgets/card_sort_controls.dart';
 import '../widgets/min_tap_target.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
+import '../widgets/pokebinder_toast.dart';
 import 'binder_add_card_screen.dart';
 import 'binder_detail_screen.dart';
 import 'binder_form_screen.dart';
@@ -81,6 +82,9 @@ class _BindersScreenState extends State<BindersScreen> {
 
   late int _tabIndex = widget.initialTabIndex;
 
+  bool _selecting = false;
+  final Set<String> _selectedIds = {};
+
   String _binderSearch = '';
   BinderSortOption _binderSort = BinderSortOption.name;
   bool _viewingAllBinders = false;
@@ -130,6 +134,53 @@ class _BindersScreenState extends State<BindersScreen> {
           onSave: _handleCardSaved,
         ),
       ),
+    );
+  }
+
+  void _enterSelectMode() => setState(() => _selecting = true);
+
+  void _cancelSelect() => setState(() {
+        _selecting = false;
+        _selectedIds.clear();
+      });
+
+  void _toggleSelect(PokemonCardData card) {
+    setState(() {
+      _selecting = true;
+      if (!_selectedIds.remove(card.id)) _selectedIds.add(card.id);
+    });
+  }
+
+  void _selectAll(List<PokemonCardData> cards) {
+    setState(() => _selectedIds.addAll(cards.map((c) => c.id)));
+  }
+
+  Future<void> _deleteSelected(List<PokemonCardData> cards) async {
+    if (cards.isEmpty) return;
+    final count = cards.length;
+    final confirmed = await confirmDestructive(
+      context,
+      title: count == 1 ? 'Delete card?' : 'Delete $count cards?',
+      message: count == 1
+          ? 'This removes "${cards.first.name}" from your collection. '
+              "This can't be undone."
+          : 'This removes $count cards from your collection. '
+              "This can't be undone.",
+      confirmLabel: 'Delete',
+    );
+    if (!confirmed || !mounted) return;
+
+    final ids = cards.map((c) => c.id).toSet();
+    setState(() {
+      PokemonCardData.library.removeWhere((c) => ids.contains(c.id));
+      _selecting = false;
+      _selectedIds.clear();
+    });
+    CardRepository.deleteMany(ids);
+    PokeBinderToast.show(
+      context,
+      count == 1 ? 'Deleted ${cards.first.name}' : 'Deleted $count cards',
+      kind: ToastKind.success,
     );
   }
 
@@ -385,7 +436,11 @@ class _BindersScreenState extends State<BindersScreen> {
               _TopTabBar(
                 index: _tabIndex,
                 labels: const ['Binders', 'All Cards'],
-                onChanged: (i) => setState(() => _tabIndex = i),
+                onChanged: (i) => setState(() {
+                  _tabIndex = i;
+                  _selecting = false;
+                  _selectedIds.clear();
+                }),
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
               Expanded(
@@ -444,6 +499,13 @@ class _BindersScreenState extends State<BindersScreen> {
                           onTimeDirectionChanged: (d) =>
                               setState(() => _timeDirection = d),
                           onCardTap: _openCard,
+                          selecting: _selecting,
+                          selectedIds: _selectedIds,
+                          onEnterSelectMode: _enterSelectMode,
+                          onCancelSelect: _cancelSelect,
+                          onToggleSelect: _toggleSelect,
+                          onSelectAll: _selectAll,
+                          onDeleteSelected: _deleteSelected,
                           onClearFilters: () => setState(() {
                             _cardSearch = '';
                             _typeFilter = null;
@@ -624,6 +686,13 @@ class _AllCardsTab extends StatelessWidget {
   final ValueChanged<TimeSortDirection> onTimeDirectionChanged;
   final ValueChanged<PokemonCardData> onCardTap;
   final VoidCallback onClearFilters;
+  final bool selecting;
+  final Set<String> selectedIds;
+  final VoidCallback onEnterSelectMode;
+  final VoidCallback onCancelSelect;
+  final ValueChanged<PokemonCardData> onToggleSelect;
+  final ValueChanged<List<PokemonCardData>> onSelectAll;
+  final ValueChanged<List<PokemonCardData>> onDeleteSelected;
 
   const _AllCardsTab({
     required this.cards,
@@ -645,6 +714,13 @@ class _AllCardsTab extends StatelessWidget {
     required this.onTimeDirectionChanged,
     required this.onCardTap,
     required this.onClearFilters,
+    required this.selecting,
+    required this.selectedIds,
+    required this.onEnterSelectMode,
+    required this.onCancelSelect,
+    required this.onToggleSelect,
+    required this.onSelectAll,
+    required this.onDeleteSelected,
   });
 
   @override
@@ -669,7 +745,10 @@ class _AllCardsTab extends StatelessWidget {
     final filtered = result.cards;
     final subOptionRow = result.subOptionRow;
 
-    return CustomScrollView(
+    final selectedCards =
+        filtered.where((c) => selectedIds.contains(c.id)).toList();
+
+    final grid = CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Column(
@@ -686,12 +765,21 @@ class _AllCardsTab extends StatelessWidget {
                 const SizedBox(height: PokeBinderSpacing.sp2),
               ],
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'SHOWING ${filtered.length} CARDS',
-                    style: PokeBinderText.resultCount,
+                  Expanded(
+                    child: Text(
+                      selecting
+                          ? '${selectedCards.length} SELECTED'
+                          : 'SHOWING ${filtered.length} CARDS',
+                      style: PokeBinderText.resultCount,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  if (!selecting && filtered.isNotEmpty) ...[
+                    _SelectModeButton(onTap: onEnterSelectMode),
+                    const SizedBox(width: PokeBinderSpacing.sp2),
+                  ],
                   CardSortSelector(selected: sortOption, onChanged: onSortChanged),
                 ],
               ),
@@ -733,9 +821,29 @@ class _AllCardsTab extends StatelessWidget {
                       children: [
                         SizedBox(
                           height: cardHeight,
-                          child: BinderCardTile(
-                            card: card,
-                            onTap: () => onCardTap(card),
+                          child: GestureDetector(
+                            onLongPress:
+                                selecting ? null : () => onToggleSelect(card),
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: BinderCardTile(
+                                    card: card,
+                                    onTap: () => selecting
+                                        ? onToggleSelect(card)
+                                        : onCardTap(card),
+                                  ),
+                                ),
+                                if (selecting)
+                                  Positioned.fill(
+                                    child: IgnorePointer(
+                                      child: _SelectionMark(
+                                        selected: selectedIds.contains(card.id),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: PokeBinderSpacing.sp1),
@@ -752,6 +860,145 @@ class _AllCardsTab extends StatelessWidget {
           ),
         const SliverToBoxAdapter(child: SizedBox(height: PokeBinderSpacing.sp6)),
       ],
+    );
+
+    if (!selecting) return grid;
+
+    return Column(
+      children: [
+        Expanded(child: grid),
+        _SelectionBar(
+          selectedCount: selectedCards.length,
+          allSelected: selectedCards.length == filtered.length,
+          onCancel: onCancelSelect,
+          onSelectAll: () => onSelectAll(filtered),
+          onDelete: () => onDeleteSelected(selectedCards),
+        ),
+      ],
+    );
+  }
+}
+
+class _SelectModeButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SelectModeButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: PokeBinderSpacing.sp2,
+          vertical: PokeBinderSpacing.sp1,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.checklist_rounded, size: 16, color: PokeBinderText.backLink.color),
+            const SizedBox(width: PokeBinderSpacing.sp1),
+            Text('Select', style: PokeBinderText.backLink),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectionMark extends StatelessWidget {
+  final bool selected;
+
+  const _SelectionMark({required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (selected)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: PokeBinderColors.red.withValues(alpha: 0.12),
+              border: Border.all(color: PokeBinderColors.red, width: 2),
+            ),
+          ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected
+                  ? PokeBinderColors.red
+                  : PokeBinderColors.white.withValues(alpha: 0.85),
+              border: Border.all(
+                color: selected
+                    ? PokeBinderColors.red
+                    : PokeBinderColors.ink.withValues(alpha: 0.35),
+                width: 1.5,
+              ),
+            ),
+            child: selected
+                ? const Icon(
+                    Icons.check_rounded,
+                    size: 15,
+                    color: PokeBinderColors.white,
+                  )
+                : null,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SelectionBar extends StatelessWidget {
+  final int selectedCount;
+  final bool allSelected;
+  final VoidCallback onCancel;
+  final VoidCallback onSelectAll;
+  final VoidCallback onDelete;
+
+  const _SelectionBar({
+    required this.selectedCount,
+    required this.allSelected,
+    required this.onCancel,
+    required this.onSelectAll,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: PokeBinderSpacing.sp2),
+      decoration: BoxDecoration(
+        color: PokeBinderColors.cream,
+        border: Border(
+          top: BorderSide(color: PokeBinderColors.ink.withValues(alpha: 0.08)),
+        ),
+      ),
+      child: Row(
+        children: [
+          TextButton(onPressed: onCancel, child: const Text('Cancel')),
+          if (!allSelected)
+            TextButton(onPressed: onSelectAll, child: const Text('Select all')),
+          const Spacer(),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: PokeBinderColors.danger,
+              foregroundColor: PokeBinderColors.white,
+            ),
+            onPressed: selectedCount > 0 ? onDelete : null,
+            icon: const Icon(Icons.delete_outline, size: 18),
+            label: Text(selectedCount > 0 ? 'Delete ($selectedCount)' : 'Delete'),
+          ),
+        ],
+      ),
     );
   }
 }

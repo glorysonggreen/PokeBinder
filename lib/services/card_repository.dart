@@ -27,6 +27,19 @@ class CardRepository {
     return SyncStatus.track('delete that card', () => _table.delete().eq('id', id));
   }
 
+  static Future<void> deleteMany(Iterable<String> ids) {
+    final list = ids.toList();
+    if (list.isEmpty) return Future.value();
+    list.forEach(_removeFromLocalDecks);
+    return SyncStatus.track('delete those cards', () async {
+      const chunk = 100;
+      for (var i = 0; i < list.length; i += chunk) {
+        final end = i + chunk > list.length ? list.length : i + chunk;
+        await _table.delete().inFilter('id', list.sublist(i, end));
+      }
+    });
+  }
+
   static Future<void> renameBinder(
     String oldName,
     String newName, {
