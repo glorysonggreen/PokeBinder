@@ -1,6 +1,6 @@
 # Security Checklist
 
-Last checked: October 9, 2026 (repository at commit `d3fab3c`).
+**Last checked:** October 9, 2026 (repository at commit `d3fab3c`).
 
 ## Secrets and credentials
 
