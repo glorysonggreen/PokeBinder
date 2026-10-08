@@ -208,7 +208,7 @@ The main risk I identified before was reliable card search and scanning.
 
 ## What Changed, and Why?
 
-| Section | Prelim said | Now says | Why it changed |
+| Section | Prelim/Midterm said | Now says | Why it changed |
 | --- | --- | --- | --- |
 | Core features | 5 features, all in the MVP, nothing cut | 5 features plus authentication, all built and saved to Supabase. The Card Scanner was removed. | A feature is only "done" when it can save data. The scanner never moved past a simulated demo and the camera plugin was never tested. Catalog search covers the same need. |
 | Auth | Not mentioned | Sign In, Sign Up, Forgot Password and Choose a New Password, backed by Supabase Auth, plus Sign Out | Collections are personal, so every user needs a real account. Login used to accept any input. |
