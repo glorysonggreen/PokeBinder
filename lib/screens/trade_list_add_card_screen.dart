@@ -11,6 +11,8 @@ import 'card_details_screen.dart';
 import 'card_form_screen.dart';
 import '../widgets/pokebinder_background.dart';
 
+const int _kCompactResults = 8;
+
 class TradeListAddCardScreen extends StatefulWidget {
   final List<WishlistEntry> initialEntries;
 
@@ -239,7 +241,9 @@ class _TradeListAddCardScreenState extends State<TradeListAddCardScreen> {
                           onClearFilters: _clearFilters,
                         ),
                       )
-                    : Container(
+                    : Align(
+                        alignment: Alignment.topCenter,
+                        child: Container(
                         decoration: BoxDecoration(
                           color: PokeBinderColors.white,
                           borderRadius: BorderRadius.circular(14),
@@ -250,6 +254,7 @@ class _TradeListAddCardScreenState extends State<TradeListAddCardScreen> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(13),
                           child: ListView.separated(
+                            shrinkWrap: filtered.length <= _kCompactResults,
                             padding: EdgeInsets.zero,
                             itemCount: filtered.length,
                             separatorBuilder: (_, __) => Divider(
@@ -271,6 +276,7 @@ class _TradeListAddCardScreenState extends State<TradeListAddCardScreen> {
                               );
                             },
                           ),
+                        ),
                         ),
                       ),
               ),
