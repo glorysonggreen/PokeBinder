@@ -1,7 +1,5 @@
 # Project Proposal
 
----
-
 ## App Name: PokéBinder
 
 ## The Problem, in One Sentence
