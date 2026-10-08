@@ -4,8 +4,11 @@
 In partial fulfillment of the requirements for Applications Development and Emerging Technologies
 
 **Course:** CS-301
+
 **Student:** Matthew Simon R. Green
+
 **Submitted to:** Prof. Tjakoen A. Stolk
+
 **Date:** September 20, 2026
 
 ---
