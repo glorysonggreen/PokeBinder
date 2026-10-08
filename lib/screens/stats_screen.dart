@@ -110,17 +110,15 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
-    setState(() {
-      final index = PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
-      if (index == -1) return;
-      if (result.deleted) {
-        PokemonCardData.library.removeAt(index);
-        CardRepository.delete(oldCard.id);
-      } else {
-        PokemonCardData.library[index] = result.card!;
-        CardRepository.upsert(result.card!);
-      }
-    });
+    if (result.deleted) {
+      CardRepository.delete(oldCard.id);
+      setState(() {});
+      return;
+    }
+    final index = PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
+    if (index == -1) return;
+    setState(() => PokemonCardData.library[index] = result.card!);
+    CardRepository.upsert(result.card!);
   }
 
   @override

@@ -5,6 +5,7 @@ import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../services/deck_repository.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/card_selection.dart';
 import '../widgets/interactive_3d_card.dart';
 import '../widgets/motion_widgets.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -77,7 +78,9 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     widget.onSave(_card, result);
 
     if (result.deleted) {
-      if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
+      showCardsDeletedToast(context, [_card]);
+      Navigator.of(context).pop();
       return;
     }
 
@@ -95,21 +98,11 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
 
   Future<void> _deleteCard() async {
     final card = _card;
-    final confirmed = await confirmDestructive(
-      context,
-      title: 'Delete card?',
-      message: 'This removes "${card.name}" from your collection. '
-          "This can't be undone.",
-      confirmLabel: 'Delete',
-    );
+    final confirmed = await confirmCardDeletion(context, [card]);
     if (!confirmed || !mounted) return;
 
     widget.onSave(card, const CardFormResult.deleted());
-    PokeBinderToast.show(
-      context,
-      'Deleted ${card.name}',
-      kind: ToastKind.success,
-    );
+    showCardsDeletedToast(context, [card]);
     Navigator.of(context).pop();
   }
 

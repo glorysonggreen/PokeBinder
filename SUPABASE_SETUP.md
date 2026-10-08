@@ -89,7 +89,7 @@ Never put the `service_role` / secret key in this app.
 
 Dashboard > **Authentication**:
 
-- **Sign In / Providers > Email**: decide whether **Confirm email** is on.
+- **Sign In / Providers > Email**: decide whether **Confirm email** is on. Either way, Supabase Auth allows only one account per email address (case-insensitive), and the app shows an "account already exists" message on a repeat sign-up.
   - On (recommended): sign-up shows "check your email", and the trainer profile
     is created by the database trigger in `schema.sql`.
   - Off: the person is signed in straight after sign-up.
@@ -128,3 +128,7 @@ For it to work:
 - Writes are sent one at a time, in order. If one fails (offline, a rule
   rejects it) a message appears and the change stays on screen but is **not**
   saved on the server. There is no offline queue or automatic retry yet.
+
+## Re-running schema.sql
+
+`supabase/schema.sql` is safe to run again. The last section removes orphaned trade-list rows, adds foreign keys so deleting a card also deletes its trade entries, and adds triggers that keep cards in sync when a binder is renamed or deleted. Run it once after updating the app.

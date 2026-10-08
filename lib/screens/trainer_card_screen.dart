@@ -101,22 +101,21 @@ class _TrainerCardScreenState extends State<TrainerCardScreen> {
           card: card,
           binders: BinderData.library,
           onSave: (oldCard, result) {
-            setState(() {
-              final index =
-                  PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
-              if (index == -1) return;
-              if (result.deleted) {
-                PokemonCardData.library.removeAt(index);
-                CardRepository.delete(oldCard.id);
+            if (result.deleted) {
+              CardRepository.delete(oldCard.id);
+              setState(() {
                 if (_profile.favoriteCardId == oldCard.id) {
                   _profile = _profile.copyWith(favoriteCardId: null);
                   widget.onProfileChanged?.call(_profile);
                 }
-              } else {
-                PokemonCardData.library[index] = result.card!;
-                CardRepository.upsert(result.card!);
-              }
-            });
+              });
+              return;
+            }
+            final index =
+                PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
+            if (index == -1) return;
+            setState(() => PokemonCardData.library[index] = result.card!);
+            CardRepository.upsert(result.card!);
           },
         ),
       ),

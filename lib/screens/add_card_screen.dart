@@ -89,13 +89,16 @@ class _AddCardScreenState extends State<AddCardScreen> {
   }
 
   void _undoAdd(PokemonCardData card, PokemonCardData? replaced) {
-    final library = PokemonCardData.library;
     if (replaced == null) {
-      library.removeWhere((c) => c.id == card.id);
       CardRepository.delete(card.id);
     } else {
+      final library = PokemonCardData.library;
       final index = library.indexWhere((c) => c.id == card.id);
-      if (index != -1) library[index] = replaced;
+      if (index != -1) {
+        library[index] = replaced;
+      } else {
+        library.add(replaced);
+      }
       CardRepository.upsert(replaced);
     }
     if (mounted) {

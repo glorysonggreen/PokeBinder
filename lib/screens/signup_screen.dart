@@ -8,6 +8,7 @@ import '../widgets/pokebinder_form_fields.dart';
 import 'app_shell.dart';
 import '../services/audio_service.dart';
 import '../widgets/pokebinder_background.dart';
+import '../widgets/pokebinder_toast.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -47,24 +48,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_error != null) setState(() => _error = null);
   }
 
+  void _fail(String message) {
+    setState(() {
+      _submitting = false;
+      _error = message;
+      _errorTick++;
+    });
+  }
+
   Future<void> _attemptSignUp() async {
+    if (_submitting) return;
     final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
+    final email = AuthService.normalizeEmail(_emailController.text);
     final password = _passwordController.text;
     final confirm = _confirmController.text;
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      setState(() {
-        _error = 'Fill in every field to continue.';
-        _errorTick++;
-      });
+      _fail('Fill in every field to continue.');
+      return;
+    }
+    if (!AuthService.isValidEmail(email)) {
+      _fail("That email address doesn't look right.");
+      return;
+    }
+    if (password.length < AuthService.minPasswordLength) {
+      _fail(
+        'Use at least ${AuthService.minPasswordLength} characters for your '
+        'password.',
+      );
       return;
     }
     if (password != confirm) {
-      setState(() {
-        _error = "Passwords don't match — check and try again.";
-        _errorTick++;
-      });
+      _fail("Passwords don't match — check and try again.");
       return;
     }
 
@@ -78,13 +93,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: password,
         trainerName: name,
       );
+      if (!mounted) return;
       if (!AuthService.isSignedIn) {
-        if (!mounted) return;
-        setState(() {
-          _submitting = false;
-          _error = 'Check your email to confirm your account, then log in.';
-          _errorTick++;
-        });
+        PokeBinderAudio.play(Sfx.success);
+        PokeBinderToast.show(
+          context,
+          'Check your email to confirm your account, then log in.',
+          kind: ToastKind.success,
+          duration: const Duration(seconds: 6),
+        );
+        Navigator.of(context).maybePop();
         return;
       }
       await TrainerProfileRepository.load(fallbackName: name);
@@ -96,11 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _submitting = false;
-        _error = 'Could not create that account — try again.';
-        _errorTick++;
-      });
+      _fail(AuthService.signUpErrorMessage(e));
     }
   }
 
@@ -140,6 +154,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  textInputAction: TextInputAction.next,
                   decoration: pokeInputDecoration(
                     hint: 'ash@pallettown.com',
                     icon: Icons.mail_outline,
@@ -153,6 +169,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.next,
                     decoration: pokeInputDecoration(
                       hint: '••••••••',
                       icon: Icons.lock_outline,
@@ -171,6 +188,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: TextField(
                     controller: _confirmController,
                     obscureText: _obscureConfirm,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _attemptSignUp(),
                     decoration: pokeInputDecoration(
                       hint: '••••••••',
                       icon: Icons.lock_outline,

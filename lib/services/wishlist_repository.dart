@@ -34,4 +34,9 @@ class WishlistRepository {
       () => _table.delete().eq('id', id),
     );
   }
+
+  static Future<void> deleteBySourceCards(List<String> cardIds) async {
+    if (cardIds.isEmpty) return;
+    await _table.delete().inFilter('source_card_id', cardIds);
+  }
 }

@@ -8,6 +8,7 @@ import '../models/pokemon_card_data.dart';
 import '../services/catalog_repository.dart';
 import '../theme/pokebinder_theme.dart';
 import 'card_sort_controls.dart';
+import 'pokebinder_background.dart';
 import 'pokebinder_controls.dart';
 import 'pokebinder_form_fields.dart';
 import 'pokeball.dart';
@@ -157,6 +158,7 @@ class _CatalogPickerState extends State<CatalogPicker> {
       _error = null;
     });
     PokeBinderAudio.play(Sfx.scan);
+    if (_sets.isEmpty) _loadSets();
     try {
       final setId = _activeSetId;
       final List<CatalogCard> cards;
@@ -192,8 +194,7 @@ class _CatalogPickerState extends State<CatalogPicker> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: PokeBinderColors.cream,
+    return PokeBinderScaffold(
       floatingActionButton: _showBackToTop
           ? FloatingActionButton.small(
               tooltip: 'Back to top',

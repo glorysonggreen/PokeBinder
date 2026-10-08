@@ -94,28 +94,26 @@ class _DeckAddCardScreenState extends State<DeckAddCardScreen> {
   }
 
   void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
+    if (result.deleted) {
+      CardRepository.delete(oldCard.id);
+      setState(() => _quantities.remove(oldCard.id));
+      return;
+    }
+    final index = PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
+    if (index == -1) return;
     setState(() {
-      final index =
-          PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
-      if (index == -1) return;
-      if (result.deleted) {
-        PokemonCardData.library.removeAt(index);
-        CardRepository.delete(oldCard.id);
-        _quantities.remove(oldCard.id);
-      } else {
-        PokemonCardData.library[index] = result.card!;
-        CardRepository.upsert(result.card!);
-        final owned = result.card!.quantityOwned;
-        final picked = _quantities[oldCard.id];
-        if (picked != null && picked > owned) {
-          if (owned <= 0) {
-            _quantities.remove(oldCard.id);
-          } else {
-            _quantities[oldCard.id] = owned;
-          }
+      PokemonCardData.library[index] = result.card!;
+      final owned = result.card!.quantityOwned;
+      final picked = _quantities[oldCard.id];
+      if (picked != null && picked > owned) {
+        if (owned <= 0) {
+          _quantities.remove(oldCard.id);
+        } else {
+          _quantities[oldCard.id] = owned;
         }
       }
     });
+    CardRepository.upsert(result.card!);
   }
 
   void _done() {

@@ -87,6 +87,16 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
       return;
     }
 
+    final sourceId = widget.existingEntry.sourceCardId;
+    if (sourceId != null) {
+      final matches = PokemonCardData.library.where((c) => c.id == sourceId);
+      if (matches.isNotEmpty && qty > matches.first.quantityOwned) {
+        setState(() => _quantityError =
+            'You only own ${matches.first.quantityOwned} of this card.');
+        return;
+      }
+    }
+
     final entry = WishlistEntry(
       id: widget.existingEntry.id,
       name: name,
@@ -98,7 +108,7 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
       notes: _notesController.text.trim(),
       kind: WishlistEntryKind.trade,
       priority: _priority,
-      estimatedValue: double.tryParse(_valueController.text.trim()) ?? 0,
+      estimatedValue: _parsedValue(_valueController.text),
       askingFor: _askingForController.text.trim(),
       sourceCardId: widget.existingEntry.sourceCardId,
       imageAssetPath: widget.existingEntry.imageAssetPath,
@@ -334,4 +344,9 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
       ),
     );
   }
+}
+
+double _parsedValue(String text) {
+  final value = double.tryParse(text.trim());
+  return value != null && value.isFinite && value > 0 ? value : 0.0;
 }

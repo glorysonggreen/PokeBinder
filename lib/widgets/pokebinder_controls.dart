@@ -575,6 +575,7 @@ Future<bool> confirmDestructive(
   required String title,
   required String message,
   required String confirmLabel,
+  IconData icon = Icons.delete_outline,
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
@@ -588,8 +589,8 @@ Future<bool> confirmDestructive(
         ),
         TextButton.icon(
           onPressed: () => Navigator.of(dialogContext).pop(true),
-          icon: const Icon(
-            Icons.delete_outline,
+          icon: Icon(
+            icon,
             size: 16,
             color: PokeBinderColors.danger,
           ),

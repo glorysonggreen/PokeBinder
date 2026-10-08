@@ -278,3 +278,118 @@ create policy "Owner can delete own avatar" on storage.objects
     bucket_id = 'avatars'
     and (storage.foldername(name))[1] = (select auth.uid())::text
   );
+
+delete from public.wishlist_entries w
+where w.source_card_id is not null
+  and not exists (select 1 from public.cards c where c.id = w.source_card_id);
+
+update public.trainer_profiles p
+set favorite_card_id = null
+where p.favorite_card_id is not null
+  and not exists (select 1 from public.cards c where c.id = p.favorite_card_id);
+
+update public.trainer_profiles p
+set favorite_binder_id = null
+where p.favorite_binder_id is not null
+  and not exists (select 1 from public.binders b where b.id = p.favorite_binder_id);
+
+update public.trainer_profiles p
+set favorite_deck_id = null
+where p.favorite_deck_id is not null
+  and not exists (select 1 from public.decks d where d.id = p.favorite_deck_id);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'wishlist_entries_source_card_id_fkey'
+  ) then
+    alter table public.wishlist_entries
+      add constraint wishlist_entries_source_card_id_fkey
+      foreign key (source_card_id) references public.cards (id) on delete cascade;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'trainer_profiles_favorite_card_id_fkey'
+  ) then
+    alter table public.trainer_profiles
+      add constraint trainer_profiles_favorite_card_id_fkey
+      foreign key (favorite_card_id) references public.cards (id) on delete set null;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'trainer_profiles_favorite_binder_id_fkey'
+  ) then
+    alter table public.trainer_profiles
+      add constraint trainer_profiles_favorite_binder_id_fkey
+      foreign key (favorite_binder_id) references public.binders (id) on delete set null;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'trainer_profiles_favorite_deck_id_fkey'
+  ) then
+    alter table public.trainer_profiles
+      add constraint trainer_profiles_favorite_deck_id_fkey
+      foreign key (favorite_deck_id) references public.decks (id) on delete set null;
+  end if;
+end
+$$;
+
+create index if not exists wishlist_entries_source_card_idx
+  on public.wishlist_entries (source_card_id);
+create index if not exists wishlist_entries_user_kind_idx
+  on public.wishlist_entries (user_id, kind);
+
+do $$
+begin
+  create unique index if not exists binders_user_name_lower_idx
+    on public.binders (user_id, lower(name));
+exception
+  when unique_violation then
+    raise notice 'Two binders share a name apart from capitalization. Rename one, then run this script again.';
+end
+$$;
+
+create or replace function public.sync_cards_on_binder_rename()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.name is distinct from old.name then
+    update public.cards
+    set binder_name = new.name
+    where user_id = new.user_id and binder_name = old.name;
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.unassign_cards_on_binder_delete()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  update public.cards
+  set binder_name = 'Unassigned', page = 0
+  where user_id = old.user_id and binder_name = old.name;
+  return old;
+end;
+$$;
+
+revoke execute on function public.sync_cards_on_binder_rename() from public, anon, authenticated;
+revoke execute on function public.unassign_cards_on_binder_delete() from public, anon, authenticated;
+
+drop trigger if exists binders_rename_cards on public.binders;
+create trigger binders_rename_cards
+  after update of name on public.binders
+  for each row execute function public.sync_cards_on_binder_rename();
+
+drop trigger if exists binders_unassign_cards on public.binders;
+create trigger binders_unassign_cards
+  after delete on public.binders
+  for each row execute function public.unassign_cards_on_binder_delete();

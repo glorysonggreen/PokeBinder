@@ -1,14 +1,19 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
+import '../models/wishlist_entry.dart';
 import 'paged_select.dart';
 import 'sync_status.dart';
+import 'wishlist_repository.dart';
 
 class CardRepository {
   CardRepository._();
 
-  static SupabaseQueryBuilder get _table =>
-      Supabase.instance.client.from('cards');
+  static const _deleteChunk = 100;
+
+  static SupabaseClient get _client => Supabase.instance.client;
+
+  static SupabaseQueryBuilder get _table => _client.from('cards');
 
   static Future<void> loadAll() async {
     final rows = await fetchAllRows('cards', orderBy: 'date_added', thenBy: 'id');
@@ -19,23 +24,25 @@ class CardRepository {
   }
 
   static Future<void> upsert(PokemonCardData card) {
+    _reconcileTradeEntries(card);
     return SyncStatus.track('save that card', () => _table.upsert(card.toRow()));
   }
 
-  static Future<void> delete(String id) {
-    _removeFromLocalDecks(id);
-    return SyncStatus.track('delete that card', () => _table.delete().eq('id', id));
-  }
+  static Future<void> delete(String id) => deleteMany([id]);
 
   static Future<void> deleteMany(Iterable<String> ids) {
-    final list = ids.toList();
+    final list = ids.toSet().toList();
     if (list.isEmpty) return Future.value();
-    list.forEach(_removeFromLocalDecks);
+    _removeLocally(list.toSet());
     return SyncStatus.track('delete those cards', () async {
-      const chunk = 100;
-      for (var i = 0; i < list.length; i += chunk) {
-        final end = i + chunk > list.length ? list.length : i + chunk;
-        await _table.delete().inFilter('id', list.sublist(i, end));
+      for (var i = 0; i < list.length; i += _deleteChunk) {
+        final end = i + _deleteChunk > list.length ? list.length : i + _deleteChunk;
+        final part = list.sublist(i, end);
+        await WishlistRepository.deleteBySourceCards(part);
+        await _client
+            .from('trainer_profiles')
+            .update({'favorite_card_id': null}).inFilter('favorite_card_id', part);
+        await _table.delete().inFilter('id', part);
       }
     });
   }
@@ -53,14 +60,33 @@ class CardRepository {
     );
   }
 
-  static void _removeFromLocalDecks(String cardId) {
+  static void _removeLocally(Set<String> ids) {
+    PokemonCardData.library.removeWhere((c) => ids.contains(c.id));
+    WishlistEntry.library.removeWhere(
+      (e) => e.sourceCardId != null && ids.contains(e.sourceCardId),
+    );
     final decks = DeckData.library;
     for (var i = 0; i < decks.length; i++) {
       final deck = decks[i];
-      if (!deck.cards.any((c) => c.cardId == cardId)) continue;
+      if (!deck.cards.any((c) => ids.contains(c.cardId))) continue;
       decks[i] = deck.copyWith(
-        cards: deck.cards.where((c) => c.cardId != cardId).toList(),
+        cards: deck.cards.where((c) => !ids.contains(c.cardId)).toList(),
       );
+    }
+  }
+
+  static void _reconcileTradeEntries(PokemonCardData card) {
+    final entries = WishlistEntry.library;
+    for (var i = entries.length - 1; i >= 0; i--) {
+      final entry = entries[i];
+      if (entry.sourceCardId != card.id) continue;
+      if (card.quantityOwned <= 0) {
+        entries.removeAt(i);
+        WishlistRepository.delete(entry.id);
+      } else if (entry.quantity > card.quantityOwned) {
+        entries[i] = entry.copyWith(quantity: card.quantityOwned);
+        WishlistRepository.upsert(entries[i]);
+      }
     }
   }
 }

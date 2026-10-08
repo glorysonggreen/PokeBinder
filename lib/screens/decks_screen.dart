@@ -169,6 +169,10 @@ class _DecksScreenState extends State<DecksScreen> {
             });
             DeckRepository.upsert(updated);
           },
+          onDeckDeleted: () {
+            setState(() => _decks.removeWhere((d) => d.id == deck.id));
+            DeckRepository.delete(deck.id);
+          },
         ),
       ),
     );
@@ -438,7 +442,7 @@ class _DeckListPanel extends StatelessWidget {
     required this.onTogglePin,
   });
 
-  int _compare(DeckData a, DeckData b) {
+  int _compare(DeckData a, DeckData b, Map<String, double> values) {
     switch (sortOption) {
       case DeckSortOption.name:
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
@@ -449,13 +453,20 @@ class _DeckListPanel extends StatelessWidget {
       case DeckSortOption.cardCount:
         return b.cardCount.compareTo(a.cardCount);
       case DeckSortOption.value:
-        return b.totalValue.compareTo(a.totalValue);
+        return (values[b.id] ?? 0).compareTo(values[a.id] ?? 0);
     }
   }
 
   List<_DeckSection> _buildSections() {
-    final pinned = decks.where((d) => d.isPinned).toList()..sort(_compare);
-    final rest = decks.where((d) => !d.isPinned).toList()..sort(_compare);
+    final values = <String, double>{};
+    if (sortOption == DeckSortOption.value) {
+      for (final deck in decks) {
+        values[deck.id] = deck.totalValue;
+      }
+    }
+    int compare(DeckData a, DeckData b) => _compare(a, b, values);
+    final pinned = decks.where((d) => d.isPinned).toList()..sort(compare);
+    final rest = decks.where((d) => !d.isPinned).toList()..sort(compare);
 
     final sections = <_DeckSection>[];
 

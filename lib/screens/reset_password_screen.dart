@@ -15,7 +15,7 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  static const _minLength = 6;
+  static const _minLength = AuthService.minPasswordLength;
 
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();

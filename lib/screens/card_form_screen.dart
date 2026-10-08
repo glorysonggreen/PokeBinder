@@ -4,6 +4,7 @@ import '../models/binder_data.dart';
 import '../models/catalog_card.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
+import '../widgets/card_selection.dart';
 import '../widgets/card_form_parts.dart';
 import '../widgets/catalog_card_summary.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -169,7 +170,9 @@ class _CardFormScreenState extends State<CardFormScreen> {
         ? null
         : widget.binders.firstWhere((b) => b.id == _binderId,
             orElse: () => widget.binders.first);
-    final value = double.tryParse(_valueController.text) ?? 0;
+    final parsedValue = double.tryParse(_valueController.text);
+    final value =
+        parsedValue != null && parsedValue.isFinite ? parsedValue : 0.0;
     final page = int.tryParse(_pageController.text) ?? widget.defaultPageNumber;
     final pageNumber = unassigned ? 0 : (page < 1 ? 1 : page);
 
@@ -212,14 +215,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
   }
 
   Future<void> _confirmDelete() async {
-    final card = widget.existingCard!;
-    final confirmed = await confirmDestructive(
-      context,
-      title: 'Delete card?',
-      message: 'This removes "${card.name}" from your collection. '
-          "This can't be undone.",
-      confirmLabel: 'Delete',
-    );
+    final confirmed = await confirmCardDeletion(context, [widget.existingCard!]);
 
     if (confirmed && mounted) {
       Navigator.of(context).pop(const CardFormResult.deleted());

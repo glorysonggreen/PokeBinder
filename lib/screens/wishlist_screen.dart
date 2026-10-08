@@ -143,19 +143,24 @@ class _WishlistScreenState extends State<WishlistScreen> {
         ),
       );
       if (result == null) return;
+      final ownedIds = PokemonCardData.library.map((c) => c.id).toSet();
+      final kept = result.where((e) => ownedIds.contains(e.sourceCardId)).toList();
+      final keptIds = kept.map((e) => e.id).toSet();
       final removed = _entries
           .where((e) =>
-              e.kind == WishlistEntryKind.trade && e.sourceCardId != null)
+              e.kind == WishlistEntryKind.trade &&
+              e.sourceCardId != null &&
+              !keptIds.contains(e.id))
           .toList();
       setState(() {
         _entries.removeWhere((e) =>
             e.kind == WishlistEntryKind.trade && e.sourceCardId != null);
-        _entries.addAll(result);
+        _entries.addAll(kept);
       });
       for (final entry in removed) {
         WishlistRepository.delete(entry.id);
       }
-      for (final entry in result) {
+      for (final entry in kept) {
         WishlistRepository.upsert(entry);
       }
       return;
@@ -231,6 +236,16 @@ class _WishlistScreenState extends State<WishlistScreen> {
       actionLabel: 'Undo',
       onAction: () {
         if (!mounted) return;
+        final sourceId = entry.sourceCardId;
+        if (sourceId != null &&
+            !PokemonCardData.library.any((c) => c.id == sourceId)) {
+          PokeBinderToast.show(
+            context,
+            'That card is no longer in your collection.',
+            kind: ToastKind.warning,
+          );
+          return;
+        }
         setState(() {
           final index = removedIndex.clamp(0, _entries.length);
           _entries.insert(index, entry);

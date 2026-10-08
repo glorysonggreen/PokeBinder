@@ -62,9 +62,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<PokemonCardData> get _recentlyAdded {
-    final sorted = [..._cards]
-      ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
-    return sorted.take(3).toList();
+    final recent = <PokemonCardData>[];
+    for (final card in _cards) {
+      var at = recent.length;
+      while (at > 0 && card.dateAdded.isAfter(recent[at - 1].dateAdded)) {
+        at--;
+      }
+      if (at < 3) {
+        recent.insert(at, card);
+        if (recent.length > 3) recent.removeLast();
+      }
+    }
+    return recent;
   }
 
   int get _totalCardCount =>
@@ -104,17 +113,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
-    setState(() {
-      final index = _cards.indexWhere((c) => c.id == oldCard.id);
-      if (index == -1) return;
-      if (result.deleted) {
-        _cards.removeAt(index);
-        CardRepository.delete(oldCard.id);
-      } else {
-        _cards[index] = result.card!;
-        CardRepository.upsert(result.card!);
-      }
-    });
+    if (result.deleted) {
+      CardRepository.delete(oldCard.id);
+      setState(() {});
+      return;
+    }
+    final index = _cards.indexWhere((c) => c.id == oldCard.id);
+    if (index == -1) return;
+    setState(() => _cards[index] = result.card!);
+    CardRepository.upsert(result.card!);
   }
 
   Future<void> _openNewBinder() async {

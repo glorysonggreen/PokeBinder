@@ -21,8 +21,6 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   static const _resendCooldownSeconds = 60;
-  static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-
   late final _emailController =
       TextEditingController(text: widget.initialEmail);
 
@@ -60,12 +58,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _sendResetLink() async {
     if (_submitting) return;
-    final email = (_sentToEmail ?? _emailController.text).trim();
+    final email =
+        AuthService.normalizeEmail(_sentToEmail ?? _emailController.text);
     if (email.isEmpty) {
       setState(() => _error = 'Enter the email on your account to continue.');
       return;
     }
-    if (!_emailPattern.hasMatch(email)) {
+    if (!AuthService.isValidEmail(email)) {
       setState(() => _error = "That email address doesn't look right.");
       return;
     }
@@ -158,6 +157,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendResetLink(),
                     decoration: pokeInputDecoration(

@@ -3,6 +3,7 @@ import '../models/deck_data.dart';
 import '../models/pokemon_card_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/card_sort_controls.dart' show trainerSubtypeIcon;
+import '../widgets/card_selection.dart';
 import '../widgets/card_tags.dart';
 import '../widgets/pokebinder_controls.dart';
 import '../widgets/pokemon_card_widget.dart';
@@ -29,12 +30,14 @@ class DeckDetailScreen extends StatefulWidget {
   final DeckData deck;
   final PokemonCardData? Function(String cardId) cardOf;
   final ValueChanged<DeckData> onDeckChanged;
+  final VoidCallback onDeckDeleted;
 
   const DeckDetailScreen({
     super.key,
     required this.deck,
     required this.cardOf,
     required this.onDeckChanged,
+    required this.onDeckDeleted,
   });
 
   @override
@@ -46,6 +49,23 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
 
   late DeckData _deck = widget.deck;
   int _pageIndex = 0;
+
+  Future<void> _confirmDeleteDeck() async {
+    final count = _deck.cards.length;
+    final note = count == 0
+        ? 'It has no cards in it.'
+        : 'Your cards stay in your collection.';
+    final confirmed = await confirmDestructive(
+      context,
+      title: 'Delete deck?',
+      message: 'This deletes the deck "${_deck.name}". $note '
+          "This can't be undone.",
+      confirmLabel: 'Delete',
+    );
+    if (!confirmed || !mounted) return;
+    widget.onDeckDeleted();
+    Navigator.of(context).pop();
+  }
 
   int get _pageCount =>
       _deck.cards.isEmpty ? 1 : (_deck.cards.length / _kCardsPerPage).ceil();
@@ -177,8 +197,18 @@ class _DeckDetailScreenState extends State<DeckDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BackLink(onTap: () => Navigator.of(context).maybePop()),
-              const SizedBox(height: PokeBinderSpacing.sp2),
+              Row(
+                children: [
+                  BackLink(onTap: () => Navigator.of(context).maybePop()),
+                  const Spacer(),
+                  CardSelectAction(
+                    icon: Icons.delete_outline,
+                    label: 'Delete',
+                    onTap: _confirmDeleteDeck,
+                  ),
+                ],
+              ),
+              const SizedBox(height: PokeBinderSpacing.sp1),
               Text('DECK DETAILS', style: PokeBinderText.eyebrow),
               const SizedBox(height: PokeBinderSpacing.sp4),
               _DeckOverviewCard(deck: _deck, ready: ready, cardOf: widget.cardOf),

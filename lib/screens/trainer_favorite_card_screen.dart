@@ -72,22 +72,22 @@ class _TrainerFavoriteCardScreenState
   }
 
   void _handleCardSaved(PokemonCardData oldCard, CardFormResult result) {
-    setState(() {
-      final index =
-          PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
-      if (index == -1) return;
-      if (result.deleted) {
-        PokemonCardData.library.removeAt(index);
-        CardRepository.delete(oldCard.id);
+    if (result.deleted) {
+      CardRepository.delete(oldCard.id);
+      setState(() {
         if (_selectedCardId == oldCard.id) _selectedCardId = null;
-      } else {
-        PokemonCardData.library[index] = result.card!;
-        CardRepository.upsert(result.card!);
-        if (_selectedCardId == oldCard.id && result.card!.quantityOwned <= 0) {
-          _selectedCardId = null;
-        }
+      });
+      return;
+    }
+    final index = PokemonCardData.library.indexWhere((c) => c.id == oldCard.id);
+    if (index == -1) return;
+    setState(() {
+      PokemonCardData.library[index] = result.card!;
+      if (_selectedCardId == oldCard.id && result.card!.quantityOwned <= 0) {
+        _selectedCardId = null;
       }
     });
+    CardRepository.upsert(result.card!);
   }
 
   void _done() => Navigator.of(context).pop(_selectedCardId ?? '');

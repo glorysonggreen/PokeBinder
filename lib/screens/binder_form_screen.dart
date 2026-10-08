@@ -20,8 +20,13 @@ class BinderFormResult {
 
 class BinderFormScreen extends StatefulWidget {
   final BinderData? existingBinder;
+  final bool canDelete;
 
-  const BinderFormScreen({super.key, this.existingBinder});
+  const BinderFormScreen({
+    super.key,
+    this.existingBinder,
+    this.canDelete = true,
+  });
 
   @override
   State<BinderFormScreen> createState() => _BinderFormScreenState();
@@ -97,11 +102,18 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
 
   Future<void> _confirmDelete() async {
     final binder = widget.existingBinder!;
+    final count = binder.cardCount;
+    final cardsNote = count == 0
+        ? 'It has no cards in it.'
+        : count == 1
+            ? 'The 1 card inside moves to Unassigned Cards and stays in your '
+                'collection.'
+            : 'The $count cards inside move to Unassigned Cards and stay in '
+                'your collection.';
     final confirmed = await confirmDestructive(
       context,
       title: 'Delete binder?',
-      message: 'This removes "${binder.name}" and all ${binder.cardCount} '
-          "cards in it. This can't be undone.",
+      message: 'This deletes the binder "${binder.name}". $cardsNote',
       confirmLabel: 'Delete',
     );
 
@@ -235,7 +247,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                   ),
                 ],
               ),
-              if (_isEditing) ...[
+              if (_isEditing && widget.canDelete) ...[
                 const SizedBox(height: PokeBinderSpacing.sp4),
                 DangerActionButton(label: 'Delete Binder', onTap: _confirmDelete),
               ],

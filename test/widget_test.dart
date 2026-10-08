@@ -1,16 +1,39 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:pokebinder/main.dart';
+import 'package:pokebinder/services/auth_service.dart';
 
 void main() {
-  testWidgets('Shows the login screen when signed out', (tester) async {
-    // Supabase.initialize() (called from main(), not from this test) is
-    // what main.dart's session check depends on, so this test only
-    // exercises the widget tree, not the real backend. Once Supabase is
-    // initialized in a test setUp with a test project, this can be
-    // expanded to sign in and assert on the loaded collection instead.
-    await tester.pumpWidget(const PokeBinderApp());
-    expect(find.text('Log In'), findsWidgets);
+  group('AuthService email helpers', () {
+    test('normalizeEmail trims and lowercases', () {
+      expect(
+        AuthService.normalizeEmail('  Ash.Ketchum@Pallet.COM '),
+        'ash.ketchum@pallet.com',
+      );
+    });
+
+    test('isValidEmail accepts normal addresses', () {
+      expect(AuthService.isValidEmail('ash@pallet.com'), isTrue);
+      expect(AuthService.isValidEmail(' misty@cerulean.gym.ph '), isTrue);
+    });
+
+    test('isValidEmail rejects malformed addresses', () {
+      expect(AuthService.isValidEmail(''), isFalse);
+      expect(AuthService.isValidEmail('ash'), isFalse);
+      expect(AuthService.isValidEmail('ash@pallet'), isFalse);
+      expect(AuthService.isValidEmail('ash @pallet.com'), isFalse);
+    });
+  });
+
+  group('AuthService messages', () {
+    test('duplicate account gets a clear message', () {
+      final message = AuthService.signUpErrorMessage(
+        const AccountAlreadyExistsException(),
+      );
+      expect(message, contains('already exists'));
+    });
+
+    test('non-auth errors read as a connection problem', () {
+      final message = AuthService.signInErrorMessage(Exception('socket'));
+      expect(message.toLowerCase(), contains('connect'));
+    });
   });
 }

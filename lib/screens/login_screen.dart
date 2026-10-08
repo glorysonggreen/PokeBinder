@@ -42,12 +42,20 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _attemptLogin() async {
-    final email = _emailController.text.trim();
+    if (_submitting) return;
+    final email = AuthService.normalizeEmail(_emailController.text);
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
       setState(() {
         _error = 'Enter an email and password to continue.';
+        _errorTick++;
+      });
+      return;
+    }
+    if (!AuthService.isValidEmail(email)) {
+      setState(() {
+        _error = "That email address doesn't look right.";
         _errorTick++;
       });
       return;
@@ -69,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = 'Could not log in — check your email and password.';
+        _error = AuthService.signInErrorMessage(e);
         _errorTick++;
       });
     }
@@ -119,6 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  textInputAction: TextInputAction.next,
                   decoration: pokeInputDecoration(
                     hint: 'ash@pallettown.com',
                     icon: Icons.mail_outline,
@@ -133,6 +143,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: TextField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _attemptLogin(),
                   decoration: pokeInputDecoration(
                     hint: '••••••••',
                     icon: Icons.lock_outline,

@@ -115,7 +115,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
       notes: _notesController.text.trim(),
       kind: WishlistEntryKind.wishlist,
       priority: _priority,
-      estimatedValue: double.tryParse(_valueController.text.trim()) ?? 0,
+      estimatedValue: _parsedValue(_valueController.text),
       imageAssetPath: _imagePath,
       catalogId: existing?.catalogId ?? widget.catalogCard?.id,
       finish: _finish,
@@ -300,4 +300,9 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
       ),
     );
   }
+}
+
+double _parsedValue(String text) {
+  final value = double.tryParse(text.trim());
+  return value != null && value.isFinite && value > 0 ? value : 0.0;
 }
