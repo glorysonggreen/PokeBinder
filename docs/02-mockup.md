@@ -597,7 +597,7 @@ The wireframe sanity check originally described this journey as scan, confirm, a
 
 This section outlines the changes between the original mockup, which consisted of 29 screens and was submitted on September 20, 2026, and the updated version, which reflects the current app in the repository and includes 31 screens.
 
-| Screen or Element | PDF Mockup | Current App (This Version) | Why It Changed |
+| Screen or Element | Original Mockup | Current App (This Version) | Why It Changed |
 | --- | --- | --- | --- |
 | Screen count and numbering | 29 screens, numbered 01 to 29 (01 Login, 02 Forgot Password, 03 Sign Up, and so on). | 31 screens, numbered to match the files in `docs/screenshots/`. Sign Up is now 02 and Forgot Password is 03. | The screenshots are the source of truth, so numbers and filenames now line up. |
 | Card Scanner (15) and Confirm Card (16) | Camera viewfinder with a **Capture** button, a **Recent Scans** list, and a confirmation screen before saving. | **Removed.** Replaced by 17 Add Card (Find Your Card), a searchable catalog, and 18 Add to Collection. | The scanner was only a simulated demo and was removed on Oct 4. Catalog search gets a correct card into the collection without a camera and works in a browser. |
