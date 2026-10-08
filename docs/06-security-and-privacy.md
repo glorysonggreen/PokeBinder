@@ -122,26 +122,11 @@ own test account.
 
 - [x] `.env` (or `env.json`) is in `.gitignore`, and `.env.example` is committed
 - [x] `git log -p | grep -i "api_key\|secret\|password\|token"` finds nothing real
-  _(Run on 2026-10-09 with `Select-String` in PowerShell. Only placeholders
-  such as `put_your_key_here`, docs text and password-field code matched. The
-  search cannot read binary files, so I also checked the committed browser
-  profile separately; see item 1 under "Found while doing this check".)_
 - [x] No service account file, keystore or `service_role` key anywhere in the repo
-  _(checked in the current tree and in history, including the committed
-  browser profile)_
 - [x] Security rules or RLS policies written and tested, not left open
-  _(Written as described above; I tested them and they work.)_
 - [ ] No real personal data in sample data, screenshots or the video
-  _(Seed data is public card data. Check your screenshots and video yourself.)_
 - [x] No course or university credentials anywhere
-  _(none found in the repository or its history)_
 - [x] Anyone whose data appears in a test was asked first
-  _(The only test address, `ash@pallettown.com`, is an invented placeholder, not
-  a real person. It is a real account in my Supabase project, which is why item 1
-  above still needs the sessions revoked.)_
-
-If you found and revoked a key while doing this, say so here. Catching it is the
-right outcome, not an embarrassment.
 
 **Revoked / rotated:** 2026-10-09. I found session tokens for my test account in
 the committed `.dart_tool/chrome-device/` folder and revoked them in Supabase
