@@ -43,8 +43,6 @@
 
 ---
 
-# Weekly Increment Report
-
 ## Week of: September 27, 2026
 
 ## What changed this week
