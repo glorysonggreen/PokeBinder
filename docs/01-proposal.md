@@ -1,15 +1,4 @@
-# Final Project Proposal (Revised)
-
-**Holy Angel University**
-In partial fulfillment of the requirements for Applications Development and Emerging Technologies
-
-**Course:** CS-301
-
-**Student:** Matthew Simon R. Green
-
-**Submitted to:** Prof. Tjakoen A. Stolk
-
-**Date:** September 20, 2026
+# Project Proposal
 
 ---
 
@@ -25,198 +14,209 @@ This app is for me and other Pokémon TCG collectors who keep their cards in phy
 
 ## Core Features (MVP)
 
-Since I have already started coding PokéBinder, I am already ahead in the development process. I have built the screens and main user flows for all of my planned MVP features except for real card scanning. The scanner screen and its overall flow are already built, but I have not yet fully implemented or tested actual card recognition.
+All of the planned MVP features are now built and connected to Supabase. The hard-coded sample cards are gone. When a user signs in, the app loads their collection from Supabase into in-memory lists (for example `PokemonCardData.library`), the screens read from those lists, and every change is saved back through repository classes (`lib/services/`). A user's collection is stored in their own account and is still there after the app is closed or opened on another device.
 
-None of the MVP features saves data yet, so my main remaining work is connecting the existing screens to Supabase rather than building new UI from scratch. Several parts of PokéBinder still use sample or in-memory data. I plan to connect these parts to Supabase so that the data can be properly stored, retrieved, and updated even after the app is closed.
+The one planned feature I did not keep is the Card Scanner. I built the scanner screen and its demo flow, but on October 4, 2026 I removed it (`scanner_screen.dart`) and replaced it with a searchable card catalog on the **Add** tab. The reasons are in the Risks and "What Changed" sections.
 
-This means most of my remaining work will focus on connecting the existing features to real data and making sure they work properly together. It also gives me more time to improve the functionality of the features I have already built instead of creating the main UI from scratch.
-
-| Feature | Still in the MVP? | Flutter pieces it needs | Honest estimate |
+| Feature | Still in the MVP? | Flutter pieces it uses | Status now |
 | --- | --- | --- | --- |
-| Sign in / Sign up | Yes | Form, TextField, supabase_flutter auth, auth-state listener, Navigator.pushAndRemoveUntil | 4 hours |
-| Manage Collection | Yes | Form (CardFormScreen), ListView.separated, GridView for binder pages, showDialog for delete confirmation, model classes with toJson/fromJson | 8 hours |
-| Search, Browse & Card Details | Yes | SearchBar, TabBar, ListView.separated, GridView, GestureDetector + Transform for 3D card tilt, Navigator.push | 3 hours |
-| Card Scanner | Yes, demo flow only | CustomPaint scan overlay, AnimationController for the existing animation; real version would need camera and text recognition, which have not been tested yet | 12+ hours / Risk |
-| Wishlist, Trade List & Deck Planner | Yes | TabBar, Form, showDialog, showModalBottomSheet, Dismissible, deck-card join | 9 hours |
-| Trainer Card & Collection Overview | Yes | Form, CircleAvatar, CustomPaint for statistics, favorite pickers | 3 hours |
-| Supabase Setup | New | Dashboard setup, --dart-define, GitHub Actions secrets | 6 hours |
+| Sign in / Sign up | Yes | Form, TextField, supabase_flutter auth, `AuthService`, auth-state listener, password recovery screen, Sign Out in the More tab | Done. One account per email, "account already exists" message, Forgot Password and Choose a New Password screens, resend-link countdown |
+| Manage Collection | Yes | Form (`CardFormScreen`), ListView, GridView for binder pages, showDialog for delete confirmation, multi-select delete, model classes with toJson/fromJson, repositories | Done. Add, edit and delete cards, binders with pages, an Unassigned Cards list, and cleanup of trade list, decks and trainer favorite when a card is deleted |
+| Search, Browse & Card Details | Yes | Search and filter controls, sort controls, ListView, GridView, GestureDetector + Transform for the drag-to-tilt 3D card, Navigator.push | Done. Search the user's own binders and cards, search the real card catalog stored in Supabase when adding, and view full card details with a 3D card |
+| Card Scanner | No, removed | CustomPaint scan overlay and AnimationController (demo version only) | Removed on Oct 4. Replaced by the catalog picker on the Add tab |
+| Wishlist, Trade List & Deck Planner | Yes | TabBar, Form, showDialog, showModalBottomSheet, deck-card join | Done and saved to Supabase |
+| Trainer Card & Collection Overview | Yes | Form, profile photo (image_picker and a crop screen), CustomPaint for statistics, favorite pickers | Done. The profile photo is stored in Supabase Storage |
+| Supabase Setup | New | Dashboard setup, `supabase/schema.sql`, Row Level Security, Storage bucket, GitHub Actions deploy | Done. The web build deploys to GitHub Pages on every push to `main` |
+| Sound, Music & Animations | New | audioplayers, shared_preferences, shared animation widgets | Done. Sound effects, two background themes, a Sound & Music settings screen, and shared animations across screens |
 
-My current firm estimate is **33 hours**, not including real scanner recognition because that feature has been moved to a stretch goal. I have 3 weeks remaining for the project, which gives me enough time to complete the MVP and make final improvements.
+The MVP is complete, so the remaining work is cleanup rather than new features: moving the Supabase settings out of the source code, adding more tests, and recording the demo video.
 
-The Card Scanner is listed separately as a risk because I have already built the UI and animation, but I have not yet fully tested the actual camera and text recognition implementation. The 12+ hour estimate is therefore not a firm estimate.
+The earlier plan treated the real scanner as a risk with a 12+ hour estimate. That risk is gone because the feature was cut, not because it was solved.
 
 ## Stretch Goals
 
-Future features could include:
+Where each stretch goal from the last version stands:
 
-1. **Real Scanner Recognition** – Use the camera and on-device text recognition to identify a Pokémon card by reading its name and card number.
-2. **Real Card Catalog** – Connect PokéBinder to the Pokémon TCG API so users can search for any card instead of being limited to cards I have already entered into the app.
-3. **Live Prices** – Connect to a card pricing source so the estimated value is updated with current market prices instead of using hard-coded values for each card.
-4. **Set Completion Tracking** – Track progress and show which cards are still missing from a set.
-5. **Deck Sharing & Friends List** – Allow users to share their decks and connect with other collectors through a friends list.
-6. **AI Assistant** – Help users identify cards, create and organize binders, plan decks, and answer questions about the app.
+1. **Real Scanner Recognition** – **Dropped.** Camera and text recognition were never tested, and the Add tab now covers the same need (getting a real card into the collection quickly) without a camera.
+2. **Real Card Catalog** – **Done, in a different way than planned.** The Pokémon TCG data is loaded into Supabase (`card_sets` and `card_catalog`) by an import tool in `tools/`, and the app searches that catalog. The app does not call the Pokémon TCG API directly. The committed seed file contains Base Set and Jungle, and the importer can load every set (about 20,000 cards).
+3. **Live Prices** – **Partly done.** Cards get a market price from the TCGplayer prices in the catalog, shown in pesos and adjusted for the card's condition. Prices are not live: they only update when I re-run the import, and the dollar-to-peso rate is a fixed number in `lib/config/pricing.dart`.
+4. **Set Completion Tracking** – Not started.
+5. **Deck Sharing & Friends List** – Not started.
+6. **AI Assistant** – Not started.
+7. **Offline Support** – New. Saves currently need a connection and are not retried.
 
 ## How My App Saves Data
 
 ### Will Different Users See the Same Data?
 
-**No.** Each person who uses PokéBinder should have their own private collection. If two people install the app, they should not see each other's cards, binders, decks, wishlist, trade list, or trainer card. This is important to me because PokéBinder is meant to represent a person's actual physical collection. The cards and information I save should belong only to that user's account.
+**No.** Each person who uses PokéBinder has their own private collection. If two people install the app, they do not see each other's cards, binders, decks, wishlist, trade list, or trainer card. This is important to me because PokéBinder is meant to represent a person's actual physical collection. The only shared data is the read-only card catalog, which is public card information. Row Level Security enforces this in the database itself, so it still holds if a screen has a bug.
 
 ### How Much Data Will the App Store?
 
-The app currently has 20 sample cards, but a real user could have around 300 to 1,500 cards in their collection. A user might also add or edit around 20 to 100 cards in a typical week. Aside from cards, a user could have around 5 to 15 binders, about 30 wishlist and trade entries, and several decks.
+A real user could have around 300 to 1,500 cards in their collection. A user might also add or edit around 20 to 100 cards in a typical week. Aside from cards, a user could have around 5 to 15 binders, about 30 wishlist and trade entries, and several decks.
 
-Based on this, I estimate that PokéBinder could store around **500 to 2,000 records per user**.
+Based on this, I estimate that PokéBinder could store around **500 to 2,000 records per user**. Supabase returns at most 1,000 rows per request, so the app reads in pages and larger collections still load completely.
 
 ### My Choice: Supabase
 
-I chose **Supabase** because it provides PostgreSQL, Supabase Auth, and Row Level Security in one platform. I will connect it to Flutter using supabase_flutter.
+I chose **Supabase** because it provides PostgreSQL, Supabase Auth, Row Level Security, and file Storage in one platform. It is connected to Flutter with supabase_flutter, and it is now the only place the app stores collection data.
 
-One reason I chose Supabase is that I have already built the Sign In, Sign Up, and Forgot Password screens. At the moment, these screens are mostly UI and do not have real account functionality behind them. Supabase Auth will allow me to connect these existing screens to actual user accounts.
+Another reason is that my data is relational. A deck contains multiple cards, a card belongs to a binder and page, and a wishlist or trade entry can point to a card I own. PostgreSQL handles this with separate tables, foreign keys, and cascade rules. For example, deleting a card also removes it from decks and the trade list.
 
-Another reason is that my data is relational. For example, a deck can contain multiple cards, a card can belong to a specific binder and page, and a wishlist entry can be connected to a card that I already own. PostgreSQL works well for this because I can use separate tables and relationships between them.
-
-I also want PokéBinder to work across devices. One of the main reasons for creating the app is to be able to check my collection while I am at a card shop and manage it again when I get home. Cloud storage allows the same account and collection to be accessed from different devices.
+I also wanted PokéBinder to work across devices, so I can check my collection at a card shop and manage it again at home. Cloud storage makes the same account and collection available from any browser.
 
 ### The Tradeoff
 
-I know that using Supabase also adds more work to the project. A local database would be simpler to set up and could work without an internet connection.
+Using Supabase added work: authentication, Row Level Security, network access, and keeping sensitive keys out of my public repository. A local database would have been simpler and would work without an internet connection.
 
-However, I decided that cloud storage fits the purpose of PokéBinder better. I accept the additional setup required for authentication, Row Level Security, network access, and keeping sensitive keys out of my public repository.
+I still think cloud storage fits PokéBinder better. The cost is that **writes are online-only**. If a save fails (for example, the connection drops or a rule rejects it), the app shows an error message and the change stays on screen but is **not** saved on the server. There is no offline queue and no automatic retry yet.
 
-If the connection is lost, the app will keep showing the last loaded data. Changes made while offline will not be saved, and the app will show an error message so the user can try again when connected.
+### What I Save
 
-### What I Will Save
+There are now eight tables, one of which is a join table, plus one storage bucket:
 
-I plan to use five main tables and one join table:
-
-- **profiles** – stores each user's trainer information
+- **trainer_profiles** – stores each user's trainer information
 - **binders** – stores the user's binders
 - **cards** – stores the cards in the user's collection
 - **decks** – stores the user's decks
 - **deck_cards** – connects cards to decks and stores their quantities
 - **wishlist_entries** – stores wishlist and trade entries
+- **card_sets** – shared, read-only list of Pokémon TCG sets
+- **card_catalog** – shared, read-only list of real cards with artwork links and market prices
+- **avatars** (Storage bucket) – trainer card profile photos, limited to JPEG, PNG and WebP up to 2 MB
 
-The card artwork will remain bundled with the application for now. Instead of storing the actual image in the database, the database will store a reference to the image.
+Card artwork is no longer bundled with the app. The catalog stores image links, and the app loads the artwork from the Pokémon TCG API's image server. Owned cards and wishlist entries keep a reference to the catalog card (`catalog_id`).
 
 ### Have I Tested Supabase Yet?
 
-As mentioned earlier, I have only used sample data that is currently hard-coded or stored in memory. I have not yet connected PokéBinder to Supabase or tested saving and retrieving real data from the database.
+Yes. PokéBinder runs against a real Supabase project, and the deployed web build uses it. Sign-up, login, password reset, and saving, loading and deleting cards, binders, decks, wishlist entries and trainer profiles all go through Supabase. I also checked that the app cannot read or write protected data while signed out (see `docs/07-security-checklist.md`).
 
-My first Supabase test will be a small one-hour spike. I will create a cards table, add a basic Row Level Security policy, and test inserting and reading one row from Flutter. I plan to complete this by **September 23, 2026**.
-
-After that, I can use what I learn from the test to start moving the existing collection data into Supabase.
+The two test files in `test/` currently cover the sign-in helpers (email checks and error messages) and the audio settings. Saving and loading with Supabase has been tested by hand, not with automated tests.
 
 ## One Thing I Want to Add That the Course Did Not Teach
 
-One feature I would like to add is a real Pokémon TCG card catalog using the **Pokémon TCG API** and the http package.
+The thing I added is a real Pokémon TCG card catalog using the **Pokémon TCG API**.
 
-Right now, PokéBinder only has bundled sample cards, but I plan to add multiple complete sets in the future. With the Pokémon TCG API, I could search for real Pokémon cards instead of being limited to the cards already in the app. This would make adding cards to my collection more useful because I would not have to manually enter the information for every card.
+Instead of typing in every card by hand, a user can search the catalog on the Add tab, pick a card, and the name, set, number, rarity, artwork and price are filled in correctly. The API data also supplies the TCGplayer market prices that become the estimated value in pesos.
 
-The API could also provide real card information and pricing data, which could eventually support the Live Prices feature.
+I load the data once into my own Supabase tables with an import tool (`tools/import_catalog.mjs`, with a Dart version, `tools/import_catalog.dart`) rather than calling the API from the app on every screen. This keeps the app fast, keeps the API's rate limits out of the user's way, and means no API key has to be inside the app.
 
 ### Does It Run Where I Develop?
 
-The API-based card catalog should work on the platforms where my Flutter app currently runs, including the web. However, I still need to verify the API's current terms and rate limits before depending on it for the final version.
-
-The real scanner is different. Actual card recognition would require camera access and text recognition or machine learning tools, which I have not fully implemented or tested yet.
+Yes. The catalog is read through Supabase, so it works anywhere the app runs, including the web build I develop and deploy with. The importer runs on my own computer with Node 18 or newer, or with Dart. If the API is slow or rate-limited, I use a free API key that stays in my terminal and never in the app.
 
 ### Web Fallback and Demo Plan
 
-The scanner already works as a browser demo. It shows the scanning animation and cycles through sample cards instead of using a real camera.
-
-I plan to clearly label this as **Demo Mode** in the application so users know that it is simulated. If I successfully implement the real scanner, I plan to demonstrate that version using a phone for my final video.
-
-For the web version, the scanner can continue using Demo Mode so that the rest of the application can still be tested without requiring camera hardware.
+PokéBinder has no hardware-dependent feature anymore, since the scanner was removed. Everything runs in a normal browser, so there is no camera, GPS or sensor feature to demo on a real device. I will demo the web build in the DevicePreview phone frame.
 
 ### Core or Stretch Goal?
 
-The real card catalog and real scanner are **stretch goals**.
-
-PokéBinder can still perform its main purpose without them because users can manually add cards and use the sample card library. My priority is to make the existing collection system work with persistent data first. Once that is working properly, I can start working on these additional features.
+The real card catalog started as a stretch goal and is now a working core feature. Cards are added by picking them from the catalog, and the details (quantity, condition, binder, page, notes) can be edited afterward. The app does not yet let a user add a card that is missing from the catalog. If the catalog fails to load, the Add tab shows an error message with a Try Again button.
 
 ## How My Project Runs When Someone Else Opens It
 
 ### Am I Keeping the DevicePreview Wrapper?
 
-**Yes.** I am keeping the DevicePreview wrapper so the web version can be presented in a phone-sized layout. It is currently disabled during normal development, and I will set `enabled: true` in main.dart before my final deployment.
+**Yes.** The app is wrapped in DevicePreview with `enabled: kIsWeb`, so the web version shows in a phone-sized frame. It does not turn on for native builds.
 
 ### Can I Run the Project with `flutter run -d web-server`?
 
-**Yes**, for the current sample-data version. The app can be run using the web server while the scanner is in Demo Mode. Before the final version, I still need to verify that the Supabase connection and environment variables work correctly in the web build.
+**Yes.** `flutter run -d web-server` works, and so does `flutter run -d chrome` (the one the README documents). A live demo is also deployed at https://glorysonggreen.github.io/PokeBinder/. To run it yourself, run `flutter pub get`, then follow `SUPABASE_SETUP.md` once to create the tables and load the catalog.
 
-If the required Supabase keys are missing, the app will show a setup message or use sample data instead of crashing or displaying a blank screen.
+The app needs a Supabase project to work, so it no longer falls back to sample data. If it cannot load the user's data, it shows a loading error instead of a blank screen.
 
 ### Does Anything That Needs Real Hardware Fall Back to Sample Data Instead of Crashing?
 
-**Yes.** The only hardware feature is the Card Scanner, and it currently runs in Demo Mode. It shows a scanning animation and cycles through sample cards without using a camera, so it works in any browser.
-
-If I implement real scanning later, the app will fall back to Demo Mode when the camera is unavailable, such as on the web or when camera permission is denied, instead of crashing.
+Not applicable. The Card Scanner was the only hardware feature, and it was removed. The profile photo picker uses `image_picker`, which on the web opens a normal file chooser.
 
 ## Repository and Security
 
-My project will be stored in my public GitHub repository: **glorysonggreen/PokeBinder**
+My project is stored in my public GitHub repository: **glorysonggreen/PokeBinder**
 
-My Supabase URL and publishable key will be kept in a local .env file that is ignored by Git. For deployment, I plan to use repository secrets instead of placing sensitive information directly in the source code.
+The Supabase URL and anon (publishable) key are written in `lib/config/supabase_config.dart`. This is not what I planned. I planned to keep them in a local `.env` file and pass them in at build time, but the app does not read `--dart-define` values yet, and the matching lines in the deploy workflow are commented out. This is acceptable because the anon key is designed to be public and Row Level Security is what protects the data. I decoded the key and confirmed its role is `anon`. Moving these values to `--dart-define` is still on my list.
 
-The Supabase service_role key and any future Gemini API key will never be included in the Flutter application or public repository.
+Secrets only my tools need, such as the Supabase service_role (secret) key and the Pokémon TCG API key used by the catalog import, go in a local `.env` file that is ignored by Git. They are never in the Flutter app or the repository. `.env.example` contains only placeholder names.
 
-For testing, I will use public sample card information and a test account with a throwaway email. I will not store personal information in the sample data.
+For testing, I use public card information and a test account with a throwaway email. I do not store personal information in the test data.
 
-My .env.example file will only contain placeholder values so that someone setting up the project knows which variables are required without exposing my actual keys.
+While doing my security check I found that a Chrome profile folder from `flutter run -d chrome` had been committed to Git history. It contained session tokens for my own test account. I revoked those sessions in Supabase on October 9, 2026. The full list of findings, fixes and accepted risks is in `docs/06-security-and-privacy.md` and `docs/07-security-checklist.md`.
 
 ## Data the App Remembers
 
-Every field below comes from my model classes. Changes from the prelim are noted in the change log.
+Every field below comes from `supabase/schema.sql` and my model classes. Changes from the prelim are noted in the change log.
 
 | Thing | Fields | Where it is saved |
 | --- | --- | --- |
-| Trainer Card | user_id, name, title, bio, favorite_card_id, favorite_binder_id, favorite_deck_id | Supabase table profiles |
+| Trainer Card | user_id, name, title, bio, favorite_card_id, favorite_binder_id, favorite_deck_id, avatar_url | Supabase table trainer_profiles; photo file in Storage bucket avatars |
 | Binder | id, user_id, name, description, page_count, slots_per_page, category, is_pinned, created_at | Supabase table binders |
-| Card (owned) | id, user_id, binder_id, page, name, set_name, card_number, rarity, type, supertype, subtype, quantity_owned, condition, estimated_value, notes, image_ref, date_added | Supabase table cards |
+| Card (owned) | id, user_id, name, set_name, card_number, rarity, type, supertype, subtype, quantity_owned, condition, binder_name, page, estimated_value, notes, image_asset_path, catalog_id, finish, date_added | Supabase table cards |
 | Deck | id, user_id, name, format, target_size, description, is_pinned, created_at | Supabase table decks |
 | Deck card | deck_id, card_id, quantity | Supabase table deck_cards |
-| Wishlist / Trade entry | id, user_id, name, set_name, card_number, rarity, condition, quantity, notes, kind (wishlist or trade), priority, estimated_value, asking_for, date_added, source_card_id, image_ref | Supabase table wishlist_entries |
+| Wishlist / Trade entry | id, user_id, name, set_name, card_number, rarity, condition, quantity, notes, kind (wishlist or trade), priority, estimated_value, asking_for, source_card_id, image_asset_path, catalog_id, finish, date_added | Supabase table wishlist_entries |
+| Card set (shared, read-only) | id, name, series, printed_total, total, release_date, logo_url, symbol_url | Supabase table card_sets |
+| Catalog card (shared, read-only) | id, set_id, number, name, supertype, subtype, type, rarity, image_small, image_large, market_price_usd, prices per finish, price_updated_at | Supabase table card_catalog |
+| Sound and music settings | music and effects on/off, volumes | On the device (shared_preferences) |
 
 ## Screens
 
-1. **Sign In, Sign Up, Forgot Password**
-2. **Home Dashboard:** Collection Summary, Estimated Collection Value, Recent Cards, Quick Actions, Collection Statistics
-3. **Collection & Binder:** Collection tab, Binder List tab, Binder Detail, Create/Edit Binder, Add Card to Binder, Card Details, Add/Edit Card
-4. **Card Scanner (Demo Mode):** Scanner, then Add/Confirm Card
+1. **Sign In, Sign Up, Forgot Password, Choose a New Password**
+2. **Home Dashboard:** Collection Summary (card count, estimated value, binder count), Quick Actions (New Binder, New Deck, Add a New Card), Recently Added, Continue a Binder
+3. **Binders:** Binders tab and All Cards tab (each with search), Unassigned Cards, Binder Detail, Create/Edit Binder, Add Card to Binder, Card Details (with 3D card), Add/Edit Card
+4. **Add:** Catalog search and picker, then Add/Confirm Card
 5. **Deck Planner:** Deck List, Deck Detail, Create/Edit Deck, Add Card to Deck
-6. **More Hub:** Trainer Card, Edit Trainer Card, Choose Favorite Card, Collection & Statistics, Wishlist & Trade List, Wishlist Form, Trade Entry Form, Add Card to Trade List
+6. **More Hub:** Trainer Card, Edit Trainer Card, Profile Photo Crop, Choose Favorite Card, Collection Statistics (value by rarity, cards by set, top value cards), Wishlist & Trade List, Wishlist Form, Trade Entry Form, Add Card to Wishlist / Trade List, Sound & Music, Sign Out
+
+The app also opens with a short Poké Ball intro animation.
 
 ## Risks, Revised
 
 ### The Risk I Named Last Time
 
-The main risk I identified before was reliable card search and scanning. Search now works for my own collection, but it cannot find cards I have not entered yet, and scanning is still unresolved.
+The main risk I identified before was reliable card search and scanning.
 
-**Search:** Card search works, but it currently only searches cards that I have already entered. I still need to connect it to the Pokémon TCG API so that users can search for real cards instead of being limited to cards already entered into the collection.
+**Search:** Resolved. Search now runs against the real card catalog in Supabase, with a database index on card names, so it can find cards I have not entered myself.
 
-**Scanning:** I have built the scanner flow around a simulation, so the main risk of recognizing a real Pokémon card has not been tested yet. The fallback of manually entering a card is already built, which helps reduce the impact if the scanner does not work as planned.
+**Scanning:** Resolved by cutting the feature. Real card recognition was never tested, so I removed the demo scanner and made catalog search the way cards get added.
 
-**First step:** Build a simple test call to the Pokémon TCG API that searches for a card by name and prints the results. I will do this by **September 23, 2026**. Real scanner development will start only after the MVP data has been successfully persisted.
+### The Persistence and Security Risks I Named
 
-### A New Risk I Did Not See Before
+**Persistence refactor:** Resolved. The app loads each user's data from Supabase when they sign in (`AppShell` shows a loading state and an error message with a retry if loading fails), and the screens save every change through repository classes (`binder_repository.dart`, `card_repository.dart`, `deck_repository.dart`, `wishlist_repository.dart`, `trainer_profile_repository.dart`, and `catalog_repository.dart` for the catalog). The in-memory lists are kept as a copy of the database, so screens can still read them directly. Data is saved to Supabase and linked to each account.
 
-A new risk I did not identify before is the persistence refactor. `PokemonCardData.library` is read or edited directly in 12 different screens. Moving from in-memory data to Supabase means that many of these operations will become asynchronous, which could break screens that are currently working.
+**Row Level Security:** Policies are written for all eight tables in `schema.sql` (owner-only on user tables, read-only on the catalog) and for the avatars bucket. I checked that protected data is not available while signed out. I also tested with two separate accounts, and each account could only see and change its own data.
 
-**First step:** I will create one CollectionRepository class that uses the existing in-memory lists first. I can then move the screens to use the repository while keeping the current app working. Once that is stable, I can replace the in-memory data with Supabase. I will do this by **September 26, 2026**.
+### Risks I See Now
 
-Another supporting risk is Row Level Security (RLS). If the policies are set up incorrectly, they could either prevent users from saving their own data or allow users to access someone else's data.
+**Online-only writes:** A failed save shows a message but is not retried, and nothing is queued offline.
 
-**First step:** I will test the RLS policies using two separate accounts by **September 29, 2026**, to make sure each account can only access its own data.
+**First step:** Decide whether to add a retry button for failed saves, or only document the limitation clearly.
+
+**Catalog-only adding:** A card can only be added by picking it from the catalog, so a card that is missing from the catalog (or a catalog that has not been loaded) cannot be added.
+
+**First step:** Load more sets with the import tool, and decide whether to add a manual "add a card" form.
+
+**Prices are not live:** Prices only update when I re-run the import, and the peso rate is fixed at 58.
+
+**First step:** Add a visible "prices last updated" note, or keep the current limitation and say so in the demo.
+
+**Secrets configuration:** The Supabase URL and anon key are in source code instead of `--dart-define`, and the GitHub Actions use version tags instead of commit SHAs.
+
+**First step:** Read the Supabase values with `String.fromEnvironment` and use the repository secrets already named in the workflow.
+
+**Thin automated tests:** The tests cover only sign-in helpers and audio settings.
+
+**First step:** Add tests for the models' `toJson` / `fromJson` and for the price calculation in `pricing.dart`.
+
+**Music license:** The title and main music are from Pokémon HOME and are credited but not licensed. This is fine for a class project, but I would replace them before sharing the app widely.
 
 ## What Changed, and Why?
 
 | Section | Prelim said | Now says | Why it changed |
 | --- | --- | --- | --- |
-| Core features | 5 features, all in the MVP, nothing cut | Still 5, plus authentication. A feature is considered "done" only when it can save data. Real scanner recognition was moved to a stretch goal. | I built all the main screens, but scanner_screen.dart currently uses a 950 ms delay to cycle through 7 demo cards. I have not tested a camera plugin yet. |
-| Auth | Not mentioned | Sign In, Sign Up, and Forgot Password added | I built these screens, but login currently accepts any input. They still need to be connected to real user accounts. |
-| Storage | "Data the app needs to remember" with no storage chosen | Supabase using Postgres, Auth, and Row Level Security | Most of the collection currently comes from PokemonCardData.library and other static lists. The authentication screens also need a real backend. |
-| Data | Card had a "binder name" text field; Deck was "selected cards" | binder_id foreign key, deck_cards join table, and fields such as rarity, priority, and estimated value added | My actual models (pokemon_card_data.dart, deck_data.dart, and wishlist_entry.dart) needed more information than I originally listed. Binders and deck contents also need their own related rows. |
-| Screens | 5 main screens with a few subscreens | 6 groups, including authentication, Deck Detail, Add Card to Deck, and Edit Trainer Card | This now matches what is actually implemented in lib/screens/. |
-| Stretch goals | 3 items | 6 items, including real scanner recognition, a real card catalog, and live prices | Card values are currently hard coded, and the app can only search for cards that I have already entered into the collection. These features would make PokéBinder more useful, but they are not required for the MVP. |
-| Risks | Search and scanning reliability | Scanning remains unresolved, along with the persistence refactor. Each risk now has a first step and target date. | The persistence risk only became clear after I saw how many parts of the app directly read and modify the static lists. |
+| Core features | 5 features, all in the MVP, nothing cut | 5 features plus authentication, all built and saved to Supabase. The Card Scanner was removed. | A feature is only "done" when it can save data. The scanner never moved past a simulated demo and the camera plugin was never tested. Catalog search covers the same need. |
+| Auth | Not mentioned | Sign In, Sign Up, Forgot Password and Choose a New Password, backed by Supabase Auth, plus Sign Out | Collections are personal, so every user needs a real account. Login used to accept any input. |
+| Storage | "Data the app needs to remember" with no storage chosen | Supabase using Postgres, Auth, Row Level Security and Storage | The data is relational and has to work across devices. RLS protects each user's data in the database itself. |
+| Data | Card had a "binder name" text field; Deck was "selected cards" | Eight tables, including a deck_cards join table and shared card_sets and card_catalog tables. Cards still store `binder_name` as text, kept in sync by database triggers when a binder is renamed or deleted. Fields such as rarity, priority, finish, catalog_id and estimated value were added. | My actual models needed more information than I first listed. I kept `binder_name` instead of switching to a `binder_id` foreign key, and the triggers keep it consistent. |
+| Screens | 5 main screens with a few subscreens | 6 groups, including authentication, the Add tab, Deck Detail, profile photo cropping and Sound & Music | This matches what is actually in `lib/screens/`. |
+| Stretch goals | 3 items | The card catalog is done, live prices are partly done (imported, not live), and the scanner was dropped. Set completion, deck sharing and friends, the AI assistant and offline support are not started. | Real card data made the app far more useful, but a live price feed and a scanner would need more time and tools than the project has. |
+| Extras | Not mentioned | Sound effects, background music, shared animations, a Poké Ball intro, and a trainer profile photo | These were added to make the app feel finished and consistent across screens. |
+| Risks | Search and scanning reliability | Search is solved and scanning was cut. The new risks are online-only saves, adding cards only from the catalog, prices that are not live, secrets configuration, and thin tests. | The persistence and RLS risks were handled by moving to repositories and writing Row Level Security policies. The remaining risks came up while checking security and finishing the app. |
