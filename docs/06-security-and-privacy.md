@@ -3,7 +3,7 @@
 This repository is public. Fill this in honestly and date it; it is checked as
 part of grading.
 
-**Last checked:** 2026-10-09 (repository at commit `35b40a1`)
+**Last checked:** October 9, 2026 (repository at commit `35b40a1`)
 
 ## What this app stores
 
