@@ -123,13 +123,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
         Text('ADD A CARD', style: PokeBinderText.eyebrow),
         const SizedBox(height: PokeBinderSpacing.sp2),
         Text('Find Your Card', style: PokeBinderText.heading),
-        const SizedBox(height: PokeBinderSpacing.sp1),
+        const SizedBox(height: PokeBinderSpacing.sp2),
         Text(
           'Pick it from the card database so the name, set, artwork and '
           'price are always correct.',
           style: PokeBinderText.subtitle,
         ),
-        const SizedBox(height: PokeBinderSpacing.sp3),
+        const SizedBox(height: PokeBinderSpacing.sp4),
       ],
       counts: _ownedByCatalogId,
       onPick: _pick,
