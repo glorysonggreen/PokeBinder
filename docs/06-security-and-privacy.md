@@ -4,7 +4,7 @@ This repository is public. This document records what the app stores, how it is
 protected, and what I found while checking. The step-by-step checklist with
 evidence is in [07-security-checklist.md](07-security-checklist.md).
 
-**Last checked:** October 9, 2026.
+**Last checked:** October 9, 2026, against commit `68a2617` (138 commits on `main`).
 
 ## What this app stores
 
@@ -136,9 +136,11 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
    matched only the key-format text of a library's source code (for example
    the string `-----BEGIN PRIVATE KEY-----`), not an actual key.
 3. **My personal email address and full name were in the author field of all 118
-   commits.** Fixed on 2026-10-09: I rewrote the history so every commit on
-   `main` (133 now) uses the GitHub `noreply` address and my GitHub username,
-   and force-pushed it. Keeping "Keep my email addresses private" and "Block
+   commits.** Fixed on 2026-10-09: I rewrote the history so every one of the 133
+   commits on `main` at that time used the GitHub `noreply` address and my GitHub
+   username, and force-pushed it. Four later commits (`12a4809`, `7c686e7`,
+   `1cfc057` and `68a2617`, all on 2026-10-09) show my full name as the author
+   name; see item 8. Keeping "Keep my email addresses private" and "Block
    command line pushes that expose my email" turned on in GitHub settings stops
    it coming back. The same limit as item 1 applies: the pre-rewrite commits
    still show the old author details to anyone who has their full commit id,
@@ -169,9 +171,19 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
    is, I will record it with the same test account and check that no real email,
    browser tab, bookmark or notification is visible.
 
-I revoked the exposed test-account sessions (item 1 above and the note at the end). I have not found an exposed secret that could
-write to or read other people's data; the exposure in item 1 is limited to my
-own test account.
+8. **My full name is the author name on four commits made after the rewrite.**
+   `12a4809`, `7c686e7`, `1cfc057` and `68a2617` (2026-10-09) use the author
+   name "Matthew Simon R. Green" with the GitHub `noreply` email address, so no
+   personal email is exposed, but my full name is. These appear to be commits
+   made through GitHub's web editor, which uses the name on the GitHub profile
+   rather than the local Git setting. **Status:** Not fixed. Next step: set the
+   GitHub profile name to my username (or accept the full name, which is also in
+   the `LICENSE`), and use a local `git config user.name` for later commits. Fixing
+   the four existing commits would need another history rewrite.
+
+I revoked the exposed test-account sessions (item 1). I have not found an
+exposed secret that could write to or read other people's data; the exposure in
+item 1 is limited to my own test account.
 
 ## Checklist
 
