@@ -20,7 +20,7 @@
 | Framework | Flutter (Dart) |
 | State | `setState` per screen, reading in-memory lists (e.g. `PokemonCardData.library`) that mirror Supabase through the repository classes in `lib/services/` |
 | Backend | Supabase (email/password auth, Postgres with Row Level Security, and Storage for profile photos) — see [SUPABASE_SETUP.md](SUPABASE_SETUP.md) |
-| Card data | [Pokémon TCG API](https://pokemontcg.io), loaded into Supabase with `tools/import_catalog` |
+| Card data | [Pokémon TCG API](https://pokemontcg.io), loaded into Supabase with `tools/import_catalog.mjs` (or the Dart version, `tools/import_catalog.dart`) |
 | Other packages | `supabase_flutter`, `google_fonts`, `image_picker`, `audioplayers`, `shared_preferences`, and `device_preview` (lets the app be judged at phone size on a desktop browser) |
 
 ## Sound and music
@@ -104,7 +104,7 @@ Screenshots (all 31 screens are in [docs/02-mockup.md](docs/02-mockup.md)):
 
 ## Status and what is next
 
-**Status: complete.** All planned features are built and working: sign-up, login and password reset; card catalog and manual add; card prices in pesos; binders, Unassigned Cards and multi-select delete; wishlist and trade list; decks; stats; trainer card with profile photo; sound and music.
+**Status: complete.** All planned features are built and working: sign-up, login and password reset; adding cards from the searchable card catalog (there is no manual entry); card prices in pesos; binders, Unassigned Cards and multi-select delete; wishlist and trade list; decks; stats; trainer card with profile photo; sound and music.
 
 **Known limitation:** writes are online-only. A failed save shows a message but is not retried, and there is no offline queue yet.
 
