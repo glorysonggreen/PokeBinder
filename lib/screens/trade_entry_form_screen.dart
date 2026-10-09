@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../models/pokemon_card_data.dart';
 import '../models/wishlist_entry.dart';
 import '../theme/pokebinder_theme.dart';
@@ -158,6 +159,8 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                 label: 'Card name',
                 child: TextField(
                   controller: _nameController,
+                  maxLength: FieldLimits.cardName,
+                  buildCounter: hideCharacterCounter,
                   decoration: pokeInputDecoration(
                     hint: 'e.g. Pikachu VMAX',
                     icon: Icons.badge_outlined,
@@ -177,6 +180,8 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   label: 'Set',
                   child: TextField(
                     controller: _setController,
+                    maxLength: FieldLimits.setName,
+                    buildCounter: hideCharacterCounter,
                     decoration: pokeInputDecoration(
                       hint: 'Base Set',
                       icon: Icons.collections_bookmark_outlined,
@@ -190,6 +195,8 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   label: 'Card Number',
                   child: TextField(
                     controller: _cardNumberController,
+                    maxLength: FieldLimits.cardNumber,
+                    buildCounter: hideCharacterCounter,
                     decoration: pokeInputDecoration(
                       hint: '4/102',
                       icon: Icons.tag_rounded,
@@ -245,6 +252,7 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                       label: 'Quantity',
                       child: TextField(
                         controller: _qtyController,
+                        inputFormatters: digitsUpTo(FieldLimits.quantityDigits),
                         keyboardType: TextInputType.number,
                         decoration: pokeInputDecoration(
                           hint: '1',
@@ -270,6 +278,7 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                   label: 'Est. value (optional)',
                   child: TextField(
                     controller: _valueController,
+                    inputFormatters: const [PesoAmountFormatter()],
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: pokeInputDecoration(
@@ -295,6 +304,7 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                 label: 'Looking for in return (optional)',
                 child: TextField(
                   controller: _askingForController,
+                  maxLength: FieldLimits.askingFor,
                   minLines: 2,
                   maxLines: 5,
                   keyboardType: TextInputType.multiline,
@@ -308,6 +318,7 @@ class _TradeEntryFormScreenState extends State<TradeEntryFormScreen> {
                 label: 'Notes (optional)',
                 child: TextField(
                   controller: _notesController,
+                  maxLength: FieldLimits.notes,
                   minLines: 2,
                   maxLines: 5,
                   keyboardType: TextInputType.multiline,

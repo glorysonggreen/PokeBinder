@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../services/auth_service.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/auth_banner.dart';
@@ -156,6 +157,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   label: 'Email',
                   child: TextField(
                     controller: _emailController,
+                    maxLength: FieldLimits.email,
+                    buildCounter: hideCharacterCounter,
                     keyboardType: TextInputType.emailAddress,
                     autocorrect: false,
                     textInputAction: TextInputAction.send,

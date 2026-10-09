@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../config/pricing.dart';
 import '../theme/pokebinder_theme.dart';
 import 'pokebinder_controls.dart';
@@ -321,6 +322,7 @@ class EstimatedValueField extends StatelessWidget {
           label: 'Estimated value',
           child: TextField(
             controller: controller,
+            inputFormatters: const [PesoAmountFormatter()],
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
             style: PokeBinderText.input,

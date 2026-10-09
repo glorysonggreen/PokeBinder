@@ -1,6 +1,6 @@
 # Security Checklist
 
-**Last checked:** October 9, 2026 (repository at commit `d3fab3c`).
+**Last checked:** October 9, 2026. Counts re-verified against commit `8ff03e9`.
 
 ## Secrets and credentials
 
@@ -9,8 +9,8 @@
 | 1 | No API key, token or password is hardcoded in `lib/`, including in comments and commented out code | No, but low risk | `lib/config/supabase_config.dart` contains the Supabase URL and anon key. The anon key is public and protected by RLS, so it is not a critical secret. No `service_role` key or other private credential was found. |
 | 2 | Anything private is in a gitignored config or passed with `--dart-define`, with an example file committed | No | `.env.example` and `.gitignore` are set up (`.env` and `.env.*` are ignored, `.env.example` is kept). But `main.dart` reads the Supabase values directly from `SupabaseConfig`, and the `--dart-define` lines in `deploy-web.yml` are commented out, so the environment based setup is not connected. |
 | 3 | No keystore, `key.properties` or signing credential is in the repository | Yes | No `.keystore`, `.jks`, or `key.properties` files were found. `.gitignore` also excludes `*.keystore` and `*.jks`. |
-| 4 | Git history is clean: I searched `git log -p` for password, secret, api key and token | Yes, with limitation | I searched the accessible Git history (94 commits). The only matches were placeholder names in comments (for example `# CARD_PRICING_API_KEY=put_your_key_here` in `.env.example`), documentation, and password length checks in the sign-up code. The Supabase anon key appears in history, but it is a public client side key. No `service_role` key or other private credential was found. |
-| 5 | Any credential that was ever committed has been rotated | N/A | Only the public Supabase anon key was found. It is meant for client side use and does not need rotation. |
+| 4 | Git history is clean: I searched `git log -p` for password, secret, api key and token | No, with limitation | I searched the accessible Git history (118 commits). The text search matched only placeholder names in comments (for example `# POKEMONTCG_API_KEY=put_your_key_here` in `.env.example`), documentation, and password length checks in the sign-up code. But a later check found that a Chrome profile folder (`.dart_tool/chrome-device/`, 361 files, commit `c05704a` to `c034b2e`) was committed and contains Supabase session tokens for my own test account (see `06-security-and-privacy.md`, item 1). The Supabase anon key also appears in history, but it is a public client side key. No `service_role` key was found. |
+| 5 | Any credential that was ever committed has been rotated | Yes | The test account's sessions were revoked in Supabase on 2026-10-09, so the committed tokens no longer work. The public Supabase anon key is meant for client side use and does not need rotation. The files are still in Git history until it is rewritten. |
 
 ## GitHub Actions
 
@@ -39,14 +39,14 @@
 
 | # | Check | Yes / No / N/A | Evidence |
 | - | ----- | -------------- | -------- |
-| 19 | Input is validated before it is written, not only styled as valid in the UI | Yes, partially | The forms check input before saving: binder, deck and trade entry names must not be empty (`binder_form_screen.dart`, `deck_form_screen.dart`, `trade_entry_form_screen.dart`), and `card_form_screen.dart` trims the name and checks quantity, value and page numbers. The database also has check rules, such as `quantity > 0` and `estimated_value >= 0`. I found no maximum length on free text fields such as notes and descriptions. |
+| 19 | Input is validated before it is written, not only styled as valid in the UI | Yes | The forms check input before saving: binder, deck and trade entry names must not be empty (`binder_form_screen.dart`, `deck_form_screen.dart`, `trade_entry_form_screen.dart`), and `card_form_screen.dart` trims the name and checks quantity, value and page numbers. Every `TextField` also has a maximum length from `lib/config/field_limits.dart`, and a test in `test/field_limits_test.dart` fails if one is added without a limit. The database enforces the same limits itself: `quantity > 0` and `estimated_value >= 0`, plus the `*_length_check` and `*_max_check` constraints at the end of `supabase/schema.sql` (see `06-security-and-privacy.md`, Input limits). |
 | 20 | Nothing secret is recoverable from the built app, since a shipped binary can be unpacked | Yes | The only credential in the app is the public Supabase anon key, which is protected by RLS. No `service_role` key or other privileged credential was found. The Pokémon TCG API key, if used, stays on my computer for the catalog import tool and is not in the app. |
 
 ## Repository and privacy
 
 | # | Check | Yes / No / N/A | Evidence |
 | - | ----- | -------------- | -------- |
-| 21 | No student number, personal email, phone number or home address in the repository or in commit messages | No, in commit details | The files and commit messages contain no student number, phone number or home address. But the commit author details on all 94 commits include my full name and my personal Gmail address. |
+| 21 | No student number, personal email, phone number or home address in the repository or in commit messages | No, in commit details | The files and commit messages contain no student number, phone number or home address. But the commit author details on all 118 commits include my full name and my personal Gmail address. |
 | 22 | No classmate's personal data in the repository | Yes | No classmate names or personal data were found in the code, assets, or demo data reviewed. |
 | 23 | Dependencies come from pub.dev, and `build/` and `.dart_tool/` are gitignored | Yes | `pubspec.yaml` uses pub.dev packages with no Git or local dependencies. `.gitignore` excludes both `build/` and `.dart_tool/`. |
 | 24 | Images, fonts and other assets are mine, licensed, or credited | Partly | The sound effects are original, made with my own tools in `tools/audio/`. Chakra Petch is loaded through `google_fonts` under its open license. Card images come from the Pokémon TCG API's image server, and the README credits the API and says Pokémon and card artwork belong to their owners. The title and main menu music (`bgm_title.mp3`, `bgm_main.mp3`) are from Pokémon HOME. They are credited in the README, but I do not have a license for them. |
@@ -54,13 +54,14 @@
 
 ## Anything I found and fixed
 
-Nothing here has been fixed in the code yet. Each item has a status and the fix I plan to make.
+Nothing below has been fixed in the code yet, except the exposed sessions (first row) and the missing length limits. Each item has a status and the fix I plan to make.
 
 | Finding | Risk | Status | Fix |
 | ------- | ---- | ------ | --- |
+| A Chrome profile folder with Supabase session tokens for my test account was committed (`.dart_tool/chrome-device/`, removed in `c034b2e` but still in history). | Medium until revoked. Only my own test account was affected. | Fixed on 2026-10-09 (sessions revoked) | Optionally remove the folder from history with `git filter-repo --path .dart_tool --invert-paths` and force-push. |
 | `lib/config/supabase_config.dart` contains the Supabase URL and anon key in the source code. The `.env.example` file and the commented `--dart-define` lines in the workflow are not used. | Low. The anon key is meant to be public and RLS protects the data. | Not fixed | Read the values with `String.fromEnvironment` and pass them with `--dart-define`, using the repository secrets already named in the workflow. |
 | The workflow uses version tags instead of commit SHAs for its four actions. | Low. This is a supply chain risk, but it does not expose a secret. | Not fixed | Pin each action to a full commit SHA, starting with `subosito/flutter-action`. |
-| My personal Gmail address and full name are in the author details of all 94 commits. | Low to medium. Anyone can see them in the public history. | Not fixed | Set the Git email to the GitHub noreply address, turn on "Keep my email addresses private" and "Block command line pushes that expose my email" in GitHub settings. Old commits would keep the Gmail address unless the history is rewritten. |
+| My personal Gmail address and full name are in the author details of all 118 commits. | Low to medium. Anyone can see them in the public history. | Not fixed | Set the Git email to the GitHub noreply address, turn on "Keep my email addresses private" and "Block command line pushes that expose my email" in GitHub settings. Old commits would keep the Gmail address unless the history is rewritten. |
 | The `avatars` bucket is public, so anyone with an avatar link can view the image. The link contains my user id. | Low. The images are profile pictures that are shown on the trainer card on purpose. | Accepted | Keep it public, and keep the 2 MB size limit and the image-only file types. |
-| No maximum length on free text fields. | Low | Not fixed | Add `maxLength` to the text fields and a length check in the database. |
+| No maximum length on free text fields. | Low | Fixed on 2026-10-09 | `maxLength` and digit limits on every text field, and matching check constraints in `supabase/schema.sql`. Re-run `schema.sql` on the live database to apply the constraints. |
 | The Pokémon HOME music is credited but not licensed. | Low for a class project, higher if the app is shared widely. | Accepted for now | Replace it with my own generated music if the app is shared beyond this class. |

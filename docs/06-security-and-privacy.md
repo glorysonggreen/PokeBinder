@@ -1,9 +1,11 @@
 # Security and privacy
 
-This repository is public. Fill this in honestly and date it; it is checked as
-part of grading.
+This repository is public. This document records what the app stores, how it is
+protected, and what I found while checking. The step-by-step checklist with
+evidence is in [07-security-checklist.md](07-security-checklist.md).
 
-**Last checked:** October 9, 2026 (repository at commit `35b40a1`)
+**Last checked:** October 9, 2026. The counts below (commits, files) were
+re-verified against commit `8ff03e9`. The input-length limits described below were added after that commit.
 
 ## What this app stores
 
@@ -64,10 +66,36 @@ Supabase Row Level Security is enabled on all 8 tables in `supabase/schema.sql`.
 - **Storage bucket `avatars`**: select, insert, update and delete policies
   require the file's first folder name to equal the user's id. The bucket
   accepts only JPEG, PNG and WebP, up to 2 MB.
+- **Length limits**: every free-text column has a `check (char_length(col) <= N)` constraint, and the number columns typed into the app have an upper bound (see [Input limits](#input-limits)).
 - **Database functions**: the sign-up trigger and the binder triggers have
   `execute` revoked from `public`, `anon` and `authenticated`, and use a fixed
   `search_path`.
 - Supabase Auth allows one account per email address.
+
+## Input limits
+
+Every text box in the app has a maximum length, set in `lib/config/field_limits.dart`. The database repeats the same limits as check constraints at the end of `supabase/schema.sql` (named `<table>_<column>_length_check` and `<table>_<column>_max_check`), so a limit still applies if someone skips the app and calls the Supabase API directly.
+
+| Field | Limit | Where |
+| --- | --- | --- |
+| Email | 254 characters | Log In, Sign Up, Forgot Password |
+| Password and confirmation | 72 characters (the Supabase Auth maximum) | Log In, Sign Up, Choose a New Password |
+| Trainer name | 30 characters | Sign Up, Edit Trainer Card |
+| Bio | 160 characters, with a counter | Edit Trainer Card |
+| Binder name | 40 characters | Create and Edit Binder |
+| Binder category | 30 characters | Create and Edit Binder |
+| Binder and deck description | 300 characters, with a counter | Create and Edit Binder, Create Deck |
+| Deck name | 40 characters | Create Deck |
+| Card name, set | 80 characters each | Edit Trade Entry |
+| Card number | 20 characters | Edit Trade Entry |
+| Notes | 500 characters, with a counter | Edit Card, Add to Collection, Edit Wishlist Card, Edit Trade Entry |
+| Looking for in return | 200 characters, with a counter | Edit Trade Entry |
+| Search boxes | 80 characters | Every search bar and the set filter in the catalog picker |
+| Quantity | 4 digits (9,999) | Edit Trade Entry |
+| Page and starting pages | 3 digits (999) | Edit Card, Add to Collection, Create and Edit Binder |
+| Estimated value | 9 digits and up to 2 decimals | Edit Card, Add to Collection, Edit Wishlist Card, Edit Trade Entry |
+
+The constraints are added `NOT VALID`: new and edited rows are checked, existing rows are not scanned, so the script can be re-run on a database that already has longer text. A row that is already over a limit has to be shortened the next time it is edited. To check old rows too, run `alter table public.<table> validate constraint <name>;`. The password limit is 72 because Supabase Auth rejects longer passwords. Quantity and value columns have a database bound that is a little looser than the typed digits (for example 99,999 copies against 9,999 typed) because copies can also be added with the **Add** button.
 
 ## Accepted risks
 
@@ -75,14 +103,13 @@ Supabase Row Level Security is enabled on all 8 tables in `supabase/schema.sql`.
 | --- | --- |
 | Public `avatars` bucket: anyone with the link can view a profile photo, and the link contains the user's id | Profile photos are shown on the trainer card on purpose. Size and file-type limits stay in place. |
 | Supabase URL and anon key are in the source and the deployed site | They are meant to be public; RLS is the protection. |
-| Free-text fields (notes, bio, descriptions) have no maximum length | Low risk; adding `maxLength` and a database length check is planned. |
 | Pokémon HOME music is credited but not licensed | Fine for a class project; replace it before sharing the app widely. |
 
 ## Found while doing this check
 
 1. **A browser profile with real login sessions was committed to git history.**
    Commit `c034b2e` (2026-10-07, "Code Optimization") deleted the folder
-   `.dart_tool/chrome-device/` (386 files), but it had been committed since
+   `.dart_tool/chrome-device/` (361 files), but it had been committed since
    `c05704a` (2026-10-04) and is still readable in the public history. It is
    Chrome's data folder from running `flutter run -d chrome`, and it includes
    browser local storage with **Supabase session data (access and refresh
@@ -103,7 +130,7 @@ Supabase Row Level Security is enabled on all 8 tables in `supabase/schema.sql`.
    current tree). It holds Dart compiler caches. A search for private keys
    matched only the key-format text of a library's source code (for example
    the string `-----BEGIN PRIVATE KEY-----`), not an actual key.
-3. **My personal email address and full name are in the author field of all 96
+3. **My personal email address and full name are in the author field of all 118
    commits.** Fix going forward: use the GitHub `noreply` address for new
    commits and turn on "Keep my email addresses private" and "Block command line
    pushes that expose my email". Old commits keep it unless history is rewritten.
@@ -113,8 +140,10 @@ Supabase Row Level Security is enabled on all 8 tables in `supabase/schema.sql`.
    something it is not.
 5. **Third-party GitHub Actions use version tags, not commit SHAs**
    (`subosito/flutter-action@v2` matters most). Planned: pin to SHAs.
+6. **Free-text fields had no maximum length.** Fixed on 2026-10-09: see
+   [Input limits](#input-limits).
 
-I revoked the exposed test-account sessions (see below). I have not found an exposed secret that could
+I revoked the exposed test-account sessions (item 1 above and the note at the end). I have not found an exposed secret that could
 write to or read other people's data; the exposure in item 1 is limited to my
 own test account.
 
@@ -125,6 +154,9 @@ own test account.
 - [x] No service account file, keystore or `service_role` key anywhere in the repo
 - [x] Security rules or RLS policies written and tested, not left open
 - [ ] No real personal data in sample data, screenshots or the video
+  (not met yet: `docs/screenshots/07-adjust-photo.png` shows a real person's
+  photo. Replace it with a non-identifying image, or confirm the person agreed
+  to it being public, and check the demo video too.)
 - [x] No course or university credentials anywhere
 - [x] Anyone whose data appears in a test was asked first
 

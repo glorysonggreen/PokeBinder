@@ -5,7 +5,7 @@
 ## What it does
 
 - Create an account (one account per email), log in, and reset a forgotten password.
-- Add cards from the catalog or manually, and edit or delete them.
+- Add cards by searching the Pokémon TCG card catalog (there is no free-form manual entry), then edit or delete them.
 - Organize cards into binders and pages; cards removed from a binder stay in **Unassigned Cards**.
 - Select several cards at once in All Cards or inside a binder and delete them with the same confirmation.
 - Deleting a card also takes it off your trade list, out of your decks, and clears it as your trainer-card favorite.
@@ -18,10 +18,10 @@
 | | |
 | --- | --- |
 | Framework | Flutter (Dart) |
-| State | `setState` (local, per-screen) |
+| State | `setState` per screen, reading in-memory lists (e.g. `PokemonCardData.library`) that mirror Supabase through the repository classes in `lib/services/` |
 | Backend | Supabase (email/password auth, Postgres with Row Level Security, and Storage for profile photos) — see [SUPABASE_SETUP.md](SUPABASE_SETUP.md) |
 | Card data | [Pokémon TCG API](https://pokemontcg.io), loaded into Supabase with `tools/import_catalog` |
-| Other packages | `google_fonts`, `image_picker`, `audioplayers`, `shared_preferences`, and `device_preview` (lets the app be judged at phone size on a desktop browser) |
+| Other packages | `supabase_flutter`, `google_fonts`, `image_picker`, `audioplayers`, `shared_preferences`, and `device_preview` (lets the app be judged at phone size on a desktop browser) |
 
 ## Sound and music
 
@@ -40,10 +40,14 @@ remembered between launches.
 
 ## Running it yourself
 
+Requires Flutter (stable channel) with Dart 3.8 or newer.
+
 ```bash
 flutter pub get
 flutter run -d chrome
 ```
+
+To run the checks: `flutter analyze` and `flutter test`.
 
 ### Environment variables
 
@@ -53,34 +57,50 @@ to create the tables and configure sign-in. The project URL and anon
 publish. Any secret or billable key (e.g. the Supabase secret key or a Pokémon
 TCG API key used by the catalog import tool) belongs in `.env` or your terminal
 — copy `.env.example`, fill in your own values, and never commit the result.
+The import tools read these as environment variables (`SUPABASE_URL`,
+`SUPABASE_SECRET_KEY`, `POKEMONTCG_API_KEY`); they do not load `.env` by
+themselves, so export them in your terminal first.
 
 ## Privacy and secrets
 
 - The app stores an email address, a trainer name, and each user's collection
   data in Supabase. Row Level Security limits every row to its owner.
+- Every text box has a maximum length (`lib/config/field_limits.dart`), and the
+  database enforces the same limits (`supabase/schema.sql`), so they also apply
+  to anyone calling the API directly.
 - Only the Supabase URL and anon key are compiled into the web build; both are
   designed to be public. The `service_role` key must never be added.
 - Card names and sets (e.g. "Charizard, Base Set") are publicly available card
   information, not personal information.
 
-See `docs/06-security-and-privacy.md` for the full, dated checklist.
+See [docs/06-security-and-privacy.md](docs/06-security-and-privacy.md) and [docs/07-security-checklist.md](docs/07-security-checklist.md) for the full, dated findings and checklist.
 
 ## Project documentation
 
 | Document | What it covers |
 | --- | --- |
-| [docs/01-proposal.md](docs/01-proposal.md) | Problem, users, scope |
-| [docs/02-design-system.md](docs/02-design-system.md) | Colours, type, spacing, motion |
-| [docs/03-data-and-integrity.md](docs/03-data-and-integrity.md) | Tables, relationships, delete behaviour |
-| [docs/06-security-and-privacy.md](docs/06-security-and-privacy.md) | RLS, keys, privacy checklist |
+| [docs/01-proposal.md](docs/01-proposal.md) | Problem, users, scope, data storage, risks |
+| [docs/02-mockup.md](docs/02-mockup.md) | All 31 screens with screenshots, the main user journey, changes from the original mockup |
+| [docs/03-design-system.md](docs/03-design-system.md) | Colours, type, spacing, motion, components |
+| [docs/04-weekly-reports.md](docs/04-weekly-reports.md) | Weekly progress reports |
+| [docs/05-demo-vid.md](docs/05-demo-vid.md) | Demo video details |
+| [docs/06-security-and-privacy.md](docs/06-security-and-privacy.md) | What is stored, RLS, keys, findings, accepted risks |
+| [docs/07-security-checklist.md](docs/07-security-checklist.md) | Security checklist with evidence |
+| [SUPABASE_SETUP.md](SUPABASE_SETUP.md) | Database, catalog import and auth setup |
+| [tools/audio/README.md](tools/audio/README.md) | How the sound effects are generated |
 | [AI-USAGE.md](AI-USAGE.md) | How AI tools were used |
-| [SUPABASE_SETUP.md](SUPABASE_SETUP.md) | Database and auth setup |
+
+The table layout and relationships are in [`supabase/schema.sql`](supabase/schema.sql); the proposal's "How My App Saves Data" section explains the choices.
 
 ## Live demo and screenshots
 
 Live demo: https://glorysonggreen.github.io/PokeBinder/
 
-Screenshots: _add 3 to 5 images to `docs/screenshots/` and link them here._
+Screenshots (all 31 screens are in [docs/02-mockup.md](docs/02-mockup.md)):
+
+| Home | Binder | Card details | Deck details |
+| --- | --- | --- | --- |
+| <img src="docs/screenshots/04-home-dashboard.png" width="180" alt="Home dashboard"> | <img src="docs/screenshots/11-binder-details.png" width="180" alt="Binder details"> | <img src="docs/screenshots/15-card-details.png" width="180" alt="Card details with 3D card"> | <img src="docs/screenshots/21-deck-details.png" width="180" alt="Deck details"> |
 
 ## Status and what is next
 
@@ -92,8 +112,8 @@ Screenshots: _add 3 to 5 images to `docs/screenshots/` and link them here._
 
 ## Credits
 
-Card data and prices come from the [Pokémon TCG API](https://pokemontcg.io), loaded into Supabase (see SUPABASE_SETUP.md). Pokémon and card artwork belong to their respective owners. Sound effects are original, generated by `tools/audio/`. The title/login and main menu music are from Pokémon HOME, an app by The Pokémon Company.
+Card data and prices come from the [Pokémon TCG API](https://pokemontcg.io), loaded into Supabase (see SUPABASE_SETUP.md). Pokémon and card artwork belong to their respective owners. Sound effects are original, generated by `tools/audio/`. The title/login and main app music (`assets/audio/music/*.mp3`) are from Pokémon HOME, an app by The Pokémon Company; they are credited but not licensed, so replace them before sharing the app widely.
 
-## Licence
+## License
 
 MIT, see [LICENSE](LICENSE).

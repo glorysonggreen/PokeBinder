@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../theme/pokebinder_motion.dart';
 import '../theme/pokebinder_theme.dart';
 import 'motion_widgets.dart';
@@ -120,6 +121,8 @@ class _CollectionSearchBarState extends State<CollectionSearchBar> {
               ignoring: !widget.enabled,
               child: TextField(
                 controller: _controller,
+                maxLength: FieldLimits.search,
+                buildCounter: hideCharacterCounter,
                 enabled: widget.enabled,
                 onChanged: widget.onChanged,
                 style: PokeBinderText.input,

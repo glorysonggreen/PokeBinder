@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../models/binder_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -153,6 +154,8 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                 label: 'Binder name',
                 child: TextField(
                   controller: _nameController,
+                  maxLength: FieldLimits.binderName,
+                  buildCounter: hideCharacterCounter,
                   decoration: pokeInputDecoration(
                     hint: 'e.g. Johto Journey',
                     icon: Icons.menu_book_outlined,
@@ -171,6 +174,8 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                 label: 'Category (optional)',
                 child: TextField(
                   controller: _categoryController,
+                  maxLength: FieldLimits.binderCategory,
+                  buildCounter: hideCharacterCounter,
                   decoration: pokeInputDecoration(
                     hint: 'e.g. Sets, Value, Trade — groups it in the list',
                     icon: Icons.sell_outlined,
@@ -185,6 +190,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                       label: 'Starting pages',
                       child: TextField(
                         controller: _pagesController,
+                        inputFormatters: digitsUpTo(FieldLimits.pageDigits),
                         keyboardType: TextInputType.number,
                         decoration: pokeInputDecoration(icon: Icons.layers_outlined),
                         onChanged: (_) {
@@ -220,6 +226,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                 label: 'Description (optional)',
                 child: TextField(
                   controller: _descriptionController,
+                  maxLength: FieldLimits.description,
                   keyboardType: TextInputType.multiline,
                   minLines: 3,
                   maxLines: 5,

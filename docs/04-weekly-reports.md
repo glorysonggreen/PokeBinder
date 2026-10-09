@@ -4,7 +4,7 @@
 
 ## What changed this week
 
-1. **Finished the remaining app screens.** All the screens in PokeBinder are now done and match the 19-screen HTML mockup. They are in `lib/screens/`, including `login_screen.dart`, `signup_screen.dart`, `forgot_password_screen.dart`, `home_screen.dart`, `binders_screen.dart`, `decks_screen.dart`, `card_details_screen.dart`, `wishlist_screen.dart`, `stats_screen.dart`, `trainer_card_screen.dart` and `more_screen.dart`. The latest UI commits were the Scanner Rework series (10 commits, `e6bcfe9` to `611f5c5`, Sep 18 to 20) and `5cd184e` Spacing & Font Size Rework (Sep 20).
+1. **Finished the remaining app screens.** All the screens in PokeBinder are now done and match the HTML mockup. They are in `lib/screens/`, including `login_screen.dart`, `signup_screen.dart`, `forgot_password_screen.dart`, `home_screen.dart`, `binders_screen.dart`, `decks_screen.dart`, `card_details_screen.dart`, `wishlist_screen.dart`, `stats_screen.dart`, `trainer_card_screen.dart` and `more_screen.dart`. The latest UI commits were the Scanner Rework series (10 commits, `e6bcfe9` to `611f5c5`, Sep 18 to 20) and `5cd184e` Spacing & Font Size Rework (Sep 20).
 
 2. **Started connecting the app to Supabase.** I set up the project and began planning how each screen will read and save data. The screens are not connected yet, so most of the app still uses local or mock data.
 
@@ -106,3 +106,7 @@ These are listed in the order I will work on them.
 
 7. Add background music and sound effects throughout the app.
 8. Design and add the app's logo.
+
+---
+
+_TODO: add reports for the weeks of October 4 and later (scanner removal and catalog import, security review, documentation). Only the author can write these._

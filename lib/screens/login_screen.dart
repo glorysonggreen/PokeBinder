@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../services/auth_service.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -126,6 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 label: 'Email',
                 child: TextField(
                   controller: _emailController,
+                  maxLength: FieldLimits.email,
+                  buildCounter: hideCharacterCounter,
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
                   textInputAction: TextInputAction.next,
@@ -142,6 +145,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 label: 'Password',
                 child: TextField(
                   controller: _passwordController,
+                  maxLength: FieldLimits.password,
+                  buildCounter: hideCharacterCounter,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _attemptLogin(),

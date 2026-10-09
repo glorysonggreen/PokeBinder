@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../services/auth_service.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/motion_widgets.dart';
@@ -97,6 +98,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   label: 'New password',
                   child: TextField(
                     controller: _passwordController,
+                    maxLength: FieldLimits.password,
+                    buildCounter: hideCharacterCounter,
                     obscureText: _obscurePassword,
                     decoration: pokeInputDecoration(
                       hint: '••••••••',
@@ -115,6 +118,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   label: 'Confirm new password',
                   child: TextField(
                     controller: _confirmController,
+                    maxLength: FieldLimits.password,
+                    buildCounter: hideCharacterCounter,
                     obscureText: _obscureConfirm,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _submitting ? null : _save(),

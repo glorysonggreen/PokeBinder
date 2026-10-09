@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../config/pricing.dart';
 import '../models/binder_data.dart';
 import '../models/catalog_card.dart';
@@ -516,6 +517,8 @@ class _CardFormScreenState extends State<CardFormScreen> {
                                     : _pageController,
                                 enabled: !unassigned,
                                 keyboardType: TextInputType.number,
+                                inputFormatters:
+                                    digitsUpTo(FieldLimits.pageDigits),
                                 style: PokeBinderText.input,
                                 onChanged: (_) => setState(() {}),
                                 decoration: pokeInputDecoration(
@@ -548,6 +551,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                       label: 'Notes (optional)',
                       child: TextField(
                         controller: _notesController,
+                        maxLength: FieldLimits.notes,
                         minLines: 3,
                         maxLines: 8,
                         keyboardType: TextInputType.multiline,

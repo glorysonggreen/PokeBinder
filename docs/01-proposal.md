@@ -89,7 +89,7 @@ Card artwork is no longer bundled with the app. The catalog stores image links, 
 
 Yes. PokéBinder runs against a real Supabase project, and the deployed web build uses it. Sign-up, login, password reset, and saving, loading and deleting cards, binders, decks, wishlist entries and trainer profiles all go through Supabase. I also checked that the app cannot read or write protected data while signed out (see `docs/07-security-checklist.md`).
 
-The two test files in `test/` currently cover the sign-in helpers (email checks and error messages) and the audio settings. Saving and loading with Supabase has been tested by hand, not with automated tests.
+The three test files in `test/` currently cover the sign-in helpers (email checks and error messages) and the audio setup (every sound and music file exists, audio calls are safe before the engine starts, and only high rarities get the sparkle sound), plus the input limits (digit and peso formatters, every `TextField` has a maximum length) and the placeholder color's contrast. Saving and loading with Supabase has been tested by hand, not with automated tests.
 
 ## One Thing I Want to Add That the Course Did Not Teach
 
@@ -155,6 +155,8 @@ Every field below comes from `supabase/schema.sql` and my model classes. Changes
 | Catalog card (shared, read-only) | id, set_id, number, name, supertype, subtype, type, rarity, image_small, image_large, market_price_usd, prices per finish, price_updated_at | Supabase table card_catalog |
 | Sound and music settings | music and effects on/off, volumes | On the device (shared_preferences) |
 
+Every text field has a maximum length (for example notes 500 characters, descriptions 300, trainer name 30), set in `lib/config/field_limits.dart` and repeated as check constraints in `supabase/schema.sql`. The full list is in [`02-mockup.md`](02-mockup.md#d-input-limits).
+
 ## Screens
 
 1. **Sign In, Sign Up, Forgot Password, Choose a New Password**
@@ -200,7 +202,7 @@ The main risk I identified before was reliable card search and scanning.
 
 **First step:** Read the Supabase values with `String.fromEnvironment` and use the repository secrets already named in the workflow.
 
-**Thin automated tests:** The tests cover only sign-in helpers and audio settings.
+**Thin automated tests:** The tests cover only sign-in helpers, the audio setup, and the input limits and placeholder contrast.
 
 **First step:** Add tests for the models' `toJson` / `fromJson` and for the price calculation in `pricing.dart`.
 

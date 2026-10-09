@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../config/pricing.dart';
 import '../models/catalog_card.dart';
 import '../models/pokemon_card_data.dart';
@@ -270,6 +271,7 @@ class _WishlistFormScreenState extends State<WishlistFormScreen> {
                       label: 'Notes (optional)',
                       child: TextField(
                         controller: _notesController,
+                        maxLength: FieldLimits.notes,
                         minLines: 2,
                         maxLines: 5,
                         keyboardType: TextInputType.multiline,

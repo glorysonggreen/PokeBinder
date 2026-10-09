@@ -299,6 +299,7 @@ Reached from Home, Binders, Binder Details, All Cards, and the card pickers.
 Updates the user's own copy of a card. Card identity (name, set, number, type) comes from the card database and is read-only.
 
 **User Actions and Flow**
+- The card summary shows the card's finish (for example **Holofoil**), which cannot be changed here.
 - The user edits **Condition**, **Quantity**, **Estimated Value**, **Binder**, **Page**, and **Notes**.
 - **Cancel** returns to 15 Card Details without changes; **✓ Save Changes** saves and returns.
 - **Delete Card** opens a confirmation dialog before removing the card.
@@ -335,6 +336,7 @@ Confirms the details of a copy before it is added. It uses the same form as 16 E
 
 **User Actions and Flow**
 - Shows the card, its market price in pesos (with the US dollar price and the date prices were updated), and a **You Own N Copies** panel with a quick **Add 1** action for a matching copy.
+- When the card comes in more than one finish (for example Holofoil and Reverse Holo), **Finish** chips show the peso price of each; the user picks one. Finish chips need per-finish prices, which come from re-running the catalog import (see `SUPABASE_SETUP.md`).
 - The user sets **Condition** (the estimated value adjusts with condition and can be overridden), **Quantity**, **Binder**, **Page**, and **Notes**.
 - **Cancel** returns to 17 Add Card; **+ Add Card** saves the card and returns to 17.
 
@@ -546,7 +548,7 @@ Reached from **+ Add to Trade List** on 28 Trade List.
 Edits the terms of a card listed for trade.
 
 **User Actions and Flow**
-- Card name is locked; the user can adjust set, card number, rarity, condition, quantity, and estimated value, and set **Eagerness to Trade** (High, Medium, Low).
+- The user can edit card name, set, card number, rarity, condition, quantity, and estimated value, and set **Eagerness to Trade** (High, Medium, Low). Name, set, and card number must not be empty, and for an entry linked to a card in the collection, quantity cannot exceed the copies owned.
 - **Looking for in return** and **Notes** are optional text fields.
 - **Cancel** discards changes; **✓ Save Changes** saves them; **Remove entry** takes the card off the trade list.
 
@@ -617,7 +619,7 @@ This section outlines the changes between the original mockup, which consisted o
 | 13 Edit Binder | Name, pages and slots, description, Save. | Adds **Category** and a **Delete Binder** button (with confirmation). | Binders can now be deleted from here. |
 | 14 All Cards | Search and type chips (All, Normal, Grass, Water, Fire). | Search, **Newest / Oldest** chips, a **Sort** menu, type and subtype filters, and **Select** for multi-delete. | Easier to find or clean up cards in a larger collection. |
 | 15 Card Details | Review info, **✎ Edit card**, drag-to-tilt 3D card. | Same 3D card and info, plus **+ Add to Deck** (pick a deck and quantity, or create one) and **Delete Card**. Deleting also removes the card from the trade list and decks and clears it as favorite. | Lets users act on a card from one place without leaving broken references. |
-| 16 to 18 Card forms | Confirm Card, Add Card, and Edit Card were manual-entry forms (name, set, number, rarity, and so on) with **+ Add to binder**. | Edit Card and Add to Collection share one form. Card identity comes from the catalog and is read-only; the user edits Condition, Quantity, Estimated Value, Binder, Page, and Notes. Add to Collection shows the peso price (and US dollar price and date) and a **You Own N Copies** panel. Button is **+ Add Card**. | Real card data makes entries correct and prices available (TCGplayer prices, adjusted by condition). |
+| 16 to 18 Card forms | Confirm Card, Add Card, and Edit Card were manual-entry forms (name, set, number, rarity, and so on) with **+ Add to binder**. | Edit Card and Add to Collection share one form. Card identity comes from the catalog and is read-only; the user edits Condition, Quantity, Estimated Value, Binder, Page, and Notes. Add to Collection shows the peso price (and US dollar price and date), **Finish** chips when a card has several finishes, and a **You Own N Copies** panel. Button is **+ Add Card**. | Real card data makes entries correct and prices available (TCGplayer prices, adjusted by condition). |
 | 19 Deck Planner | Deck rows plus an **Editing** section to search binders and add cards on the same screen. | A deck list with search, format chips (All, Standard, Expanded, Casual), a **Needs Cards** toggle, sort, pinning, and **Missing N** / **✓ Complete** badges. Editing moved to Deck Details. | Separating the list from editing gives each more room. |
 | 20 Create Deck | Name, format, target size, description. Returns to the planner. | Target sizes are 15, 20, 30, 40, or 60. **+ Create Deck** opens the new deck's Deck Details. | Takes the user straight to adding cards. |
 | 21 Deck Details | Quantity dialog, **+ Add Card**, paging. | Adds a summary (Unique, Copies, Needed), a progress bar, a **Card Type Mix** bar, and **Delete** (cards stay in the collection). | Shows deck completion at a glance. |
@@ -626,6 +628,30 @@ This section outlines the changes between the original mockup, which consisted o
 | 24 Collection Statistics (was 25) | Total cards, estimated value, Value by Rarity, Cards by Set. | Tiles are **Cards, Value, Sets**, plus Value by Rarity, Cards by Set (donut with legend), and **Top Value Cards**. | More useful breakdown of the collection. |
 | 25 to 30 Wishlist and Trade List | Two simple tabs. Add Wishlist and Trade Card were manual-entry forms. | Tabs show counts, stat tiles (Wanted / Est. to Buy and For Trade / Est. Value), search, priority chips, sorting, and paging. Wishlist adds cards through a catalog picker (26). Trade List adds through a collection picker (29). Entries open edit screens (27, 30), and removal asks for confirmation and offers **Undo**. | The original lists were too simple for a larger collection, and real card data replaced manual entry. |
 | 31 Sound & Music (new) | Not in the PDF. | Toggles and volume sliders for background music and sound effects, a **Play a Test Sound** button, and settings remembered on the device. | The app has chiptune effects and two looping themes. |
+| Text fields | No maximum lengths and a light-grey placeholder color. | Every text field has a maximum length (see D. Input Limits). Long multi-line fields show a counter such as `0/300`. Placeholder text is darker so it meets the 4.5:1 contrast requirement. | Stops oversized text and makes placeholders readable. Screenshots taken before this change show the older, lighter placeholder text. |
 | Data and accounts | Not covered. | Cards, binders, decks, wishlist, trade list, and profile are saved to Supabase per user (Row Level Security). Writes are online-only. | Moves the app from mock data to real, synced data. |
 | Design system | Added success, warning, information, card-type, and scanner colors. | The palette is documented in [`03-design-system.md`](03-design-system.md). It has no scanner colors; it adds a violet (Sound & Music, statistics chart). Status and card-type colors are defined with their widgets rather than as palette tokens. | The scanner screens no longer exist. |
  
+
+## D. Input Limits
+
+These are the maximum lengths enforced in the app (`lib/config/field_limits.dart`) and again by the database (`supabase/schema.sql`). Text longer than the limit is cut off as it is typed or pasted; fields marked "with a counter" show how many characters are left.
+
+| Field | Limit | Where |
+| --- | --- | --- |
+| Email | 254 characters | Log In, Sign Up, Forgot Password |
+| Password and confirmation | 72 characters (the Supabase Auth maximum) | Log In, Sign Up, Choose a New Password |
+| Trainer name | 30 characters | Sign Up, Edit Trainer Card |
+| Bio | 160 characters, with a counter | Edit Trainer Card |
+| Binder name | 40 characters | Create and Edit Binder |
+| Binder category | 30 characters | Create and Edit Binder |
+| Binder and deck description | 300 characters, with a counter | Create and Edit Binder, Create Deck |
+| Deck name | 40 characters | Create Deck |
+| Card name, set | 80 characters each | Edit Trade Entry |
+| Card number | 20 characters | Edit Trade Entry |
+| Notes | 500 characters, with a counter | Edit Card, Add to Collection, Edit Wishlist Card, Edit Trade Entry |
+| Looking for in return | 200 characters, with a counter | Edit Trade Entry |
+| Search boxes | 80 characters | Every search bar and the set filter in the catalog picker |
+| Quantity | 4 digits (9,999) | Edit Trade Entry |
+| Page and starting pages | 3 digits (999) | Edit Card, Add to Collection, Create and Edit Binder |
+| Estimated value | 9 digits and up to 2 decimals | Edit Card, Add to Collection, Edit Wishlist Card, Edit Trade Entry |

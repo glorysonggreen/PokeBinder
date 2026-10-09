@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../services/auth_service.dart';
 import '../services/trainer_profile_repository.dart';
 import '../theme/pokebinder_theme.dart';
@@ -141,6 +142,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 label: 'Trainer name',
                 child: TextField(
                   controller: _nameController,
+                  maxLength: FieldLimits.trainerName,
+                  buildCounter: hideCharacterCounter,
                   textCapitalization: TextCapitalization.words,
                   decoration: pokeInputDecoration(
                     hint: 'Ash K.',
@@ -153,6 +156,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 label: 'Email',
                 child: TextField(
                   controller: _emailController,
+                  maxLength: FieldLimits.email,
+                  buildCounter: hideCharacterCounter,
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
                   textInputAction: TextInputAction.next,
@@ -168,6 +173,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   label: 'Password',
                   child: TextField(
                     controller: _passwordController,
+                    maxLength: FieldLimits.password,
+                    buildCounter: hideCharacterCounter,
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.next,
                     decoration: pokeInputDecoration(
@@ -187,6 +194,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   label: 'Confirm password',
                   child: TextField(
                     controller: _confirmController,
+                    maxLength: FieldLimits.password,
+                    buildCounter: hideCharacterCounter,
                     obscureText: _obscureConfirm,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _attemptSignUp(),

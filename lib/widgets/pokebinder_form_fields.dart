@@ -16,6 +16,7 @@ InputDecoration pokeInputDecoration({
   return InputDecoration(
     hintText: hint,
     hintStyle: PokeBinderText.hint,
+    counterStyle: PokeBinderText.fieldLabel,
     filled: true,
     fillColor: PokeBinderColors.white,
     isDense: true,

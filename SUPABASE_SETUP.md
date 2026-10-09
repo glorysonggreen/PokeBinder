@@ -26,10 +26,10 @@ step fills them.
 1. On your computer, with Node 18 or newer, from the project folder:
 
    ```
-   node tools/import_catalog.mjs --sets base1,jungle
+   node tools/import_catalog.mjs --sets base1,base2
    ```
 
-   Use the sets you want people to choose from (ids are listed at
+   Use the sets you want people to choose from (`base1` is Base Set and `base2` is Jungle; all ids are listed at
    <https://api.pokemontcg.io/v2/sets>). The data comes from the Pokémon TCG
    API; artwork is loaded from its image server and prices are TCGplayer market
    prices in US dollars. If the API is slow or rate-limited, set
@@ -37,6 +37,12 @@ step fills them.
 2. Open the generated `supabase/seed_catalog.sql`, paste it into the SQL Editor
    and run it. Run the script and the file again whenever you want fresh prices
    or more sets; it updates rows in place.
+
+   The `supabase/seed_catalog.sql` committed in this repository (Base Set and
+   Jungle, prices from Oct 4, 2026) was made by an earlier version of the
+   importer and has no per-finish prices. Regenerate it with the command above
+   to get them; without them the **Finish** chooser (Holofoil, Reverse Holo and
+   so on) on the card form is not shown.
 
 ### Loading every card in the API
 
@@ -131,4 +137,4 @@ For it to work:
 
 ## Re-running schema.sql
 
-`supabase/schema.sql` is safe to run again. The last section removes orphaned trade-list rows, adds foreign keys so deleting a card also deletes its trade entries, and adds triggers that keep cards in sync when a binder is renamed or deleted. Run it once after updating the app.
+`supabase/schema.sql` is safe to run again. The last section removes orphaned trade-list rows, adds foreign keys so deleting a card also deletes its trade entries, and adds triggers that keep cards in sync when a binder is renamed or deleted. It also ends with the **Length limits** section, which adds a check constraint for the maximum length of every free-text column (and an upper bound on quantities, page numbers and values) to match the limits in `lib/config/field_limits.dart`. The constraints are added `NOT VALID`, so existing rows are not scanned: new and edited rows are checked, and a row that is already too long must be shortened the next time it is edited. To check old rows as well, run `alter table public.<table> validate constraint <name>;`. Run `schema.sql` once after updating the app.

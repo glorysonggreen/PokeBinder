@@ -393,3 +393,95 @@ drop trigger if exists binders_unassign_cards on public.binders;
 create trigger binders_unassign_cards
   after delete on public.binders
   for each row execute function public.unassign_cards_on_binder_delete();
+
+-- ---------------------------------------------------------------------------
+-- Length limits
+--
+-- The app already stops people typing past these numbers (see
+-- lib/config/field_limits.dart). These constraints repeat the same limits in the
+-- database, so they still apply if someone skips the app and calls the API
+-- directly. Keep the two lists in sync.
+--
+-- The constraints are added NOT VALID: new inserts and updates are checked, but
+-- rows that already exist are not scanned, so this script can be re-run on a
+-- database that has older, longer data. A row that is already over a limit must
+-- be shortened the next time it is edited. To check everything that was saved
+-- earlier, run:  alter table public.<table> validate constraint <name>;
+-- ---------------------------------------------------------------------------
+
+do $$
+declare
+  r record;
+  cname text;
+begin
+  -- Free text and short app-controlled text: at most max_len characters.
+  for r in
+    select * from (values
+      ('binders',           'name',            40),
+      ('binders',           'category',        30),
+      ('binders',           'description',    300),
+      ('cards',             'name',            80),
+      ('cards',             'set_name',        80),
+      ('cards',             'card_number',     20),
+      ('cards',             'notes',          500),
+      ('cards',             'binder_name',     40),
+      ('cards',             'rarity',          60),
+      ('cards',             'type',            60),
+      ('cards',             'supertype',       60),
+      ('cards',             'subtype',         60),
+      ('cards',             'condition',       10),
+      ('decks',             'name',            40),
+      ('decks',             'description',    300),
+      ('decks',             'format',          30),
+      ('wishlist_entries',  'name',            80),
+      ('wishlist_entries',  'set_name',        80),
+      ('wishlist_entries',  'card_number',     20),
+      ('wishlist_entries',  'rarity',          60),
+      ('wishlist_entries',  'condition',       10),
+      ('wishlist_entries',  'notes',          500),
+      ('wishlist_entries',  'asking_for',     200),
+      ('wishlist_entries',  'kind',            20),
+      ('wishlist_entries',  'priority',        20),
+      ('trainer_profiles',  'name',            30),
+      ('trainer_profiles',  'title',           40),
+      ('trainer_profiles',  'bio',            160)
+    ) as t(tbl, col, max_len)
+  loop
+    cname := r.tbl || '_' || r.col || '_length_check';
+    if not exists (
+      select 1 from pg_constraint
+      where conname = cname
+        and conrelid = format('public.%I', r.tbl)::regclass
+    ) then
+      execute format(
+        'alter table public.%I add constraint %I check (char_length(%I) <= %s) not valid',
+        r.tbl, cname, r.col, r.max_len
+      );
+    end if;
+  end loop;
+
+  -- Numbers typed into the app: an upper bound as well as the existing minimum.
+  for r in
+    select * from (values
+      ('binders',          'page_count',      999),
+      ('cards',            'quantity_owned',  99999),
+      ('cards',            'page',            999),
+      ('cards',            'estimated_value', 999999999.99),
+      ('wishlist_entries', 'quantity',        99999),
+      ('wishlist_entries', 'estimated_value', 999999999.99)
+    ) as t(tbl, col, max_val)
+  loop
+    cname := r.tbl || '_' || r.col || '_max_check';
+    if not exists (
+      select 1 from pg_constraint
+      where conname = cname
+        and conrelid = format('public.%I', r.tbl)::regclass
+    ) then
+      execute format(
+        'alter table public.%I add constraint %I check (%I <= %s) not valid',
+        r.tbl, cname, r.col, r.max_val
+      );
+    end if;
+  end loop;
+end
+$$;

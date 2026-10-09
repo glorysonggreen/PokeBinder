@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/binder_data.dart';
 import '../models/deck_data.dart';
@@ -179,6 +180,8 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                 label: 'Trainer name',
                 child: TextField(
                   controller: _nameController,
+                  maxLength: FieldLimits.trainerName,
+                  buildCounter: hideCharacterCounter,
                   textCapitalization: TextCapitalization.words,
                   decoration: pokeInputDecoration(
                     hint: 'e.g. Ash K.',
@@ -250,6 +253,7 @@ class _TrainerCardEditScreenState extends State<TrainerCardEditScreen> {
                 label: 'Bio (optional)',
                 child: TextField(
                   controller: _bioController,
+                  maxLength: FieldLimits.bio,
                   keyboardType: TextInputType.multiline,
                   minLines: 3,
                   maxLines: 5,

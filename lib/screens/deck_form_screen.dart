@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/field_limits.dart';
 import '../models/deck_data.dart';
 import '../theme/pokebinder_theme.dart';
 import '../widgets/pokebinder_controls.dart';
@@ -80,6 +81,8 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                 label: 'Deck name',
                 child: TextField(
                   controller: _nameController,
+                  maxLength: FieldLimits.deckName,
+                  buildCounter: hideCharacterCounter,
                   decoration: pokeInputDecoration(
                     hint: 'e.g. Lightning Rush',
                     icon: Icons.style_outlined,
@@ -124,6 +127,7 @@ class _DeckFormScreenState extends State<DeckFormScreen> {
                 label: 'Description (optional)',
                 child: TextField(
                   controller: _descriptionController,
+                  maxLength: FieldLimits.description,
                   keyboardType: TextInputType.multiline,
                   minLines: 2,
                   maxLines: 5,
