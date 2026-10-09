@@ -134,6 +134,11 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
    commits.** Fix going forward: use the GitHub `noreply` address for new
    commits and turn on "Keep my email addresses private" and "Block command line
    pushes that expose my email". Old commits keep it unless history is rewritten.
+   - **Status:** Not fixed yet. Planned: one `git filter-repo` run in a fresh
+     clone, using `--mailmap` to replace the Gmail address with the `noreply`
+     address and `--path .dart_tool --path build --invert-paths` to remove the
+     files from items 1 and 2, then a force-push. This changes every commit
+     hash, so the hashes quoted in these documents must be updated afterwards.
 4. **The `--dart-define` setup is not connected.** `.env.example` and the
    commented workflow lines describe an environment-based config the app does
    not use yet. Acceptable for the anon key; noted so it is not mistaken for
@@ -142,6 +147,15 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
    (`subosito/flutter-action@v2` matters most). Planned: pin to SHAs.
 6. **Free-text fields had no maximum length.** Fixed on 2026-10-09: see
    [Input limits](#input-limits).
+7. **Sample data and screenshots were reviewed for real personal data.** I looked
+   at all 43 images in `docs/assets/` and searched the tracked files for email
+   addresses, phone numbers and social links. The only person-like data is the
+   invented trainer "Ash K." and the placeholder email `ash@pallettown.com`. The
+   profile photo in `07-adjust-photo.png` is a Pokémon plush, not a person, and
+   notes, bio and description fields are empty. The seed data is public card
+   data. Nothing needed changing. The demo video is not recorded yet; when it
+   is, I will record it with the same test account and check that no real email,
+   browser tab, bookmark or notification is visible.
 
 I revoked the exposed test-account sessions (item 1 above and the note at the end). I have not found an exposed secret that could
 write to or read other people's data; the exposure in item 1 is limited to my
@@ -153,7 +167,7 @@ own test account.
 - [x] `git log -p | grep -i "api_key\|secret\|password\|token"` finds nothing real
 - [x] No service account file, keystore or `service_role` key anywhere in the repo
 - [x] Security rules or RLS policies written and tested, not left open
-- [ ] No real personal data in sample data, screenshots or the video
+- [x] No real personal data in sample data or screenshots
 - [x] No course or university credentials anywhere
 - [x] Anyone whose data appears in a test was asked first
 
