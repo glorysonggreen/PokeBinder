@@ -597,7 +597,7 @@ The wireframe sanity check originally described this journey as scan, confirm, a
 
 This section outlines the changes between the original mockup, which consisted of 29 screens and was submitted on September 20, 2026, and the updated version, which reflects the current app in the repository and includes 31 screens.
 
-| Screen or Element | Original Mockup | Current App (This Version) | Why It Changed |
+| Screen or Element | PDF Mockup | Current App (This Version) | Why It Changed |
 | --- | --- | --- | --- |
 | Screen count and numbering | 29 screens, numbered 01 to 29 (01 Login, 02 Forgot Password, 03 Sign Up, and so on). | 31 screens, numbered to match the files in `docs/screenshots/`. Sign Up is now 02 and Forgot Password is 03. | The screenshots are the source of truth, so numbers and filenames now line up. |
 | Card Scanner (15) and Confirm Card (16) | Camera viewfinder with a **Capture** button, a **Recent Scans** list, and a confirmation screen before saving. | **Removed.** Replaced by 17 Add Card (Find Your Card), a searchable catalog, and 18 Add to Collection. | The scanner was only a simulated demo and was removed on Oct 4. Catalog search gets a correct card into the collection without a camera and works in a browser. |
@@ -627,4 +627,5 @@ This section outlines the changes between the original mockup, which consisted o
 | 25 to 30 Wishlist and Trade List | Two simple tabs. Add Wishlist and Trade Card were manual-entry forms. | Tabs show counts, stat tiles (Wanted / Est. to Buy and For Trade / Est. Value), search, priority chips, sorting, and paging. Wishlist adds cards through a catalog picker (26). Trade List adds through a collection picker (29). Entries open edit screens (27, 30), and removal asks for confirmation and offers **Undo**. | The original lists were too simple for a larger collection, and real card data replaced manual entry. |
 | 31 Sound & Music (new) | Not in the PDF. | Toggles and volume sliders for background music and sound effects, a **Play a Test Sound** button, and settings remembered on the device. | The app has chiptune effects and two looping themes. |
 | Data and accounts | Not covered. | Cards, binders, decks, wishlist, trade list, and profile are saved to Supabase per user (Row Level Security). Writes are online-only. | Moves the app from mock data to real, synced data. |
-| Design system | Added success, warning, information, card-type, and scanner colors. | Same palette without the scanner colors. See [`03-design-system.pdf`](03-design-system.pdf). | The scanner screens no longer exist. |
+| Design system | Added success, warning, information, card-type, and scanner colors. | The palette is documented in [`03-design-system.md`](03-design-system.md). It has no scanner colors; it adds a violet (Sound & Music, statistics chart). Status and card-type colors are defined with their widgets rather than as palette tokens. | The scanner screens no longer exist. |
+ 
