@@ -123,32 +123,49 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
      token is still valid, so I am treating it as exposed.
    - **Status:** Fixed on 2026-10-09. I removed the test user's sessions in the
      Supabase dashboard (Authentication > Users), so the tokens in the old
-     commits no longer work. The files are still in the git history. Optionally remove the folder from history with `git filter-repo`
-     (`--path .dart_tool --invert-paths`) and force-push; until then the files
-     stay reachable by anyone who knows the old commit ids.
-2. **`build/` was also committed in history** (13 commits, now removed from the
-   current tree). It holds Dart compiler caches. A search for private keys
+     commits no longer work. I then rewrote the git history with
+     `git filter-repo` to drop `.dart_tool/` and force-pushed it. No commit on `main`
+     contains the folder any more. One limit remains: GitHub still serves the
+     pre-rewrite commits to anyone who has their full commit id, and a clone or
+     fork made before the rewrite still holds them. I checked on 2026-10-09 and
+     the old files could still be downloaded that way. They cannot be used to
+     sign in, because the sessions are revoked. Next step: ask GitHub Support
+     to remove the old commits and their cached views.
+2. **`build/` was also committed in history** (13 commits; removed from the
+   current tree and, by the history rewrite, from every commit on `main`). It holds Dart compiler caches. A search for private keys
    matched only the key-format text of a library's source code (for example
    the string `-----BEGIN PRIVATE KEY-----`), not an actual key.
-3. **My personal email address and full name are in the author field of all 118
-   commits.** Fix going forward: use the GitHub `noreply` address for new
-   commits and turn on "Keep my email addresses private" and "Block command line
-   pushes that expose my email". Old commits keep it unless history is rewritten.
-4. **The `--dart-define` setup is not connected.** `.env.example` and the
-   commented workflow lines describe an environment-based config the app does
-   not use yet. Acceptable for the anon key; noted so it is not mistaken for
-   something it is not.
-5. **Third-party GitHub Actions use version tags, not commit SHAs**
-   (`subosito/flutter-action@v2` matters most). Planned: pin to SHAs.
+3. **My personal email address and full name were in the author field of all 118
+   commits.** Fixed on 2026-10-09: I rewrote the history so every commit on
+   `main` (133 now) uses the GitHub `noreply` address and my GitHub username,
+   and force-pushed it. Keeping "Keep my email addresses private" and "Block
+   command line pushes that expose my email" turned on in GitHub settings stops
+   it coming back. The same limit as item 1 applies: the pre-rewrite commits
+   still show the old author details to anyone who has their full commit id,
+   until GitHub removes them.
+4. **The `--dart-define` setup was never connected.** `.env.example` and the
+   commented workflow lines described an environment-based config the app does
+   not use. Fixed on 2026-10-09: the unused `--dart-define` lines were removed
+   from `deploy-web.yml`, and `.env.example` now lists only the import tool
+   keys. The app keeps the public Supabase URL and anon key in
+   `lib/config/supabase_config.dart` on purpose, which is acceptable for an
+   anon key.
+5. **Third-party GitHub Actions used version tags, not commit SHAs**
+   (`subosito/flutter-action@v2` mattered most). Fixed on 2026-10-09: all four
+   actions in `deploy-web.yml` are pinned to full commit SHAs, with the version
+   in a trailing comment. I update them by hand when a new version is needed.
 6. **Free-text fields had no maximum length.** Fixed on 2026-10-09: see
    [Input limits](#input-limits).
 7. **Sample data and screenshots were reviewed for real personal data.** I looked
-   at all 43 images in `docs/assets/` and searched the tracked files for email
+   at all 33 images in `docs/assets/` and searched the tracked files for email
    addresses, phone numbers and social links. The only person-like data is the
    invented trainer "Ash K." and the placeholder email `ash@pallettown.com`. The
    profile photo in `07-adjust-photo.png` is a Pokémon plush, not a person, and
    notes, bio and description fields are empty. The seed data is public card
-   data. Nothing needed changing. The demo video is not recorded yet; when it
+   data. The current files needed no further changes. One limit: an earlier
+   version of `07-adjust-photo.png` showed a photo of a real person. It was
+   replaced, but that earlier version is still in the git history (see the
+   findings table in `07-security-checklist.md`). The demo video is not recorded yet; when it
    is, I will record it with the same test account and check that no real email,
    browser tab, bookmark or notification is visible.
 
@@ -169,4 +186,5 @@ own test account.
 **Revoked / rotated:** 2026-10-09. I found session tokens for my test account in
 the committed `.dart_tool/chrome-device/` folder and revoked them in Supabase
 (Authentication > Users). No other key needed rotating; the only key in the
-app is the public anon key.
+app is the public anon key. The folder was then removed from the git history
+(item 1).
