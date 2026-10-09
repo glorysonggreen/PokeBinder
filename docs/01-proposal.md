@@ -198,9 +198,9 @@ The main risk I identified before was reliable card search and scanning.
 
 **First step:** Add a visible "prices last updated" note, or keep the current limitation and say so in the demo.
 
-**Secrets configuration:** The Supabase URL and anon key are in source code instead of `--dart-define`, and the GitHub Actions use version tags instead of commit SHAs.
+**Secrets configuration:** The Supabase URL and anon key are in source code on purpose, because both are public and protected by Row Level Security. The GitHub Actions are pinned to commit SHAs, and the unused `--dart-define` lines were removed from the workflow.
 
-**First step:** Read the Supabase values with `String.fromEnvironment` and use the repository secrets already named in the workflow.
+**First step:** Keep the pins current by updating a SHA when I move to a newer action version.
 
 **Thin automated tests:** The tests cover only sign-in helpers, the audio setup, and the input limits and placeholder contrast.
 

@@ -37,10 +37,11 @@ details when the app loads.
 - Where they live locally: `.env`, which is git-ignored (`.env`, `.env.*`,
   `env.json`, `*.keystore`, `*.jks` and `serviceAccountKey.json` are all in
   `.gitignore`; `.env.example` is committed with placeholder names only).
-- Where the deploy workflow gets them: the workflow has
-  `${{ secrets.SUPABASE_URL }}` and `${{ secrets.SUPABASE_PUBLISHABLE_KEY }}`
-  lines ready, but they are commented out because the app does not read
-  `--dart-define` values yet. No secret is needed to build or deploy today.
+- Where the deploy workflow gets them: it does not. The workflow passes no
+  secrets and no `--dart-define` values to the build, because the app reads its
+  two public Supabase values from `lib/config/supabase_config.dart`. The unused
+  `${{ secrets.* }}` placeholder lines were removed on 2026-10-09. No secret is
+  needed to build or deploy.
 - Anything my deployed web build carries that a visitor could read, and why that
   is acceptable: the Supabase project URL and the **anon** key. I decoded the
   key's payload and confirmed its role is `anon`, not `service_role`. It is
@@ -133,11 +134,6 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
    commits.** Fix going forward: use the GitHub `noreply` address for new
    commits and turn on "Keep my email addresses private" and "Block command line
    pushes that expose my email". Old commits keep it unless history is rewritten.
-   - **Status:** Not fixed yet. Planned: one `git filter-repo` run in a fresh
-     clone, using `--mailmap` to replace the Gmail address with the `noreply`
-     address and `--path .dart_tool --path build --invert-paths` to remove the
-     files from items 1 and 2, then a force-push. This changes every commit
-     hash, so the hashes quoted in these documents must be updated afterwards.
 4. **The `--dart-define` setup is not connected.** `.env.example` and the
    commented workflow lines describe an environment-based config the app does
    not use yet. Acceptable for the anon key; noted so it is not mistaken for
