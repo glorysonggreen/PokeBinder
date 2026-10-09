@@ -4,7 +4,7 @@
 
 ## What changed this week
 
-1. **Finished the remaining app screens.** All the screens in PokeBinder are now done and match the HTML mockup. They are in `lib/screens/`, including `login_screen.dart`, `signup_screen.dart`, `forgot_password_screen.dart`, `home_screen.dart`, `binders_screen.dart`, `decks_screen.dart`, `card_details_screen.dart`, `wishlist_screen.dart`, `stats_screen.dart`, `trainer_card_screen.dart` and `more_screen.dart`. The latest UI commits were the Scanner Rework series (10 commits, `e6bcfe9` to `611f5c5`, Sep 18 to 20) and `5cd184e` Spacing & Font Size Rework (Sep 20).
+1. **Finished the remaining app screens.** All the screens in PokeBinder are now done and match the HTML mockup. They are in `lib/screens/`, including `login_screen.dart`, `signup_screen.dart`, `forgot_password_screen.dart`, `home_screen.dart`, `binders_screen.dart`, `decks_screen.dart`, `card_details_screen.dart`, `wishlist_screen.dart`, `stats_screen.dart`, `trainer_card_screen.dart` and `more_screen.dart`. The latest UI commits were the Scanner Rework series (10 commits, `4785d64` to `d608b8e`, Sep 18 to 20) and `12423b0` Spacing & Font Size Rework (Sep 20).
 
 2. **Started connecting the app to Supabase.** I set up the project and began planning how each screen will read and save data. The screens are not connected yet, so most of the app still uses local or mock data.
 
@@ -47,7 +47,7 @@
 
 ## What changed this week
 
-1. **Added animations across the app** using a shared set of reusable animation widgets (commit `910d829`, Sep 27; 13 files, about 1,060 lines added). The animations are:
+1. **Added animations across the app** using a shared set of reusable animation widgets (commit `d0d650a`, Sep 27; 13 files, about 1,060 lines added). The animations are:
    - **Switching tabs:** screens fade between tabs in `app_shell.dart`, and the bottom navigation icons bounce when selected (`app_nav_bar.dart`).
    - **Screen content:** content fades and slides in on Home, Binders, Binder Detail, Decks, Wishlist and Card Details.
    - **Card Details:** the card is "dealt in", and the value counts up.
@@ -56,7 +56,7 @@
    - **Login and sign-up:** error messages animate in on `login_screen.dart`, `signup_screen.dart`, `forgot_password_screen.dart` and `reset_password_screen.dart`.
    - **Moving between pages:** every page change uses one custom transition (`pokebinder_page_transitions.dart`).
 
-2. **Finished the main Supabase backend** (commit `9e41812`, Sep 27). This includes the database schema (`supabase/schema.sql`), Row Level Security (RLS) rules, the sign-in service (`auth_service.dart`), repository classes for binders, cards, decks, wishlist and trainer profiles, and model updates so each model can be saved to and loaded from database rows.
+2. **Finished the main Supabase backend** (commit `05794d8`, Sep 27). This includes the database schema (`supabase/schema.sql`), Row Level Security (RLS) rules, the sign-in service (`auth_service.dart`), repository classes for binders, cards, decks, wishlist and trainer profiles, and model updates so each model can be saved to and loaded from database rows.
 
 3. **Moved the app from static and in-memory data to Supabase repositories.** User data is now saved permanently and linked to each account through Supabase Auth and RLS. The screens now read and save through repositories instead of changing lists directly.
 

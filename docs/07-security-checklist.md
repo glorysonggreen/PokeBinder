@@ -1,6 +1,6 @@
 # Security Checklist
 
-**Last checked:** October 9, 2026. Counts re-verified against commit `8ff03e9`.
+**Last checked:** October 9, 2026. Counts re-verified against commit `119e1fc`.
 
 ## Secrets and credentials
 
@@ -9,7 +9,7 @@
 | 1 | No API key, token or password is hardcoded in `lib/`, including in comments and commented out code | No, but low risk | `lib/config/supabase_config.dart` contains the Supabase URL and anon key. The anon key is public and protected by RLS, so it is not a critical secret. No `service_role` key or other private credential was found. |
 | 2 | Anything private is in a gitignored config or passed with `--dart-define`, with an example file committed | Yes | Nothing private is in the app. The only private values are the tool keys (`SUPABASE_SECRET_KEY`, `POKEMONTCG_API_KEY`), which stay in a local `.env`. `.env` and `.env.*` are ignored, and `.env.example` is committed with placeholder names. The app's own config is the public Supabase URL and anon key in `SupabaseConfig`, so it needs no `--dart-define`. The unused `--dart-define` placeholder lines were removed from `deploy-web.yml` on 2026-10-09. |
 | 3 | No keystore, `key.properties` or signing credential is in the repository | Yes | No `.keystore`, `.jks`, or `key.properties` files were found. `.gitignore` also excludes `*.keystore` and `*.jks`. |
-| 4 | Git history is clean: I searched `git log -p` for password, secret, api key and token | No, with limitation | I searched the accessible Git history (118 commits). The text search matched only placeholder names in comments (for example `# POKEMONTCG_API_KEY=put_your_key_here` in `.env.example`), documentation, and password length checks in the sign-up code. But a later check found that a Chrome profile folder (`.dart_tool/chrome-device/`, 361 files, commit `c05704a` to `c034b2e`) was committed and contains Supabase session tokens for my own test account (see `06-security-and-privacy.md`, item 1). The Supabase anon key also appears in history, but it is a public client side key. No `service_role` key was found. |
+| 4 | Git history is clean: I searched `git log -p` for password, secret, api key and token | No, with limitation | I searched the accessible Git history (118 commits). The text search matched only placeholder names in comments (for example `# POKEMONTCG_API_KEY=put_your_key_here` in `.env.example`), documentation, and password length checks in the sign-up code. But a later check found that a Chrome profile folder (`.dart_tool/chrome-device/`, 361 files, commit `c8c8170` to `8d00338`) was committed and contains Supabase session tokens for my own test account (see `06-security-and-privacy.md`, item 1). The Supabase anon key also appears in history, but it is a public client side key. No `service_role` key was found. |
 | 5 | Any credential that was ever committed has been rotated | Yes | The test account's sessions were revoked in Supabase on 2026-10-09, so the committed tokens no longer work. The public Supabase anon key is meant for client side use and does not need rotation. The files are still in Git history until it is rewritten. |
 
 ## GitHub Actions
@@ -59,7 +59,7 @@ Each item has a status and the fix. As of 2026-10-09, the exposed sessions, the 
 
 | Finding | Risk | Status | Fix |
 | ------- | ---- | ------ | --- |
-| A Chrome profile folder with Supabase session tokens for my test account was committed (`.dart_tool/chrome-device/`, removed in `c034b2e` but still in history). | Medium until revoked. Only my own test account was affected. | Fixed on 2026-10-09 (sessions revoked) | Optionally remove the folder from history with `git filter-repo --path .dart_tool --invert-paths` and force-push. |
+| A Chrome profile folder with Supabase session tokens for my test account was committed (`.dart_tool/chrome-device/`, removed in `8d00338` but still in history). | Medium until revoked. Only my own test account was affected. | Fixed on 2026-10-09 (sessions revoked) | Optionally remove the folder from history with `git filter-repo --path .dart_tool --invert-paths` and force-push. |
 | `lib/config/supabase_config.dart` contains the Supabase URL and anon key in the source code. The `.env.example` file and the commented `--dart-define` lines in the workflow are not used. | Low. The anon key is meant to be public and RLS protects the data. | Not fixed | Read the values with `String.fromEnvironment` and pass them with `--dart-define`, using the repository secrets already named in the workflow. |
 | The workflow uses version tags instead of commit SHAs for its four actions. | Low. This is a supply chain risk, but it does not expose a secret. | Not fixed | Pin each action to a full commit SHA, starting with `subosito/flutter-action`. |
 | My personal Gmail address and full name are in the author details of all 118 commits. | Low to medium. Anyone can see them in the public history. | Not fixed | Set the Git email to the GitHub noreply address, turn on "Keep my email addresses private" and "Block command line pushes that expose my email" in GitHub settings. Old commits would keep the Gmail address unless the history is rewritten. |

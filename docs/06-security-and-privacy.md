@@ -108,9 +108,9 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
 ## Found while doing this check
 
 1. **A browser profile with real login sessions was committed to git history.**
-   Commit `c034b2e` (2026-10-07, "Code Optimization") deleted the folder
+   Commit `8d00338` (2026-10-07, "Code Optimization") deleted the folder
    `.dart_tool/chrome-device/` (361 files), but it had been committed since
-   `c05704a` (2026-10-04) and is still readable in the public history. It is
+   `c8c8170` (2026-10-04) and is still readable in the public history. It is
    Chrome's data folder from running `flutter run -d chrome`, and it includes
    browser local storage with **Supabase session data (access and refresh
    tokens) for my test account `ash@pallettown.com`**, plus cookies, browser
