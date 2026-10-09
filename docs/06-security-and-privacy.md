@@ -4,8 +4,7 @@ This repository is public. This document records what the app stores, how it is
 protected, and what I found while checking. The step-by-step checklist with
 evidence is in [07-security-checklist.md](07-security-checklist.md).
 
-**Last checked:** October 9, 2026. The counts below (commits, files) were
-re-verified against commit `8ff03e9`. The input-length limits described below were added after that commit.
+**Last checked:** October 9, 2026.
 
 ## What this app stores
 
