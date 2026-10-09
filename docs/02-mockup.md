@@ -12,7 +12,7 @@ Screens opened from a bottom-navigation tab show a **‹ Back** link instead of 
 <tr><th width="260">Screen</th><th>Screen Details</th></tr>
 
 <tr>
-<td><b>01 · Login</b><br>Authentication · Wireframe page 6<br><br><img src="screenshots/01-login.png" width="240" alt="Login screen"><br><sub><a href="screenshots/01-login.png">01-login.png</a></sub></td>
+<td><b>01 · Login</b><br>Authentication · Wireframe page 6<br><br><img src="assets/screenshots/01-login.png" width="240" alt="Login screen"><br><sub><a href="assets/screenshots/01-login.png">01-login.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -31,7 +31,7 @@ Shown when the app is launched while signed out, and after signing out from the 
 </tr>
 
 <tr>
-<td><b>02 · Sign Up</b><br>Authentication · Wireframe page 6<br><br><img src="screenshots/02-sign-up.png" width="240" alt="Sign Up screen"><br><sub><a href="screenshots/02-sign-up.png">02-sign-up.png</a></sub></td>
+<td><b>02 · Sign Up</b><br>Authentication · Wireframe page 6<br><br><img src="assets/screenshots/02-sign-up.png" width="240" alt="Sign Up screen"><br><sub><a href="assets/screenshots/02-sign-up.png">02-sign-up.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -48,7 +48,7 @@ Reached from 01 Login through **Sign Up**.
 </tr>
 
 <tr>
-<td><b>03 · Forgot Password</b><br>Authentication · Wireframe page 6<br><br><img src="screenshots/03-forgot-password.png" width="240" alt="Forgot Password screen"><br><sub><a href="screenshots/03-forgot-password.png">03-forgot-password.png</a></sub></td>
+<td><b>03 · Forgot Password</b><br>Authentication · Wireframe page 6<br><br><img src="assets/screenshots/03-forgot-password.png" width="240" alt="Forgot Password screen"><br><sub><a href="assets/screenshots/03-forgot-password.png">03-forgot-password.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -67,7 +67,7 @@ Reached only from 01 Login through **Forgot Password**.
 </tr>
 
 <tr>
-<td><b>04 · Home Dashboard</b><br>Home & Profile · Wireframe page 6<br><br><img src="screenshots/04-home-dashboard.png" width="240" alt="Home Dashboard"><br><sub><a href="screenshots/04-home-dashboard.png">04-home-dashboard.png</a></sub></td>
+<td><b>04 · Home Dashboard</b><br>Home & Profile · Wireframe page 6<br><br><img src="assets/screenshots/04-home-dashboard.png" width="240" alt="Home Dashboard"><br><sub><a href="assets/screenshots/04-home-dashboard.png">04-home-dashboard.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -89,7 +89,7 @@ Reached after login or account creation. It is the Home tab and the app's landin
 </tr>
 
 <tr>
-<td><b>05 · Trainer Card (Profile)</b><br>Home & Profile · Wireframe page 6<br><br><img src="screenshots/05-trainer-card.png" width="240" alt="Trainer Card"><br><sub><a href="screenshots/05-trainer-card.png">05-trainer-card.png</a></sub></td>
+<td><b>05 · Trainer Card (Profile)</b><br>Home & Profile · Wireframe page 6<br><br><img src="assets/screenshots/05-trainer-card.png" width="240" alt="Trainer Card"><br><sub><a href="assets/screenshots/05-trainer-card.png">05-trainer-card.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -107,7 +107,7 @@ Reached from the More tab or from the avatar on the Home Dashboard.
 </tr>
 
 <tr>
-<td><b>06 · Edit Trainer Card</b><br>Home & Profile · Wireframe page 6<br><br><img src="screenshots/06-edit-trainer-card.png" width="240" alt="Edit Trainer Card"><br><sub><a href="screenshots/06-edit-trainer-card.png">06-edit-trainer-card.png</a></sub></td>
+<td><b>06 · Edit Trainer Card</b><br>Home & Profile · Wireframe page 6<br><br><img src="assets/screenshots/06-edit-trainer-card.png" width="240" alt="Edit Trainer Card"><br><sub><a href="assets/screenshots/06-edit-trainer-card.png">06-edit-trainer-card.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -127,7 +127,7 @@ Reached from 05 Trainer Card through **✎ Edit**.
 </tr>
 
 <tr>
-<td><b>07 · Adjust Photo</b><br>Home & Profile · New: Not in the wireframes<br><br><img src="screenshots/07-adjust-photo.png" width="240" alt="Adjust Photo"><br><sub><a href="screenshots/07-adjust-photo.png">07-adjust-photo.png</a></sub></td>
+<td><b>07 · Adjust Photo</b><br>Home & Profile · New: Not in the wireframes<br><br><img src="assets/screenshots/07-adjust-photo.png" width="240" alt="Adjust Photo"><br><sub><a href="assets/screenshots/07-adjust-photo.png">07-adjust-photo.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -144,7 +144,7 @@ Reached from 06 Edit Trainer Card after choosing a photo. The photo is stored in
 </tr>
 
 <tr>
-<td><b>08 · Choose Favorite Card</b><br>Home & Profile · New: Not in the wireframes<br><br><img src="screenshots/08-choose-favorite-card.png" width="240" alt="Choose Favorite Card"><br><sub><a href="screenshots/08-choose-favorite-card.png">08-choose-favorite-card.png</a></sub></td>
+<td><b>08 · Choose Favorite Card</b><br>Home & Profile · New: Not in the wireframes<br><br><img src="assets/screenshots/08-choose-favorite-card.png" width="240" alt="Choose Favorite Card"><br><sub><a href="assets/screenshots/08-choose-favorite-card.png">08-choose-favorite-card.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -161,7 +161,7 @@ Reached from **Favorite Card** on 06 Edit Trainer Card.
 </tr>
 
 <tr>
-<td><b>09 · Binders</b><br>Collection & Binders · Wireframe page 7<br><br><img src="screenshots/09-binders.png" width="240" alt="Binders"><br><sub><a href="screenshots/09-binders.png">09-binders.png</a></sub></td>
+<td><b>09 · Binders</b><br>Collection & Binders · Wireframe page 7<br><br><img src="assets/screenshots/09-binders.png" width="240" alt="Binders"><br><sub><a href="assets/screenshots/09-binders.png">09-binders.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -181,7 +181,7 @@ Reached through the Binders tab, the **Binders** tile or **Continue a Binder** p
 </tr>
 
 <tr>
-<td><b>10 · Create Binder</b><br>Collection & Binders · Wireframe page 7<br><br><img src="screenshots/10-create-binder.png" width="240" alt="Create Binder"><br><sub><a href="screenshots/10-create-binder.png">10-create-binder.png</a></sub></td>
+<td><b>10 · Create Binder</b><br>Collection & Binders · Wireframe page 7<br><br><img src="assets/screenshots/10-create-binder.png" width="240" alt="Create Binder"><br><sub><a href="assets/screenshots/10-create-binder.png">10-create-binder.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -199,7 +199,7 @@ Opened from 09 Binders or from **+ New Binder** on the Home Dashboard.
 </tr>
 
 <tr>
-<td><b>11 · Binder Details</b><br>Collection & Binders · New: Not in the wireframes<br><br><img src="screenshots/11-binder-details.png" width="240" alt="Binder Details"><br><sub><a href="screenshots/11-binder-details.png">11-binder-details.png</a></sub></td>
+<td><b>11 · Binder Details</b><br>Collection & Binders · New: Not in the wireframes<br><br><img src="assets/screenshots/11-binder-details.png" width="240" alt="Binder Details"><br><sub><a href="assets/screenshots/11-binder-details.png">11-binder-details.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -219,7 +219,7 @@ Reached from 09 Binders after selecting a binder, or from **Continue a Binder** 
 </tr>
 
 <tr>
-<td><b>12 · Add Cards (Binder)</b><br>Collection & Binders · New: Not in the wireframes<br><br><img src="screenshots/12-add-card-binder.png" width="240" alt="Add Cards to a binder"><br><sub><a href="screenshots/12-add-card-binder.png">12-add-card-binder.png</a></sub></td>
+<td><b>12 · Add Cards (Binder)</b><br>Collection & Binders · New: Not in the wireframes<br><br><img src="assets/screenshots/12-add-card-binder.png" width="240" alt="Add Cards to a binder"><br><sub><a href="assets/screenshots/12-add-card-binder.png">12-add-card-binder.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -237,7 +237,7 @@ Reached from the **Add Cards** tile on 11 Binder Details.
 </tr>
 
 <tr>
-<td><b>13 · Edit Binder</b><br>Collection & Binders · Wireframe page 7<br><br><img src="screenshots/13-edit-binder.png" width="240" alt="Edit Binder"><br><sub><a href="screenshots/13-edit-binder.png">13-edit-binder.png</a></sub></td>
+<td><b>13 · Edit Binder</b><br>Collection & Binders · Wireframe page 7<br><br><img src="assets/screenshots/13-edit-binder.png" width="240" alt="Edit Binder"><br><sub><a href="assets/screenshots/13-edit-binder.png">13-edit-binder.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -254,7 +254,7 @@ Reached from **✎ Edit** on 11 Binder Details.
 </tr>
 
 <tr>
-<td><b>14 · All Cards</b><br>Collection & Binders · Wireframe page 7<br><br><img src="screenshots/14-all-cards.png" width="240" alt="All Cards"><br><sub><a href="screenshots/14-all-cards.png">14-all-cards.png</a></sub></td>
+<td><b>14 · All Cards</b><br>Collection & Binders · Wireframe page 7<br><br><img src="assets/screenshots/14-all-cards.png" width="240" alt="All Cards"><br><sub><a href="assets/screenshots/14-all-cards.png">14-all-cards.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -273,7 +273,7 @@ Reached from the **Cards** tile, the search bar, or **View All** on the Home Das
 </tr>
 
 <tr>
-<td><b>15 · Card Details</b><br>Collection & Binders · Wireframe page 7<br><br><img src="screenshots/15-card-details.png" width="240" alt="Card Details"><br><sub><a href="screenshots/15-card-details.png">15-card-details.png</a></sub></td>
+<td><b>15 · Card Details</b><br>Collection & Binders · Wireframe page 7<br><br><img src="assets/screenshots/15-card-details.png" width="240" alt="Card Details"><br><sub><a href="assets/screenshots/15-card-details.png">15-card-details.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -292,7 +292,7 @@ Reached from Home, Binders, Binder Details, All Cards, and the card pickers.
 </tr>
 
 <tr>
-<td><b>16 · Edit Card</b><br>Card Entry · Wireframe page 8<br><br><img src="screenshots/16-edit-card.png" width="240" alt="Edit Card"><br><sub><a href="screenshots/16-edit-card.png">16-edit-card.png</a></sub></td>
+<td><b>16 · Edit Card</b><br>Card Entry · Wireframe page 8<br><br><img src="assets/screenshots/16-edit-card.png" width="240" alt="Edit Card"><br><sub><a href="assets/screenshots/16-edit-card.png">16-edit-card.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -310,7 +310,7 @@ Reached from **✎ Edit** on 15 Card Details.
 </tr>
 
 <tr>
-<td><b>17 · Add Card (Find Your Card)</b><br>Card Entry · Wireframe page 8, reworked<br><br><img src="screenshots/17-add-card.png" width="240" alt="Add Card: Find Your Card"><br><sub><a href="screenshots/17-add-card.png">17-add-card.png</a></sub></td>
+<td><b>17 · Add Card (Find Your Card)</b><br>Card Entry · Wireframe page 8, reworked<br><br><img src="assets/screenshots/17-add-card.png" width="240" alt="Add Card: Find Your Card"><br><sub><a href="assets/screenshots/17-add-card.png">17-add-card.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -328,7 +328,7 @@ Reached through the raised **Add** button in the navigation bar or **+ Add a New
 </tr>
 
 <tr>
-<td><b>18 · Add to Collection</b><br>Card Entry · Wireframe page 8<br><br><img src="screenshots/18-add-to-collection.png" width="240" alt="Add to Collection"><br><sub><a href="screenshots/18-add-to-collection.png">18-add-to-collection.png</a></sub></td>
+<td><b>18 · Add to Collection</b><br>Card Entry · Wireframe page 8<br><br><img src="assets/screenshots/18-add-to-collection.png" width="240" alt="Add to Collection"><br><sub><a href="assets/screenshots/18-add-to-collection.png">18-add-to-collection.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -346,7 +346,7 @@ Reached after choosing a card on 17 Add Card.
 </tr>
 
 <tr>
-<td><b>19 · Deck Planner</b><br>Deck Planner · Wireframe page 8<br><br><img src="screenshots/19-deck-planner.png" width="240" alt="Deck Planner"><br><sub><a href="screenshots/19-deck-planner.png">19-deck-planner.png</a></sub></td>
+<td><b>19 · Deck Planner</b><br>Deck Planner · Wireframe page 8<br><br><img src="assets/screenshots/19-deck-planner.png" width="240" alt="Deck Planner"><br><sub><a href="assets/screenshots/19-deck-planner.png">19-deck-planner.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -364,7 +364,7 @@ Reached through the Decks tab or opened directly from a Home Dashboard shortcut.
 </tr>
 
 <tr>
-<td><b>20 · Create Deck</b><br>Deck Planner · Wireframe page 8<br><br><img src="screenshots/20-create-deck.png" width="240" alt="Create Deck"><br><sub><a href="screenshots/20-create-deck.png">20-create-deck.png</a></sub></td>
+<td><b>20 · Create Deck</b><br>Deck Planner · Wireframe page 8<br><br><img src="assets/screenshots/20-create-deck.png" width="240" alt="Create Deck"><br><sub><a href="assets/screenshots/20-create-deck.png">20-create-deck.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -380,7 +380,7 @@ Reached from 19 Deck Planner, **+ New Deck** on the Home Dashboard, or when addi
 </tr>
 
 <tr>
-<td><b>21 · Deck Details</b><br>Deck Planner · New: Not in the wireframes<br><br><img src="screenshots/21-deck-details.png" width="240" alt="Deck Details"><br><sub><a href="screenshots/21-deck-details.png">21-deck-details.png</a></sub></td>
+<td><b>21 · Deck Details</b><br>Deck Planner · New: Not in the wireframes<br><br><img src="assets/screenshots/21-deck-details.png" width="240" alt="Deck Details"><br><sub><a href="assets/screenshots/21-deck-details.png">21-deck-details.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -399,7 +399,7 @@ Reached from 19 Deck Planner after selecting or creating a deck.
 </tr>
 
 <tr>
-<td><b>22 · Add Cards (Deck)</b><br>Deck Planner · New: Not in the wireframes<br><br><img src="screenshots/22-add-card-deck.png" width="240" alt="Add Cards to a deck"><br><sub><a href="screenshots/22-add-card-deck.png">22-add-card-deck.png</a></sub></td>
+<td><b>22 · Add Cards (Deck)</b><br>Deck Planner · New: Not in the wireframes<br><br><img src="assets/screenshots/22-add-card-deck.png" width="240" alt="Add Cards to a deck"><br><sub><a href="assets/screenshots/22-add-card-deck.png">22-add-card-deck.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -415,7 +415,7 @@ Reached from **+ Add Card** on 21 Deck Details.
 </tr>
 
 <tr>
-<td><b>23 · More</b><br>More · Wireframe page 8<br><br><img src="screenshots/23-more.png" width="240" alt="More"><br><sub><a href="screenshots/23-more.png">23-more.png</a></sub></td>
+<td><b>23 · More</b><br>More · Wireframe page 8<br><br><img src="assets/screenshots/23-more.png" width="240" alt="More"><br><sub><a href="assets/screenshots/23-more.png">23-more.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -434,7 +434,7 @@ Reached through the More tab.
 </tr>
 
 <tr>
-<td><b>24 · Collection Statistics</b><br>More · Wireframe page 9<br><br><img src="screenshots/24-collection-statistics.png" width="240" alt="Collection Statistics"><br><sub><a href="screenshots/24-collection-statistics.png">24-collection-statistics.png</a></sub></td>
+<td><b>24 · Collection Statistics</b><br>More · Wireframe page 9<br><br><img src="assets/screenshots/24-collection-statistics.png" width="240" alt="Collection Statistics"><br><sub><a href="assets/screenshots/24-collection-statistics.png">24-collection-statistics.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -451,7 +451,7 @@ Reached from 23 More or from the **Value** tile on the Home Dashboard.
 </tr>
 
 <tr>
-<td><b>25 · Wishlist</b><br>More · Wireframe page 9<br><br><img src="screenshots/25-wishlist.png" width="240" alt="Wishlist"><br><sub><a href="screenshots/25-wishlist.png">25-wishlist.png</a></sub></td>
+<td><b>25 · Wishlist</b><br>More · Wireframe page 9<br><br><img src="assets/screenshots/25-wishlist.png" width="240" alt="Wishlist"><br><sub><a href="assets/screenshots/25-wishlist.png">25-wishlist.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -471,7 +471,7 @@ Reached from **Wishlist & Trade List** on 23 More.
 </tr>
 
 <tr>
-<td><b>26 · Add Card (Wishlist)</b><br>More · Wireframe page 9, reworked<br><br><img src="screenshots/26-add-card-wishlist.png" width="240" alt="Add Card to Wishlist"><br><sub><a href="screenshots/26-add-card-wishlist.png">26-add-card-wishlist.png</a></sub></td>
+<td><b>26 · Add Card (Wishlist)</b><br>More · Wireframe page 9, reworked<br><br><img src="assets/screenshots/26-add-card-wishlist.png" width="240" alt="Add Card to Wishlist"><br><sub><a href="assets/screenshots/26-add-card-wishlist.png">26-add-card-wishlist.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -488,7 +488,7 @@ Reached from **+ Add to Wishlist** on 25 Wishlist.
 </tr>
 
 <tr>
-<td><b>27 · Edit Wishlist Card</b><br>More · New: Not in the wireframes<br><br><img src="screenshots/27-edit-wishlist-card.png" width="240" alt="Edit Wishlist Card"><br><sub><a href="screenshots/27-edit-wishlist-card.png">27-edit-wishlist-card.png</a></sub></td>
+<td><b>27 · Edit Wishlist Card</b><br>More · New: Not in the wireframes<br><br><img src="assets/screenshots/27-edit-wishlist-card.png" width="240" alt="Edit Wishlist Card"><br><sub><a href="assets/screenshots/27-edit-wishlist-card.png">27-edit-wishlist-card.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -505,7 +505,7 @@ Reached by selecting an entry on 25 Wishlist.
 </tr>
 
 <tr>
-<td><b>28 · Trade List</b><br>More · Wireframe page 9<br><br><img src="screenshots/28-trade-list.png" width="240" alt="Trade List"><br><sub><a href="screenshots/28-trade-list.png">28-trade-list.png</a></sub></td>
+<td><b>28 · Trade List</b><br>More · Wireframe page 9<br><br><img src="assets/screenshots/28-trade-list.png" width="240" alt="Trade List"><br><sub><a href="assets/screenshots/28-trade-list.png">28-trade-list.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -525,7 +525,7 @@ Reached by switching tabs from 25 Wishlist.
 </tr>
 
 <tr>
-<td><b>29 · Add Cards (Trade List)</b><br>More · New: Not in the wireframes<br><br><img src="screenshots/29-add-card-trade-list.png" width="240" alt="Add Cards to the Trade List"><br><sub><a href="screenshots/29-add-card-trade-list.png">29-add-card-trade-list.png</a></sub></td>
+<td><b>29 · Add Cards (Trade List)</b><br>More · New: Not in the wireframes<br><br><img src="assets/screenshots/29-add-card-trade-list.png" width="240" alt="Add Cards to the Trade List"><br><sub><a href="assets/screenshots/29-add-card-trade-list.png">29-add-card-trade-list.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -541,7 +541,7 @@ Reached from **+ Add to Trade List** on 28 Trade List.
 </tr>
 
 <tr>
-<td><b>30 · Edit Trade Entry</b><br>More · Wireframe page 9<br><br><img src="screenshots/30-edit-trade-list-card.png" width="240" alt="Edit Trade Entry"><br><sub><a href="screenshots/30-edit-trade-list-card.png">30-edit-trade-list-card.png</a></sub></td>
+<td><b>30 · Edit Trade Entry</b><br>More · Wireframe page 9<br><br><img src="assets/screenshots/30-edit-trade-list-card.png" width="240" alt="Edit Trade Entry"><br><sub><a href="assets/screenshots/30-edit-trade-list-card.png">30-edit-trade-list-card.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -558,7 +558,7 @@ Reached by selecting an entry on 28 Trade List.
 </tr>
 
 <tr>
-<td><b>31 · Sound & Music</b><br>More · New: Not in the wireframes<br><br><img src="screenshots/31-sound-and-music.png" width="240" alt="Sound & Music"><br><sub><a href="screenshots/31-sound-and-music.png">31-sound-and-music.png</a></sub></td>
+<td><b>31 · Sound & Music</b><br>More · New: Not in the wireframes<br><br><img src="assets/screenshots/31-sound-and-music.png" width="240" alt="Sound & Music"><br><sub><a href="assets/screenshots/31-sound-and-music.png">31-sound-and-music.png</a></sub></td>
 <td>
 
 **Purpose**
@@ -583,13 +583,13 @@ The main user journey is finding a card, adding it to the collection, placing it
 
 | Step | Screen | Screenshot |
 | --- | --- | --- |
-| 1 | 01 · Login | <img src="screenshots/01-login.png" width="140" alt="Login"> |
-| 2 | 04 · Home Dashboard | <img src="screenshots/04-home-dashboard.png" width="140" alt="Home Dashboard"> |
-| 3 | 17 · Add Card (Find Your Card) | <img src="screenshots/17-add-card.png" width="140" alt="Find Your Card"> |
-| 4 | 18 · Add to Collection | <img src="screenshots/18-add-to-collection.png" width="140" alt="Add to Collection"> |
-| 5 | 09 · Binders | <img src="screenshots/09-binders.png" width="140" alt="Binders"> |
-| 6 | 11 · Binder Details | <img src="screenshots/11-binder-details.png" width="140" alt="Binder Details"> |
-| 7 | 15 · Card Details | <img src="screenshots/15-card-details.png" width="140" alt="Card Details"> |
+| 1 | 01 · Login | <img src="assets/screenshots/01-login.png" width="140" alt="Login"> |
+| 2 | 04 · Home Dashboard | <img src="assets/screenshots/04-home-dashboard.png" width="140" alt="Home Dashboard"> |
+| 3 | 17 · Add Card (Find Your Card) | <img src="assets/screenshots/17-add-card.png" width="140" alt="Find Your Card"> |
+| 4 | 18 · Add to Collection | <img src="assets/screenshots/18-add-to-collection.png" width="140" alt="Add to Collection"> |
+| 5 | 09 · Binders | <img src="assets/screenshots/09-binders.png" width="140" alt="Binders"> |
+| 6 | 11 · Binder Details | <img src="assets/screenshots/11-binder-details.png" width="140" alt="Binder Details"> |
+| 7 | 15 · Card Details | <img src="assets/screenshots/15-card-details.png" width="140" alt="Card Details"> |
 
 The wireframe sanity check originally described this journey as scan, confirm, add to binder, then find the card again. Since the scanner was removed (see below), the first half of the journey is now: search the catalog, confirm the details in Add to Collection, and save. The user then opens a binder and finds the card again through Binder Details and Card Details.
 
@@ -601,7 +601,7 @@ This section outlines the changes between the original mockup, which consisted o
 
 | Screen or Element | PDF Mockup | Current App (This Version) | Why It Changed |
 | --- | --- | --- | --- |
-| Screen count and numbering | 29 screens, numbered 01 to 29 (01 Login, 02 Forgot Password, 03 Sign Up, and so on). | 31 screens, numbered to match the files in `docs/screenshots/`. Sign Up is now 02 and Forgot Password is 03. | The screenshots are the source of truth, so numbers and filenames now line up. |
+| Screen count and numbering | 29 screens, numbered 01 to 29 (01 Login, 02 Forgot Password, 03 Sign Up, and so on). | 31 screens, numbered to match the files in `docs/assets/screenshots/`. Sign Up is now 02 and Forgot Password is 03. | The screenshots are the source of truth, so numbers and filenames now line up. |
 | Card Scanner (15) and Confirm Card (16) | Camera viewfinder with a **Capture** button, a **Recent Scans** list, and a confirmation screen before saving. | **Removed.** Replaced by 17 Add Card (Find Your Card), a searchable catalog, and 18 Add to Collection. | The scanner was only a simulated demo and was removed on Oct 4. Catalog search gets a correct card into the collection without a camera and works in a browser. |
 | Bottom Navigation Bar | Raised **Scan** button. | Tabs are Home, Binders, **Add**, Decks, More. The raised button is now **Add**. | Scanning no longer exists. |
 | 01 Login | Gold "PB" monogram, Google and Apple sign-in buttons, Forgot Password above Log In. | Pokéball emblem, email and password only (no Google or Apple), Forgot Password above Log In, plus a speaker button to mute sound. | Social sign-in was not built. Sound control was added for the login screens. |

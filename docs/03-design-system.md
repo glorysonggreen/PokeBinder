@@ -8,6 +8,8 @@ PokéBinder's look is defined in one place, [`lib/theme/pokebinder_theme.dart`](
 - **Material 3**, with `ColorScheme.fromSeed()` seeded from `PokeBinderColors.red`, plus the named colors below used directly in the UI.
 - **Fonts:** Chakra Petch for UI (headings, labels, buttons, tabs, chips, card captions) and Inter for body text, loaded with `google_fonts`. The font files are bundled in `assets/google_fonts/`.
 
+![PokéBinder design system: palette, gradients, type scale, spacing, contrast checks and sample controls](assets/design-system.png)
+
 ## Palette
 
 | Role | Name in code | Hex | Used for |
@@ -94,6 +96,10 @@ Presets: `PokeBinderSpacing.page` (16 / 16 / 16 / 24 left, top, right, bottom) a
 **Theme-level styles** (in `PokeBinderTheme.light()`): dialogs use the cream background with 16 px corners; text buttons use deep red; snackbars are floating, 18 px rounded, ink background with white Chakra Petch text; ink splashes use `SoundSplashFactory` so every tap ticks.
 
 ## Components
+
+![Components in use: reusable widgets from lib/widgets/ shown in the running app](assets/components.png)
+
+_The sheet above was captured before the placeholder color was darkened to `#6F6457` (see Palette), so its placeholder text still shows the old, lighter `#A89C86`. Retake it to update._
 
 Reusable widgets in `lib/widgets/`. Parameters are the constructor fields; "Appears on" lists the screens that use the widget.
 

@@ -154,7 +154,7 @@ own test account.
 - [x] No service account file, keystore or `service_role` key anywhere in the repo
 - [x] Security rules or RLS policies written and tested, not left open
 - [ ] No real personal data in sample data, screenshots or the video
-  (not met yet: `docs/screenshots/07-adjust-photo.png` shows a real person's
+  (not met yet: `docs/assets/screenshots/07-adjust-photo.png` shows a real person's
   photo. Replace it with a non-identifying image, or confirm the person agreed
   to it being public, and check the demo video too.)
 - [x] No course or university credentials anywhere

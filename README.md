@@ -100,7 +100,7 @@ Screenshots (all 31 screens are in [docs/02-mockup.md](docs/02-mockup.md)):
 
 | Home | Binder | Card details | Deck details |
 | --- | --- | --- | --- |
-| <img src="docs/screenshots/04-home-dashboard.png" width="180" alt="Home dashboard"> | <img src="docs/screenshots/11-binder-details.png" width="180" alt="Binder details"> | <img src="docs/screenshots/15-card-details.png" width="180" alt="Card details with 3D card"> | <img src="docs/screenshots/21-deck-details.png" width="180" alt="Deck details"> |
+| <img src="docs/assets/screenshots/04-home-dashboard.png" width="180" alt="Home dashboard"> | <img src="docs/assets/screenshots/11-binder-details.png" width="180" alt="Binder details"> | <img src="docs/assets/screenshots/15-card-details.png" width="180" alt="Card details with 3D card"> | <img src="docs/assets/screenshots/21-deck-details.png" width="180" alt="Deck details"> |
 
 ## Status and what is next
 
