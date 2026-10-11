@@ -111,7 +111,7 @@ These are listed in the order I will work on them.
 
 ## Week of: October 9, 2026
 
-This report covers October 4 to October 9 (about 78 commits).
+This report covers October 4 to October 9 (about 78 commits). Follow-up work on October 11 is marked where it appears.
 
 ## What changed this week
 
@@ -127,6 +127,8 @@ This report covers October 4 to October 9 (about 78 commits).
 
 6. **Did a security and privacy review and wrote the documentation (October 9).** I added `docs/01` to `docs/07`, all 31 screenshots, a security checklist, and a security and privacy document. I also added a maximum length to every text field (`lib/config/field_limits.dart`), with the same limits as database check constraints in `supabase/schema.sql` and a test in `test/field_limits_test.dart`. Placeholder text now has enough contrast, and the LICENSE has the correct owner. I also rewrote the Git history to remove `.dart_tool/` and `build/` and to use the GitHub `noreply` address, and pinned the GitHub Actions to commit SHAs.
 
+7. **Recorded the demo video and did a second history rewrite (October 11).** The demo video is recorded. I rewrote the Git history a second time so every commit on `main` uses my GitHub username as the author name, and updated the security documents to match (see "What broke" below).
+
 ## Why
 
 1. **Catalog instead of scanner.** Last week I set the rule that I would use an API only if it met every "must have", and otherwise use a smaller dataset. The Pokémon TCG API has the name, set, number, type, rarity and artwork, plus a market price. Loading it once into my own database means the app never calls the API on a screen and no API key is inside the app. Because of this the scanner no longer had a data source to identify cards, so I replaced it with search, as my decision rule said.
@@ -141,16 +143,13 @@ This report covers October 4 to October 9 (about 78 commits).
 
 1. **Test-account sessions were committed to Git.** While checking the history I found that Chrome's data folder (`.dart_tool/chrome-device/`, 361 files) had been committed on October 4 and was only deleted from the current files on October 7. It contains Supabase session tokens for my own test account. I revoked that account's sessions in the Supabase dashboard on October 9, so the tokens no longer work. On October 9 I rewrote the history to remove them, but GitHub still serves the old commits to anyone who has their commit id. Only my test account was affected, and no `service_role` key was exposed. The details are in `06-security-and-privacy.md`.
 
-2. **My name and personal email were in the author field of every commit.** I did not notice this until the review. On October 9 I rewrote the history so every commit on `main` uses the GitHub `noreply` address. Six later commits still show my full name as the author name (see `06-security-and-privacy.md`, item 8).
+2. **My name and personal email were in the author field of every commit.** I did not notice this until the review. On October 9 I rewrote the history so every commit on `main` uses the GitHub `noreply` address. Six commits made after that rewrite still showed my full name as the author name, because they were made through GitHub's web editor, which uses the profile name. I fixed those on October 11 with a second rewrite (`git filter-repo --mailmap`), so all 147 commits on `main` now use the name `glorysonggreen`, and I checked the result on GitHub. The old commits are still served by GitHub by commit id until GitHub removes them (see `06-security-and-privacy.md`, items 3 and 8). My full name is still in the `LICENSE`.
 
 3. **Bugs in deletion and the trade list.** Deleting a card left it on the trade list, in decks and as the trainer favorite, and some screens did not update afterwards. The bug-fix commits on October 7 and 8 cover these.
 
-4. **The demo video is not recorded yet.** I wrote `05-demo-vid.md` with the plan, but the video file and the final timestamps are missing.
-
 ## What is left
 
-1. Record the demo video with the test account `ash@pallettown.com`, then check it for any real email, tab or notification before linking it.
-2. Ask GitHub Support to remove the old, pre-rewrite commits, and decide what to do about my full name showing as the author name on six later commits (see `06-security-and-privacy.md`, item 8).
-3. Keep the pinned GitHub Actions current. I pinned all four to commit SHAs and removed the unused `--dart-define` lines on October 9.
-4. Run `flutter analyze` and `flutter test` after the last changes.
-5. Replace the Pokémon HOME music with my own before sharing the app beyond this class.
+1. Ask GitHub Support to remove the old, pre-rewrite commits and their cached views, and mention both history rewrites (October 9 and October 11).
+2. Keep the pinned GitHub Actions current. I pinned all four to commit SHAs and removed the unused `--dart-define` lines on October 9.
+3. Run `flutter analyze` and `flutter test` after the last changes.
+4. Replace the Pokémon HOME music with my own before sharing the app beyond this class.
