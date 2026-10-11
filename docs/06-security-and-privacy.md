@@ -4,7 +4,7 @@ This repository is public. This document records what the app stores, how it is
 protected, and what I found while checking. The step-by-step checklist with
 evidence is in [07-security-checklist.md](07-security-checklist.md).
 
-**Last checked:** October 9, 2026, against commit `68a2617` (138 commits on `main`).
+**Last checked:** October 11, 2026, against commit `1b8c80a` (147 commits on `main`).
 
 ## What this app stores
 
@@ -138,15 +138,14 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
    matched only the key-format text of a library's source code (for example
    the string `-----BEGIN PRIVATE KEY-----`), not an actual key.
 3. **My personal email address and full name were in the author field of all 118
-   commits.** Fixed on 2026-10-09: I rewrote the history so every one of the 133
-   commits on `main` at that time used the GitHub `noreply` address and my GitHub
-   username, and force-pushed it. Six later commits (`12a4809`, `7c686e7`,
-   `1cfc057`, `68a2617`, `3e3a5eb` and `bd12097`, all on 2026-10-09) show my full name as the author
-   name; see item 8. Keeping "Keep my email addresses private" and "Block
-   command line pushes that expose my email" turned on in GitHub settings stops
-   it coming back. The same limit as item 1 applies: the pre-rewrite commits
-   still show the old author details to anyone who has their full commit id,
-   until GitHub removes them.
+   commits.** Fixed on 2026-10-09 and 2026-10-11: I rewrote the history so every
+   commit on `main` uses the GitHub `noreply` address and my GitHub username, and
+   force-pushed it. Six commits made after the first rewrite had picked up my full
+   name from the GitHub profile (see item 8); the second rewrite fixed those too.
+   Keeping "Keep my email addresses private" and "Block command line pushes that
+   expose my email" turned on in GitHub settings stops the email coming back. The
+   same limit as item 1 applies: the pre-rewrite commits still show the old author
+   details to anyone who has their full commit id, until GitHub removes them.
 4. **The `--dart-define` setup was never connected.** `.env.example` and the
    commented workflow lines described an environment-based config the app does
    not use. Fixed on 2026-10-09: the unused `--dart-define` lines were removed
@@ -169,19 +168,22 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
    data. The current files needed no further changes. One limit: an earlier
    version of `07-adjust-photo.png` showed a photo of a real person. It was
    replaced, but that earlier version is still in the git history (see the
-   findings table in `07-security-checklist.md`). The demo video is not recorded yet; when it
-   is, I will record it with the same test account and check that no real email,
+   findings table in `07-security-checklist.md`). The demo video is recorded, but I have not
+   checked it yet. I will watch it through and confirm that no real email,
    browser tab, bookmark or notification is visible.
 
-8. **My full name is the author name on six commits made after the rewrite.**
-   `12a4809`, `7c686e7`, `1cfc057`, `68a2617`, `3e3a5eb` and `bd12097` (2026-10-09) use the author
-   name "Matthew Simon R. Green" with the GitHub `noreply` email address, so no
-   personal email is exposed, but my full name is. These appear to be commits
-   made through GitHub's web editor, which uses the name on the GitHub profile
-   rather than the local Git setting. **Status:** Not fixed. Next step: set the
-   GitHub profile name to my username (or accept the full name, which is also in
-   the `LICENSE`), and use a local `git config user.name` for later commits. Fixing
-   the six existing commits would need another history rewrite.
+8. **My full name was the author name on six commits made after the first
+   rewrite.** `12a4809`, `7c686e7`, `1cfc057`, `68a2617`, `3e3a5eb` and `bd12097`
+   (2026-10-09) used the author name "Matthew Simon R. Green" with the GitHub
+   `noreply` email, so no personal email was exposed. They appear to have come from
+   GitHub's web editor, which uses the profile name rather than the local Git
+   setting. **Status:** Fixed on 2026-10-11 for `main`. I rewrote the history again
+   with `git filter-repo --mailmap` so every commit uses the name `glorysonggreen`,
+   and force-pushed it. These SHAs no longer exist on `main`, but the old copies
+   (and their old SHAs) are still served by GitHub until it removes them, as in
+   item 1. To stop it recurring I set the git `user.name` to `glorysonggreen` and
+   changed the GitHub profile name. Remaining: the `LICENSE` still contains my full
+   name.
 
 I revoked the exposed test-account sessions (item 1). I have not found an
 exposed secret that could write to or read other people's data; the exposure in
