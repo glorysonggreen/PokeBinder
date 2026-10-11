@@ -147,8 +147,8 @@ Reusable widgets in `lib/widgets/`. Parameters are the constructor fields; "Appe
 
 | Component | File | Parameters | Appears on |
 | --- | --- | --- | --- |
-| `PillButton` | `pokebinder_controls.dart` | `label`, `onTap`, `ghost`, `enabled`, `icon`, `loading` | 21 screens: every form, Login, Sign Up, Binders, Decks, Home, Card Details |
-| `DangerActionButton` | `pokebinder_controls.dart` | `label`, `onTap` | Card, Binder, Wishlist, Trade, and Trainer forms |
+| `PillButton` | `pokebinder_controls.dart` | `label`, `onTap`, `ghost`, `enabled`, `icon`, `loading` | 21 screens: most forms, Login, Sign Up, Binders, Decks, Home, Card Details |
+| `DangerActionButton` | `pokebinder_controls.dart` | `label`, `onTap` | Card Details, and the Card, Binder, Wishlist, Trade, and Trainer forms |
 | `LabeledFormField` | `pokebinder_form_fields.dart` | `label`, `child` | Form and auth screens |
 | `FormFieldRow` | `pokebinder_form_fields.dart` | `left`, `right` | Binder, Card, Deck, Sign Up, Trade, and Wishlist forms |
 | `PokeDropdownField<T>` | `pokebinder_form_fields.dart` | `value`, `options`, `onChanged`, `icon`, `height` | Card, Binder, Deck, Wishlist, Trade, and Trainer forms |
@@ -163,16 +163,16 @@ Reusable widgets in `lib/widgets/`. Parameters are the constructor fields; "Appe
 
 | Component | File | Parameters | Appears on |
 | --- | --- | --- | --- |
-| `PokeBinderToast` (with `ToastKind`: success, info, warning, error) | `pokebinder_toast.dart` | message, kind, action label and callback | Add Card, removals (Undo), sync errors |
+| `PokeBinderToast` (with `ToastKind`: success, info, warning, error) | `pokebinder_toast.dart` | `message`, `kind`, `actionLabel`, `onAction`, `duration` (a static helper, not a widget) | Add Card, removals (Undo), sync errors |
 | `AnimatedFormError` | `motion_widgets.dart` | `message`, `pulse` | Login, Sign Up, Forgot and Reset Password |
 | `FadeSlideIn`, `PopIn`, `CardDealIn`, `BouncySwitcher`, `CountUpText`, `PressableScale`, `FadeIndexedStack` | `motion_widgets.dart` | `child`, `index`, `offset`, `startScale`, `overshoot` (FadeSlideIn); `child`, `delay` (PopIn, CardDealIn); `child` (BouncySwitcher); `value`, `style` (CountUpText); `child`, `onTap`, `behavior`, `shineRadius` (PressableScale); `index`, `children` (FadeIndexedStack) | Entrance and press animations across screens |
-| `PokeballLoader`, `PokeballSpinner`, `PokeballBadge`, `PokeballIcon` | `pokeball.dart` | `size`, `label` (Loader); `size`, `color` (Spinner); `size`, `initialDelay` (Badge); `size` (Icon) | Loading states, Login banner |
+| `PokeballLoader`, `PokeballSpinner`, `PokeballBadge`, `PokeballIcon` | `pokeball.dart` | `size`, `label` (Loader); `size`, `color` (Spinner); `size`, `initialDelay` (Badge); `size` (Icon) | Loading states and the catalog picker (Loader), the busy state of `PillButton` (Spinner), the Login banner through `AuthBanner` (Badge); `PokeballIcon` is not used yet |
 | `PokeBinderIntro` | `pokeball_intro.dart` | `child` | Short Poké Ball intro animation shown when the app opens (`main.dart`) |
 | `SoundToggleButton`, `AudioGestureUnlocker` | `sound_widgets.dart` | none; `child` | Login screen mute button; first-tap audio unlock on the web |
 
 ### Component rules
 
-1. **Data and callbacks, not `setState`.** Most reusable widgets are `StatelessWidget`s that take data through parameters and call back with `onTap` and `onChanged`. The few stateful ones (`Interactive3DCard`, `AuthLinkText`, `CollectionSearchBar`, `PillButton`, `PressableScale`, the Pokéball loaders and `CatalogPicker`) keep internal state only for animation, text input, or picker search, not for app data.
+1. **Data and callbacks, not `setState`.** Most reusable widgets are `StatelessWidget`s that take data through parameters and call back with `onTap` and `onChanged`. The few stateful ones (`Interactive3DCard`, `AuthLinkText`, `CollectionSearchBar`, `PillButton`, `PressableScale`, `AnimatedFormError`, `FadeIndexedStack`, `PokeBinderIntro`, the Pokéball loaders and `CatalogPicker`) keep internal state only for animation, text input, or picker search, not for app data.
 2. **`const` wherever possible** to keep components consistent and efficient.
 3. **Every `TextField` has a limit.** Set `maxLength: FieldLimits.<name>` (one-line fields also pass `buildCounter: hideCharacterCounter`) or, for numbers, `inputFormatters: digitsUpTo(FieldLimits.<name>)` or `const [PesoAmountFormatter()]`. Take the number from `FieldLimits`; never hard-code it. A test fails if a `TextField` has neither.
 4. **Placeholder color is `hint` only**, so it stays at 4.5:1 or better on the white input fill. Do not lighten it with opacity.

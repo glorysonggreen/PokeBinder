@@ -59,7 +59,7 @@ Lets a user who cannot remember their password request a reset link by email.
 - Tapping **Send Reset Link** sends the request. The screen then changes to a **Check Your Email** state with short steps (open the email, tap the link in the same browser, choose a new password), a spam-folder reminder, and **Back to Log In**.
 - In the confirmation state, **Resend Link** becomes available after a 60-second cooldown, and **Use a different email** goes back to the form.
 - Tapping **Log In** (Remembered it?) or **‹ Back** returns to 01 Login without sending anything.
-- When the user opens the emailed link, a **Choose a New Password** screen (new password and confirmation, minimum length enforced) saves the new password and continues into the app.
+- When the user opens the emailed link, a **Choose a New Password** screen (new password and confirmation, at least 6 characters) saves the new password, shows "Your password has been changed.", and a **Continue** button closes the screen.
 
 **Navigation**
 Reached only from 01 Login through **Forgot Password**.
@@ -114,12 +114,12 @@ Reached from the More tab or from the avatar on the Home Dashboard.
 Lets the user customize what appears on their Trainer Card.
 
 **User Actions and Flow**
-- **Upload Photo** (or the camera badge on the avatar) picks a profile photo and opens 07 Adjust Photo.
-- The user edits **Trainer Name** and chooses a **Title** (Trainer, Gym Leader, Elite Four, Champion, Pokémon Professor, or Collector).
+- **Upload Photo** (**Change Photo** once a photo is set) or the camera badge on the avatar picks a profile photo and opens 07 Adjust Photo. **Remove** deletes the current photo.
+- The user edits **Trainer name** and chooses a **Title** (Trainer, Gym Leader, Elite Four, Champion, Pokémon Professor, or Collector).
 - **Favorite Card** opens 08 Choose Favorite Card.
 - **Favorite Binder** and **Favorite Deck** are dropdowns on the same screen.
 - **Bio (optional)** holds a short line about the user's collection or journey.
-- **Cancel** discards changes; **✓ Save Changes** saves them. Both return to 05 Trainer Card.
+- **Cancel** discards changes; **✓ Save Changes** saves them, including the new photo. Both return to 05 Trainer Card.
 
 **Navigation**
 Reached from 05 Trainer Card through **✎ Edit**.
@@ -139,7 +139,7 @@ Lets the user frame a new profile photo inside the circular avatar before saving
 - **Cancel** or **‹ Back** returns without changing the photo.
 
 **Navigation**
-Reached from 06 Edit Trainer Card after choosing a photo. The photo is stored in Supabase Storage.
+Reached from 06 Edit Trainer Card after choosing a photo. The cropped photo is uploaded to Supabase Storage when **✓ Save Changes** is pressed on 06.
 </td>
 </tr>
 
@@ -152,7 +152,7 @@ Lets the user pick the card featured on their Trainer Card.
 
 **User Actions and Flow**
 - The user searches their collection and sorts the list (for example **Alphabetical**).
-- Selecting a card row marks it as the favorite (radio-style circle). Each row shows the artwork, set and number, quantity owned, condition, binder, and estimated value.
+- The radio-style circle on a card row marks it as the favorite (tap it again to unselect); tapping the rest of the row opens 15 Card Details. A **Clear** link appears while a card is selected. Each row shows the artwork, set and number, quantity owned, condition, binder, and estimated value (when above zero).
 - **✓ Done** saves the choice and returns to 06 Edit Trainer Card; **‹ Back** returns without saving.
 
 **Navigation**
@@ -169,7 +169,7 @@ Lets users browse their collection through organized binders.
 
 **User Actions and Flow**
 - The **Binders / All Cards** tabs at the top switch between this screen and 14 All Cards.
-- **Search binders…** filters the list; the **Sort** menu orders it (Alphabetical, Newest, Oldest, Most Cards, Highest Value).
+- **Search binders…** filters the list; the **Sort** menu (shown once there is more than one binder) orders it (Alphabetical, Newest, Oldest, Most Cards, Highest Value).
 - **+ New Binder** opens 10 Create Binder.
 - Binders can be pinned with the pin icon; pinned binders appear under **Pinned Binders**, the rest under **All Binders** (with **View All Binders (+N)** / **Show Less** when the list is long).
 - **Unassigned Cards** is a built-in entry holding cards that are not in any binder, including cards removed from a binder.
@@ -188,10 +188,10 @@ Reached through the Binders tab, the **Binders** tile or **Continue a Binder** p
 Creates a new binder with a name and starting structure before cards are added.
 
 **User Actions and Flow**
-- The user enters a **Binder Name** and an optional **Category** (for example Sets, Value, Trade), which groups the binder.
-- The user selects **Starting Pages** and **Slots per Page**.
+- The user enters a **Binder name** and an optional **Category** (for example Sets, Value, Trade), which groups the binder.
+- The user selects **Starting pages** and **Slots per page**.
 - An optional **Description** can be added.
-- **Cancel** returns without creating the binder; **+ Create Binder** creates it and returns to 09 Binders.
+- **Cancel** returns without creating the binder; **+ Create Binder** creates it and opens it in 11 Binder Details when started from 09 Binders, or stays on the Home Dashboard when started from there.
 
 **Navigation**
 Opened from 09 Binders or from **+ New Binder** on the Home Dashboard.
@@ -206,15 +206,15 @@ Opened from 09 Binders or from **+ New Binder** on the Home Dashboard.
 Shows one binder's contents one page at a time and lets the user manage its cards.
 
 **User Actions and Flow**
-- **‹ Back** returns to 09 Binders.
+- **‹ Back** returns to the screen the binder was opened from (09 Binders, or 05 Trainer Card when opened from **Favorite Binder**).
 - **✎ Edit** opens 13 Edit Binder (not shown for Unassigned Cards).
-- **Select** enters selection mode: the user can select several cards (or select all on the page) and then delete them from the collection (with confirmation) or remove them from the binder, which sends them to Unassigned Cards.
+- **Select** enters selection mode: the user can select several cards (or select all on the page) and then delete them from the collection (with confirmation) or remove them from the binder, which sends them to Unassigned Cards. The Unassigned Cards view only offers delete.
 - Tapping a card opens 15 Card Details.
 - The dashed **Add Cards** tile opens 12 Add Cards (Binder).
 - **‹ Prev** / **Next ›** change the binder page.
 
 **Navigation**
-Reached from 09 Binders after selecting a binder, or from **Continue a Binder** on the Home Dashboard.
+Reached from 09 Binders after selecting a binder, from **Continue a Binder** on the Home Dashboard, or from **Favorite Binder** on 05 Trainer Card.
 </td>
 </tr>
 
@@ -246,7 +246,7 @@ Lets users change an existing binder's name, category, size, or description.
 **User Actions and Flow**
 - The user edits the name, category, starting pages, slots per page, and description. Pages already in the binder stay put.
 - **Cancel** discards changes; **✓ Save Changes** applies them.
-- **Delete Binder** removes the binder after confirmation.
+- **Delete Binder** removes the binder after confirmation. It is not offered when this is the user's only binder.
 
 **Navigation**
 Reached from **✎ Edit** on 11 Binder Details.
@@ -263,7 +263,7 @@ A complete view of the user's collection, with search, filters, and sorting.
 **User Actions and Flow**
 - The **Binders** tab returns to 09 Binders.
 - **Search all N cards by name…** filters the grid.
-- The **Newest / Oldest** chips and the **Sort** menu change the order; type and subtype filters narrow the results.
+- The **Sort** menu changes the order, and a row of chips depends on the sort: **Newest / Oldest** for Time, type chips for Pokémon, subtype chips for Trainer and Energy, and chips for Rarity, Set and Condition.
 - **Select** enters selection mode so several cards can be deleted at once (with the same confirmation as a single delete).
 - Selecting a card tile opens 15 Card Details.
 
@@ -287,7 +287,7 @@ A complete view of one card: artwork, set, number, rarity, quantity owned, condi
 - **‹ Back** returns to the screen where the card was opened.
 
 **Navigation**
-Reached from Home, Binders, Binder Details, All Cards, and the card pickers.
+Reached from Home, Binders, Binder Details, All Cards, Collection Statistics, the Trainer Card, and the card pickers.
 </td>
 </tr>
 
@@ -335,7 +335,7 @@ Reached through the raised **Add** button in the navigation bar or **+ Add a New
 Confirms the details of a copy before it is added. It uses the same form as 16 Edit Card.
 
 **User Actions and Flow**
-- Shows the card, its market price in pesos (with the US dollar price and the date prices were updated), and a **You Own N Copies** panel with a quick **Add 1** action for a matching copy.
+- Shows the card, its market price in pesos (with the US dollar price and the date prices were updated), and a **You Own N Copies** panel that lists the copies already owned (matching copies are tagged **MATCH** and come first), each with an **Add** button for the quantity set in the form (**Add 1** when the quantity is 1).
 - When the card comes in more than one finish (for example Holofoil and Reverse Holo), **Finish** chips show the peso price of each; the user picks one. Finish chips need per-finish prices, which come from re-running the catalog import (see `SUPABASE_SETUP.md`).
 - The user sets **Condition** (the estimated value adjusts with condition and can be overridden), **Quantity**, **Binder**, **Page**, and **Notes**.
 - **Cancel** returns to 17 Add Card; **+ Add Card** saves the card and returns to 17.
@@ -353,7 +353,7 @@ Reached after choosing a card on 17 Add Card.
 Lists the user's decks with their completion status.
 
 **User Actions and Flow**
-- **Search decks…** filters the list; format chips (**All, Standard, Expanded, Casual**) and a **Needs Cards** toggle narrow it; a **Sort** menu orders it.
+- **Search decks…** filters the list; format chips (**All, Standard, Expanded, Casual**) and a **Needs Cards** toggle narrow it; a **Sort** menu orders it. The chips appear once at least one deck exists, and the Sort menu once more than one deck is shown.
 - **+ New Deck** opens 20 Create Deck.
 - Each deck row shows its format, how many cards are ready, and a **Missing N** or **✓ Complete** badge. Decks can be pinned.
 - Selecting a deck opens 21 Deck Details.
@@ -372,7 +372,7 @@ Creates a new deck with a name, format, target size, and optional description.
 
 **User Actions and Flow**
 - The user enters a **Deck Name**, picks a **Format** (Standard, Expanded, or Casual) and a **Target Deck Size** (15, 20, 30, 40, or 60 cards), and may add a description.
-- **Cancel** returns without creating the deck; **+ Create Deck** creates it and opens 21 Deck Details.
+- **Cancel** returns without creating the deck; **+ Create Deck** creates it and opens 21 Deck Details. (When started from 15 Card Details, the new deck gets that card and the user stays on Card Details.)
 
 **Navigation**
 Reached from 19 Deck Planner, **+ New Deck** on the Home Dashboard, or when adding a card to a new deck from 15 Card Details.
@@ -387,11 +387,11 @@ Reached from 19 Deck Planner, **+ New Deck** on the Home Dashboard, or when addi
 Shows one deck's completion, card-type mix, and card list, and lets the user manage its cards.
 
 **User Actions and Flow**
-- A summary card shows **Unique**, **Copies**, and **Needed** counts, a progress bar (for example "3 of 60 cards ready"), and a **Card Type Mix** bar with percentage chips.
+- A summary card shows **Unique**, **Copies**, and **Needed** counts (the last reads as a percentage **ready** once the deck is complete), a progress bar (for example "3 of 60 cards ready"), and a **Card Type Mix** bar with percentage chips.
 - Selecting a card row opens a quantity dialog to change the quantity, remove the card, or save.
 - **+ Add Card** opens 22 Add Cards (Deck).
 - **Delete** (top right) removes the deck after confirmation. The cards stay in the collection.
-- **‹ Back** returns to 19 Deck Planner; **‹ Prev / Next ›** page through long decks.
+- **‹ Back** returns to 19 Deck Planner (or to 05 Trainer Card when opened from **Favorite Deck**); **‹ Prev / Next ›** page through decks of more than 5 cards.
 
 **Navigation**
 Reached from 19 Deck Planner after selecting or creating a deck.
@@ -407,7 +407,7 @@ Lets the user choose cards from their collection and how many copies of each go 
 
 **User Actions and Flow**
 - The user searches, sorts, and uses the **+ / −** steppers. Rows show quantity owned and how many are already in the deck; the stepper cannot exceed the copies owned.
-- **✓ Done · N cards** saves the quantities and returns to 21 Deck Details; **‹ Back** returns without saving.
+- **✓ Done · N cards** (just **Done** when nothing is selected) saves the quantities and returns to 21 Deck Details; **‹ Back** returns without saving.
 
 **Navigation**
 Reached from **+ Add Card** on 21 Deck Details.
@@ -461,7 +461,7 @@ Keeps the list of cards the user wants. It shares one screen with the Trade List
 - The tabs show counts, for example **Wishlist (1)** and **Trade List (1)**. The **Trade List** tab switches to 28 Trade List.
 - Stat tiles show **Wanted** and **Est. to Buy**.
 - The user searches, filters by priority (**All, High, Medium, Low**), and sorts (Alphabetical, Newest, Oldest, Priority, Value: High-Low). Long lists are paged.
-- Selecting an entry opens 27 Edit Wishlist Card.
+- Selecting an entry opens 27 Edit Wishlist Card. Swiping a row removes it, with an **Undo** toast.
 - **+ Add to Wishlist** opens 26 Add Card (Wishlist).
 - **‹ Back** returns to 23 More.
 
@@ -497,7 +497,7 @@ Edits a wishlist entry. Card details come from the card database.
 **User Actions and Flow**
 - The user edits **Condition**, **Quantity**, **Estimated Value**, **Priority** (High, Medium, Low), and **Notes**.
 - **Cancel** discards changes; **✓ Save Changes** saves them.
-- **Remove entry** deletes the entry after confirmation, with an **Undo** toast.
+- **Remove entry** deletes the entry after confirmation.
 
 **Navigation**
 Reached by selecting an entry on 25 Wishlist.
@@ -515,7 +515,7 @@ Keeps the list of cards the user is willing to trade, using the same structure a
 - The **Wishlist** tab switches to 25 Wishlist.
 - Stat tiles show **For Trade** and **Est. Value**.
 - The user searches, filters by eagerness (**All, High, Medium, Low**), and sorts. Rows show quantity, condition, value, and how recently the entry was added.
-- Selecting an entry opens 30 Edit Trade Entry.
+- Selecting an entry opens 30 Edit Trade Entry. Swiping a row removes it, with an **Undo** toast.
 - **+ Add to Trade List** opens 29 Add Cards (Trade List).
 - **‹ Back** returns to 23 More.
 
@@ -611,13 +611,13 @@ This section outlines the changes between the original mockup, which consisted o
 | 05 Trainer Card | Avatar, trainer info, collection totals, favorite deck, favorite Pokémon, and achievement badges. | Avatar, name, title badge, Total Cards, Binders, and Decks counts, and **Favorite Card**, **Favorite Binder**, and **Favorite Deck** sections with empty states. No achievement badges. | Favorites were made consistent across cards, binders, and decks. Badges were not built. |
 | 06 Edit Trainer Card | Avatar presets or upload, name, title, favorite Pokémon, favorite deck, card back, country, and biography. | Photo upload, trainer name, **Title** picker (Trainer, Gym Leader, Elite Four, Champion, Pokémon Professor, Collector), Favorite Card, Favorite Binder, Favorite Deck, and optional Bio. No country or card back. | Reduced to the options that were built. |
 | 07 Adjust Photo (new) | Not in the PDF. | Drag-and-zoom crop of the profile photo inside the avatar circle, with **✓ Use Photo**. | Needed to frame uploaded photos. |
-| 08 Choose Favorite Card | Select a card row, **Clear**, **Done**. | Search, sort, select a card row (radio circle), and **✓ Done**. | The picker now matches the other card lists. |
+| 08 Choose Favorite Card | Select a card row, **Clear**, **Done**. | Search, sort, a radio circle to select a card, **Clear**, and **✓ Done**. | The picker now matches the other card lists. |
 | 09 Binders | Binder rows with **✎ Edit binder** and **Prev / Next page** controls, plus a dashed **+** tile. | Binder search, sort (Alphabetical, Newest, Oldest, Most Cards, Highest Value), **Pinned Binders** and **All Binders** sections, pin icons, optional categories, and a built-in **Unassigned Cards** entry. Editing moved to Binder Details. | Cards removed from a binder need a place to go, and pinning and sorting help with many binders. |
 | 10 Create Binder | Name, starting pages, slots per page, description. | Adds an optional **Category**. | Lets binders be grouped. |
 | 11 Binder Details | **Remove** mode: tap a card to confirm removal. | **Select** mode: choose several cards (or select all on the page), then delete them from the collection or remove them from the binder. | Multi-select makes bulk cleanup possible. |
-| 12 Add Cards (Binder) | Search, filters, sort, steppers, **Add N cards**. | Search, sort, steppers, and a button that reads **Select cards to add** until a card is chosen, then **✓ Add N cards**. Filters are not shown. | Matches the built screen. |
+| 12 Add Cards (Binder) | Search, filters, sort, steppers, **Add N cards**. | Search, sort, steppers, and a button that reads **Select cards to add** until a card is chosen, then **✓ Add N cards**. Chip filters appear depending on the sort chosen, as on 14 All Cards. | Matches the built screen. |
 | 13 Edit Binder | Name, pages and slots, description, Save. | Adds **Category** and a **Delete Binder** button (with confirmation). | Binders can now be deleted from here. |
-| 14 All Cards | Search and type chips (All, Normal, Grass, Water, Fire). | Search, **Newest / Oldest** chips, a **Sort** menu, type and subtype filters, and **Select** for multi-delete. | Easier to find or clean up cards in a larger collection. |
+| 14 All Cards | Search and type chips (All, Normal, Grass, Water, Fire). | Search, a **Sort** menu with chips that depend on the sort (Newest / Oldest, type, subtype and so on), and **Select** for multi-delete. | Easier to find or clean up cards in a larger collection. |
 | 15 Card Details | Review info, **✎ Edit card**, drag-to-tilt 3D card. | Same 3D card and info, plus **+ Add to Deck** (pick a deck and quantity, or create one) and **Delete Card**. Deleting also removes the card from the trade list and decks and clears it as favorite. | Lets users act on a card from one place without leaving broken references. |
 | 16 to 18 Card forms | Confirm Card, Add Card, and Edit Card were manual-entry forms (name, set, number, rarity, and so on) with **+ Add to binder**. | Edit Card and Add to Collection share one form. Card identity comes from the catalog and is read-only; the user edits Condition, Quantity, Estimated Value, Binder, Page, and Notes. Add to Collection shows the peso price (and US dollar price and date), **Finish** chips when a card has several finishes, and a **You Own N Copies** panel. Button is **+ Add Card**. | Real card data makes entries correct and prices available (TCGplayer prices, adjusted by condition). |
 | 19 Deck Planner | Deck rows plus an **Editing** section to search binders and add cards on the same screen. | A deck list with search, format chips (All, Standard, Expanded, Casual), a **Needs Cards** toggle, sort, pinning, and **Missing N** / **✓ Complete** badges. Editing moved to Deck Details. | Separating the list from editing gives each more room. |
@@ -626,7 +626,7 @@ This section outlines the changes between the original mockup, which consisted o
 | 22 Add Cards (Deck) | Search, filters, sort, steppers, **Done N cards**. | Same, with rows showing how many are already in the deck. | Matches the built screen. |
 | 23 More (was 24) | Trainer Card, Collection Statistics, Wishlist & Trade List. | Adds **Sound & Music** and **Sign Out** (with confirmation). | Sound settings and sign-out needed a home. |
 | 24 Collection Statistics (was 25) | Total cards, estimated value, Value by Rarity, Cards by Set. | Tiles are **Cards, Value, Sets**, plus Value by Rarity, Cards by Set (donut with legend), and **Top Value Cards**. | More useful breakdown of the collection. |
-| 25 to 30 Wishlist and Trade List | Two simple tabs. Add Wishlist and Trade Card were manual-entry forms. | Tabs show counts, stat tiles (Wanted / Est. to Buy and For Trade / Est. Value), search, priority chips, sorting, and paging. Wishlist adds cards through a catalog picker (26). Trade List adds through a collection picker (29). Entries open edit screens (27, 30), and removal asks for confirmation and offers **Undo**. | The original lists were too simple for a larger collection, and real card data replaced manual entry. |
+| 25 to 30 Wishlist and Trade List | Two simple tabs. Add Wishlist and Trade Card were manual-entry forms. | Tabs show counts, stat tiles (Wanted / Est. to Buy and For Trade / Est. Value), search, priority chips, sorting, and paging. Wishlist adds cards through a catalog picker (26). Trade List adds through a collection picker (29). Entries open edit screens (27, 30), and removal from an edit screen asks for confirmation, and swiping a row removes it with an **Undo** toast. | The original lists were too simple for a larger collection, and real card data replaced manual entry. |
 | 31 Sound & Music (new) | Not in the PDF. | Toggles and volume sliders for background music and sound effects, a **Play a Test Sound** button, and settings remembered on the device. | The app has chiptune effects and two looping themes. |
 | Text fields | No maximum lengths and a light-grey placeholder color. | Every text field has a maximum length (see D. Input Limits). Long multi-line fields show a counter such as `0/300`. Placeholder text is darker so it meets the 4.5:1 contrast requirement. | Stops oversized text and makes placeholders readable. Screenshots taken before this change show the older, lighter placeholder text. |
 | Data and accounts | Not covered. | Cards, binders, decks, wishlist, trade list, and profile are saved to Supabase per user (Row Level Security). Writes are online-only. | Moves the app from mock data to real, synced data. |

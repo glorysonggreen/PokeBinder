@@ -27,7 +27,7 @@ The one planned feature I did not keep is the Card Scanner. I built the scanner 
 | Supabase Setup | New | Dashboard setup, `supabase/schema.sql`, Row Level Security, Storage bucket, GitHub Actions deploy | Done. The web build deploys to GitHub Pages on every push to `main` |
 | Sound, Music & Animations | New | audioplayers, shared_preferences, shared animation widgets | Done. Sound effects, two background themes, a Sound & Music settings screen, and shared animations across screens |
 
-The MVP is complete, so the remaining work is cleanup rather than new features: moving the Supabase settings out of the source code, adding more tests, and recording the demo video.
+The MVP is complete, so the remaining work is cleanup rather than new features: adding more tests and recording the demo video.
 
 The earlier plan treated the real scanner as a risk with a 12+ hour estimate. That risk is gone because the feature was cut, not because it was solved.
 
@@ -131,13 +131,13 @@ Not applicable. The Card Scanner was the only hardware feature, and it was remov
 
 My project is stored in my public GitHub repository: **glorysonggreen/PokeBinder**
 
-The Supabase URL and anon (publishable) key are written in `lib/config/supabase_config.dart`. This is not what I planned. I planned to keep them in a local `.env` file and pass them in at build time, but the app does not read `--dart-define` values yet, and the matching lines in the deploy workflow are commented out. This is acceptable because the anon key is designed to be public and Row Level Security is what protects the data. I decoded the key and confirmed its role is `anon`. Moving these values to `--dart-define` is still on my list.
+The Supabase URL and anon (publishable) key are written in `lib/config/supabase_config.dart`. This is not what I first planned: I planned to keep them in a local `.env` file and pass them in at build time. The app does not read `--dart-define` values, and the unused `--dart-define` lines were removed from the deploy workflow on October 9, 2026. I am keeping the values in the source because the anon key is designed to be public and Row Level Security is what protects the data. I decoded the key and confirmed its role is `anon`.
 
 Secrets only my tools need, such as the Supabase service_role (secret) key and the Pokémon TCG API key used by the catalog import, go in a local `.env` file that is ignored by Git. They are never in the Flutter app or the repository. `.env.example` contains only placeholder names.
 
 For testing, I use public card information and a test account with a throwaway email. I do not store personal information in the test data.
 
-While doing my security check I found that a Chrome profile folder from `flutter run -d chrome` had been committed to Git history. It contained session tokens for my own test account. I revoked those sessions in Supabase on October 9, 2026. The full list of findings, fixes and accepted risks is in `docs/06-security-and-privacy.md` and `docs/07-security-checklist.md`.
+While doing my security check I found that a Chrome profile folder from `flutter run -d chrome` had been committed to Git history. It contained session tokens for my own test account. I revoked those sessions in Supabase on October 9, 2026, and removed the folder from the Git history the same day. The full list of findings, fixes and accepted risks is in `docs/06-security-and-privacy.md` and `docs/07-security-checklist.md`.
 
 ## Data the App Remembers
 
@@ -152,7 +152,7 @@ Every field below comes from `supabase/schema.sql` and my model classes. Changes
 | Deck card | deck_id, card_id, quantity | Supabase table deck_cards |
 | Wishlist / Trade entry | id, user_id, name, set_name, card_number, rarity, condition, quantity, notes, kind (wishlist or trade), priority, estimated_value, asking_for, source_card_id, image_asset_path, catalog_id, finish, date_added | Supabase table wishlist_entries |
 | Card set (shared, read-only) | id, name, series, printed_total, total, release_date, logo_url, symbol_url | Supabase table card_sets |
-| Catalog card (shared, read-only) | id, set_id, number, name, supertype, subtype, type, rarity, image_small, image_large, market_price_usd, prices per finish, price_updated_at | Supabase table card_catalog |
+| Catalog card (shared, read-only) | id, set_id, number, name, supertype, subtype, type, rarity, rarity_raw, image_small, image_large, market_price_usd, prices per finish, price_updated_at | Supabase table card_catalog |
 | Sound and music settings | music and effects on/off, volumes | On the device (shared_preferences) |
 
 Every text field has a maximum length (for example notes 500 characters, descriptions 300, trainer name 30), set in `lib/config/field_limits.dart` and repeated as check constraints in `supabase/schema.sql`. The full list is in [`02-mockup.md`](02-mockup.md#d-input-limits).
@@ -163,7 +163,7 @@ Every text field has a maximum length (for example notes 500 characters, descrip
 2. **Home Dashboard:** Collection Summary (card count, estimated value, binder count), Quick Actions (New Binder, New Deck, Add a New Card), Recently Added, Continue a Binder
 3. **Binders:** Binders tab and All Cards tab (each with search), Unassigned Cards, Binder Detail, Create/Edit Binder, Add Card to Binder, Card Details (with 3D card), Add/Edit Card
 4. **Add:** Catalog search and picker, then Add/Confirm Card
-5. **Deck Planner:** Deck List, Deck Detail, Create/Edit Deck, Add Card to Deck
+5. **Deck Planner:** Deck List, Deck Detail, Create Deck, Add Card to Deck
 6. **More Hub:** Trainer Card, Edit Trainer Card, Profile Photo Crop, Choose Favorite Card, Collection Statistics (value by rarity, cards by set, top value cards), Wishlist & Trade List, Wishlist Form, Trade Entry Form, Add Card to Wishlist / Trade List, Sound & Music, Sign Out
 
 The app also opens with a short Poké Ball intro animation.

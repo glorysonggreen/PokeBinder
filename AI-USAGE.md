@@ -172,7 +172,7 @@ These three problems came from Claude's first sync and deck-saving code (Entries
 
 The first design showed the cards of the selected binder at the bottom of the screen. I felt this did not make sense, because a binder should organize and contain cards. I changed the design so each binder is a real container for its cards.
 
-I also added the Binders and All Cards tabs, pinned binders, binder limits, the Unsorted binder, and sorting. These were my own design decisions, and I tested and adjusted them as I built the feature. Claude wrote the add, edit, and delete forms based on my design (Entry 1), so I do not count those forms as code I wrote myself.
+I also added the Binders and All Cards tabs, pinned binders, binder limits, the Unassigned Cards list, and sorting. These were my own design decisions, and I tested and adjusted them as I built the feature. Claude wrote the add, edit, and delete forms based on my design (Entry 1), so I do not count those forms as code I wrote myself.
 
 ### 3.2 Interactive 3D Pokémon Cards
 

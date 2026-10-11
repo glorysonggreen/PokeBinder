@@ -10,9 +10,9 @@ name: Deploy web demo
 # visits the site, so it matters which kind you are shipping:
 #
 #   Safe to ship: project identifiers whose data is protected by rules, i.e. the
-#   Firebase config in firebase_options.dart and the Supabase URL plus publishable
-#   key. Both vendors document these as safe to expose in a client. Your Firestore
-#   rules and your Supabase RLS policies are what actually protect the data.
+#   Supabase URL plus publishable (anon) key. Supabase documents these as safe to
+#   expose in a client. The Row Level Security policies in supabase/schema.sql are
+#   what actually protect the data.
 #
 #   NOT safe to ship: anything billable or privileged. A Gemini API key, a
 #   Supabase secret (service_role) key, a service account JSON. A stranger can
@@ -21,9 +21,6 @@ name: Deploy web demo
 #
 # Whatever you do pass in, put it in Settings > Secrets and variables > Actions
 # and reference it below. Never write a key literally in this file: it is public.
-#
-# Step by step, with the Dart side and the usual mistakes: page 12 of
-# content/extending-your-app/ in your course workspace.
 
 on:
   push:

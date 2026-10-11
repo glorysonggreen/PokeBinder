@@ -19,13 +19,15 @@ evidence is in [07-security-checklist.md](07-security-checklist.md).
 | Sound and music on/off and volume | On the device (`shared_preferences`, which is browser local storage on web) | Only that device |
 
 Card names and sets are public card information, not personal information.
-No analytics, advertising or tracking code is in the app (`web/index.html` only
-loads Flutter's own bootstrap script).
+No analytics, advertising or tracking code is in the app (`web/index.html`
+loads only Flutter's own bootstrap script, plus a small inline script that
+removes the launch screen).
 
 **Third parties that see a visitor's IP address:** card artwork is loaded
-straight from the Pokémon TCG API's image server (`Image.network`), and fonts
-come from Google Fonts. Both receive the visitor's IP address and browser
-details when the app loads.
+straight from the Pokémon TCG API's image server (`Image.network`), so that
+server receives the visitor's IP address and browser details when card images
+load. The two fonts (Chakra Petch and Inter) are bundled in
+`assets/google_fonts/`, so they are not fetched from Google Fonts.
 
 ## Secrets
 
@@ -138,8 +140,8 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
 3. **My personal email address and full name were in the author field of all 118
    commits.** Fixed on 2026-10-09: I rewrote the history so every one of the 133
    commits on `main` at that time used the GitHub `noreply` address and my GitHub
-   username, and force-pushed it. Four later commits (`12a4809`, `7c686e7`,
-   `1cfc057` and `68a2617`, all on 2026-10-09) show my full name as the author
+   username, and force-pushed it. Six later commits (`12a4809`, `7c686e7`,
+   `1cfc057`, `68a2617`, `3e3a5eb` and `bd12097`, all on 2026-10-09) show my full name as the author
    name; see item 8. Keeping "Keep my email addresses private" and "Block
    command line pushes that expose my email" turned on in GitHub settings stops
    it coming back. The same limit as item 1 applies: the pre-rewrite commits
@@ -171,15 +173,15 @@ The constraints are added `NOT VALID`: new and edited rows are checked, existing
    is, I will record it with the same test account and check that no real email,
    browser tab, bookmark or notification is visible.
 
-8. **My full name is the author name on four commits made after the rewrite.**
-   `12a4809`, `7c686e7`, `1cfc057` and `68a2617` (2026-10-09) use the author
+8. **My full name is the author name on six commits made after the rewrite.**
+   `12a4809`, `7c686e7`, `1cfc057`, `68a2617`, `3e3a5eb` and `bd12097` (2026-10-09) use the author
    name "Matthew Simon R. Green" with the GitHub `noreply` email address, so no
    personal email is exposed, but my full name is. These appear to be commits
    made through GitHub's web editor, which uses the name on the GitHub profile
    rather than the local Git setting. **Status:** Not fixed. Next step: set the
    GitHub profile name to my username (or accept the full name, which is also in
    the `LICENSE`), and use a local `git config user.name` for later commits. Fixing
-   the four existing commits would need another history rewrite.
+   the six existing commits would need another history rewrite.
 
 I revoked the exposed test-account sessions (item 1). I have not found an
 exposed secret that could write to or read other people's data; the exposure in

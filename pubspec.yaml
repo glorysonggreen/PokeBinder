@@ -12,7 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # Chakra Petch (headers/labels) from Google Fonts, matching the mockup.
+  # Chakra Petch (headers/labels) and Inter (body text), bundled in assets/google_fonts/.
   google_fonts: ^6.2.1
   # Backend: auth + Postgres database for the collection, binders, decks,
   # and wishlist. See SUPABASE_SETUP.md.

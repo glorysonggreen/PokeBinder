@@ -111,7 +111,7 @@ These are listed in the order I will work on them.
 
 ## Week of: October 9, 2026
 
-This report covers October 4 to October 9 (about 69 commits).
+This report covers October 4 to October 9 (about 78 commits).
 
 ## What changed this week
 
@@ -125,7 +125,7 @@ This report covers October 4 to October 9 (about 69 commits).
 
 5. **Did a bug-fix pass (October 7 and 8)** on sign-in, card deletion, the trade list, the delete screens, and the Binder Detail and Binders screens.
 
-6. **Did a security and privacy review and wrote the documentation (October 9).** I added `docs/01` to `docs/07`, all 31 screenshots, a security checklist, and a security and privacy document. I also added a maximum length to every text field (`lib/config/field_limits.dart`), with the same limits as database check constraints in `supabase/schema.sql` and a test in `test/field_limits_test.dart`. Placeholder text now has enough contrast, and the LICENSE has the correct owner.
+6. **Did a security and privacy review and wrote the documentation (October 9).** I added `docs/01` to `docs/07`, all 31 screenshots, a security checklist, and a security and privacy document. I also added a maximum length to every text field (`lib/config/field_limits.dart`), with the same limits as database check constraints in `supabase/schema.sql` and a test in `test/field_limits_test.dart`. Placeholder text now has enough contrast, and the LICENSE has the correct owner. I also rewrote the Git history to remove `.dart_tool/` and `build/` and to use the GitHub `noreply` address, and pinned the GitHub Actions to commit SHAs.
 
 ## Why
 
@@ -139,9 +139,9 @@ This report covers October 4 to October 9 (about 69 commits).
 
 ## What broke or what I got stuck on
 
-1. **Test-account sessions were committed to Git.** While checking the history I found that Chrome's data folder (`.dart_tool/chrome-device/`, 361 files) had been committed on October 4 and was only deleted from the current files on October 7. It contains Supabase session tokens for my own test account. I revoked that account's sessions in the Supabase dashboard on October 9, so the tokens no longer work. The files are still in the history until I rewrite it. Only my test account was affected, and no `service_role` key was exposed. The details are in `06-security-and-privacy.md`.
+1. **Test-account sessions were committed to Git.** While checking the history I found that Chrome's data folder (`.dart_tool/chrome-device/`, 361 files) had been committed on October 4 and was only deleted from the current files on October 7. It contains Supabase session tokens for my own test account. I revoked that account's sessions in the Supabase dashboard on October 9, so the tokens no longer work. On October 9 I rewrote the history to remove them, but GitHub still serves the old commits to anyone who has their commit id. Only my test account was affected, and no `service_role` key was exposed. The details are in `06-security-and-privacy.md`.
 
-2. **My name and personal email are in the author field of every commit.** I did not notice this until the review. New commits should use the GitHub `noreply` address. The old ones keep my Gmail address unless I rewrite the history.
+2. **My name and personal email were in the author field of every commit.** I did not notice this until the review. On October 9 I rewrote the history so every commit on `main` uses the GitHub `noreply` address. Six later commits still show my full name as the author name (see `06-security-and-privacy.md`, item 8).
 
 3. **Bugs in deletion and the trade list.** Deleting a card left it on the trade list, in decks and as the trainer favorite, and some screens did not update afterwards. The bug-fix commits on October 7 and 8 cover these.
 
@@ -150,7 +150,7 @@ This report covers October 4 to October 9 (about 69 commits).
 ## What is left
 
 1. Record the demo video with the test account `ash@pallettown.com`, then check it for any real email, tab or notification before linking it.
-2. Rewrite the Git history with `git filter-repo`: replace my Gmail address with the `noreply` address and remove `.dart_tool/` and `build/`. Then update the commit hashes in the documents, including the ones in the earlier weekly reports.
+2. Ask GitHub Support to remove the old, pre-rewrite commits, and decide what to do about my full name showing as the author name on six later commits (see `06-security-and-privacy.md`, item 8).
 3. Keep the pinned GitHub Actions current. I pinned all four to commit SHAs and removed the unused `--dart-define` lines on October 9.
-4. Fill in `AI-USAGE.md` (the "what you changed or checked yourself" column is still a TODO) and run `flutter analyze` and `flutter test` after the last changes.
+4. Run `flutter analyze` and `flutter test` after the last changes.
 5. Replace the Pokémon HOME music with my own before sharing the app beyond this class.
