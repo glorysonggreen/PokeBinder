@@ -19,6 +19,8 @@ class BinderAddCardScreen extends StatefulWidget {
 
   final int pageIndex;
 
+  final int freeSlots;
+
   final List<PokemonCardData> Function() availableCards;
 
   final Future<void> Function(PokemonCardData card) onCardTap;
@@ -27,6 +29,7 @@ class BinderAddCardScreen extends StatefulWidget {
     super.key,
     required this.binderName,
     required this.pageIndex,
+    required this.freeSlots,
     required this.availableCards,
     required this.onCardTap,
   });
@@ -52,6 +55,8 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
 
   int get _totalSelected => _quantities.values.fold(0, (sum, q) => sum + q);
 
+  int get _slotsLeft => widget.freeSlots - _quantities.length;
+
   void _clearFilters() {
     setState(() {
       _query = '';
@@ -70,6 +75,7 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
   void _increment(PokemonCardData card) {
     setState(() {
       final current = _quantities[card.id] ?? 0;
+      if (current == 0 && _slotsLeft < 1) return;
       if (current < card.quantityOwned) {
         _quantities[card.id] = current + 1;
       }
@@ -156,7 +162,10 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
               Text(
                 'Search your collection for cards to add to page '
                 '${widget.pageIndex + 1} of "${widget.binderName}". '
-                "They'll move here from where they're stored now.",
+                "They'll move here from where they're stored now.\n"
+                '$_slotsLeft of ${widget.freeSlots} free '
+                '${widget.freeSlots == 1 ? 'slot' : 'slots'} left on this '
+                'page. Copies of the same card share one slot.',
                 style: PokeBinderText.subtitle,
               ),
               const SizedBox(height: PokeBinderSpacing.sp3),
@@ -227,7 +236,8 @@ class _BinderAddCardScreenState extends State<BinderAddCardScreen> {
                             itemBuilder: (context, index) {
                               final card = filtered[index];
                               final quantity = _quantities[card.id] ?? 0;
-                              final atMax = quantity >= card.quantityOwned;
+                              final atMax = quantity >= card.quantityOwned ||
+                                  (quantity == 0 && _slotsLeft < 1);
                               return _BinderCardPickerRow(
                                 card: card,
                                 quantity: quantity,

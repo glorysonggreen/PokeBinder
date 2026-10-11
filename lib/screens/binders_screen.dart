@@ -312,6 +312,7 @@ class _BindersScreenState extends State<BindersScreen> {
         builder: (_) => BinderAddCardScreen(
           binderName: binder.name,
           pageIndex: pageIndex,
+          freeSlots: binder.freeSlotsOnPage(pageIndex + 1),
           availableCards: () => _cardsOutsideBinder(binder.id),
           onCardTap: _openCard,
         ),
@@ -354,8 +355,10 @@ class _BindersScreenState extends State<BindersScreen> {
     final binderName = _binders[binderIndex].name;
     final stamp = DateTime.now().microsecondsSinceEpoch;
     final library = PokemonCardData.library;
+    var freeSlots = _binders[binderIndex].freeSlotsOnPage(pageIndex + 1);
 
     for (var i = 0; i < picks.length; i++) {
+      if (freeSlots < 1) break;
       final pick = picks[i];
       final cardIndex = library.indexWhere((c) => c.id == pick.cardId);
       if (cardIndex == -1) continue;
@@ -381,6 +384,7 @@ class _BindersScreenState extends State<BindersScreen> {
         library.add(newCard);
         CardRepository.upsert(newCard);
       }
+      freeSlots--;
     }
   }
 

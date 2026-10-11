@@ -51,7 +51,9 @@ class BinderCardTile extends StatelessWidget {
 class AddCardTile extends StatelessWidget {
   final VoidCallback? onTap;
 
-  const AddCardTile({super.key, this.onTap});
+  final bool showIcon;
+
+  const AddCardTile({super.key, this.onTap, this.showIcon = true});
 
   @override
   Widget build(BuildContext context) {
@@ -61,12 +63,14 @@ class AddCardTile extends StatelessWidget {
         onTap: onTap,
         child: CustomPaint(
           painter: _DashedRRectPainter(),
-          child: const Center(
-            child: Icon(
-              Icons.add,
-              size: 22,
-              color: PokeBinderColors.inkSoft,
-            ),
+          child: Center(
+            child: showIcon
+                ? const Icon(
+                    Icons.add,
+                    size: 22,
+                    color: PokeBinderColors.inkSoft,
+                  )
+                : null,
           ),
         ),
       ),

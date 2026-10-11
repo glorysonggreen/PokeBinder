@@ -71,6 +71,16 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
   }
 
   Future<void> _openAddCard() async {
+    final binder = _binder;
+    if (binder != null && binder.freeSlotsOnPage(_pageIndex + 1) < 1) {
+      PokeBinderToast.show(
+        context,
+        'Page ${_pageIndex + 1} is full (${binder.slotsPerPage} of '
+        '${binder.slotsPerPage} slots). Try another page.',
+        kind: ToastKind.warning,
+      );
+      return;
+    }
     await widget.onAddCard(
       binderId: _isUnassigned ? null : widget.binderId,
       pageIndex: _isUnassigned ? 0 : _pageIndex,
@@ -195,10 +205,15 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
     final selecting = _selecting && currentPageCards.isNotEmpty;
     final selectedCards = selecting ? _selectedCards() : <PokemonCardData>[];
     final title = _isUnassigned ? 'Unassigned Cards' : binder!.name;
+    final slotCount = _isUnassigned ? 0 : binder!.slotsPerPage;
+    final usedSlots = currentPageCards.length;
+    final showAddTile = !selecting && !_isUnassigned && usedSlots < slotCount;
     final subtitle = _isUnassigned
         ? '${currentPageCards.length} '
             '${currentPageCards.length == 1 ? 'card' : 'cards'} · no binder'
-        : 'Page ${_pageIndex + 1} of ${binder!.pageCount}';
+        : 'Page ${_pageIndex + 1} of ${binder!.pageCount} · '
+            '$usedSlots of $slotCount slots'
+            '${usedSlots > slotCount ? ' (over capacity)' : ''}';
 
     return PokeBinderScaffold(
       bottomNavigationBar: selecting
@@ -297,7 +312,6 @@ class _BinderDetailScreenState extends State<BinderDetailScreen> {
                           crossAxisSpacing * (crossAxisCount - 1)) /
                       crossAxisCount;
                   final cardHeight = cardWidth / kPokemonCardImageAspectRatio;
-                  final showAddTile = !selecting && !_isUnassigned;
 
                   return SliverGrid(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

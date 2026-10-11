@@ -287,20 +287,22 @@ class _CardFormScreenState extends State<CardFormScreen> {
     if (page == count + 1) {
       return (text: 'This adds page $page to ${binder.name}.', error: false);
     }
-    final used = PokemonCardData.library
-        .where((c) =>
-            c.binderName == binder.name &&
-            c.page == page &&
-            c.id != widget.existingCard?.id)
-        .length;
-    if (used >= binder.slotsPerPage) {
+    final used = binder.cardsOnPage(page, excludeCardId: widget.existingCard?.id);
+
+    final existing = widget.existingCard;
+    final stays = existing != null &&
+        existing.binderName == binder.name &&
+        existing.page == page;
+    if (!stays && used >= binder.slotsPerPage) {
       return (
-        text: 'Page $page is full ($used of ${binder.slotsPerPage} slots).',
-        error: false,
+        text: 'Page $page is full ($used of ${binder.slotsPerPage} slots). '
+            'Pick another page, or ${count + 1} to add a new page.',
+        error: true,
       );
     }
+    final slotsUsed = stays ? used + 1 : used;
     return (
-      text: 'Page $page has $used of ${binder.slotsPerPage} slots used.',
+      text: 'Page $page has $slotsUsed of ${binder.slotsPerPage} slots used.',
       error: false,
     );
   }

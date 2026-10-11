@@ -48,6 +48,7 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
 
   String? _nameError;
   String? _pagesError;
+  String? _slotsError;
 
   bool get _isEditing => widget.existingBinder != null;
 
@@ -86,6 +87,13 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
       return;
     }
     final pageCount = requestedPages < minPages ? minPages : requestedPages;
+
+    final fullest = existing?.fullestPageCount ?? 0;
+    if (_slotsPerPage < fullest) {
+      setState(() => _slotsError = 'One page already holds $fullest cards. '
+          'Choose at least $fullest slots, or move some cards out first.');
+      return;
+    }
 
     final binder = BinderData(
       id: existing?.id ?? 'binder-${DateTime.now().microsecondsSinceEpoch}',
@@ -218,10 +226,18 @@ class _BinderFormScreenState extends State<BinderFormScreen> {
                       PokeDropdownOption(12, '12'),
                       PokeDropdownOption(15, '15'),
                     ],
-                    onChanged: (value) => setState(() => _slotsPerPage = value),
+                    onChanged: (value) => setState(() {
+                      _slotsPerPage = value;
+                      _slotsError = null;
+                    }),
                   ),
                 ),
               ),
+              if (_slotsError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: PokeBinderSpacing.sp2),
+                  child: Text(_slotsError!, style: PokeBinderText.formError),
+                ),
               LabeledFormField(
                 label: 'Description (optional)',
                 child: TextField(

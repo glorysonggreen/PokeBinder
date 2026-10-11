@@ -44,6 +44,30 @@ class BinderData {
     return result;
   }
 
+  int cardsOnPage(int page, {String? excludeCardId}) =>
+      PokemonCardData.library
+          .where((c) =>
+              c.binderName == name && c.page == page && c.id != excludeCardId)
+          .length;
+
+  int freeSlotsOnPage(int page, {String? excludeCardId}) {
+    final free = slotsPerPage - cardsOnPage(page, excludeCardId: excludeCardId);
+    return free < 0 ? 0 : free;
+  }
+
+  int get fullestPageCount {
+    final counts = <int, int>{};
+    for (final card in PokemonCardData.library) {
+      if (card.binderName != name || card.page < 1) continue;
+      counts[card.page] = (counts[card.page] ?? 0) + 1;
+    }
+    var fullest = 0;
+    for (final count in counts.values) {
+      if (count > fullest) fullest = count;
+    }
+    return fullest;
+  }
+
   int get cardCount =>
       PokemonCardData.library.where((c) => c.binderName == name).length;
 
